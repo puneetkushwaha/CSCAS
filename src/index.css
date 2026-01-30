@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-lh-purple: #bc13fe;
+  --color-lh-dark: #050505;
+
+  --font-plus-jakarta: "Plus Jakarta Sans", sans-serif;
+
+  --animate-marquee: marquee 25s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+
+    /* Half translate is key for infinite loop */
+  }
+
+  --animate-float-glow: floatGlow 3s ease-in-out infinite;
+
+  @keyframes floatGlow {
+
+    0%,
+    100% {
+      transform: translateY(0);
+      filter: drop-shadow(0 0 10px rgba(188, 19, 254, 0.4));
+    }
+
+    50% {
+      transform: translateY(-10px);
+      filter: drop-shadow(0 0 30px rgba(188, 19, 254, 0.8));
+    }
+  }
+
+}
+
+/* Custom Utility for word spacing as you asked earlier */
+.word-spaced {
+  word-spacing: 1rem;
+}
+
+body {
+  @apply bg-lh-dark text-white font-plus-jakarta overflow-x-hidden;
+}
+
+.bg-hero-main {
+  background-image: linear-gradient(rgba(5, 5, 5, 0.7), rgba(5, 5, 5, 0.8)), url('./assets/images/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.bg-defense {
+  background-image: linear-gradient(rgba(5, 5, 5, 0.2), rgba(5, 5, 5, 0.515)), url('./assets/images/defense-bg.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.mask-gradient {
+  mask-image: linear-gradient(to top, transparent, black 70%);
+  -webkit-mask-image: linear-gradient(to top, transparent, black 70%);
+}
+
+.mask-gradient-top {
+  mask-image: linear-gradient(to bottom, transparent, black 25%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 25%);
+}
+
+.outline-text {
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.7);
+  color: transparent;
+  font-weight: 900;
+}
