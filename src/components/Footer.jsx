@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Send, Facebook, Instagram, Linkedin, Twitter, Mail, Phone, Shield, MapPin } from 'lucide-react';
+import { Send, Facebook, Instagram, Linkedin, Twitter, Mail, Phone, Shield, MapPin, Globe } from 'lucide-react';
 
 const Footer = () => {
   const navData = [
@@ -28,6 +28,13 @@ const Footer = () => {
       title: "Legal",
       links: ["Privacy Policy", "Terms of Use", "Cookie Policy", "Data Protection Policy"]
     }
+  ];
+
+  const socialLinks = [
+    { Icon: Globe, href: "https://codevirussec.in/", label: "Website" },
+    { Icon: Twitter, href: "https://x.com/Codevirussec", label: "Twitter" },
+    { Icon: Instagram, href: "https://www.instagram.com/codevirussecurity", label: "Instagram" },
+    { Icon: Linkedin, href: "https://www.linkedin.com/company/codevirus-security/posts/?feedView=all", label: "LinkedIn" }
   ];
 
   return (
@@ -130,7 +137,9 @@ const Footer = () => {
           <div className="lg:col-span-4 space-y-4">
             <h4 className="text-lh-purple text-xs font-black uppercase tracking-[0.2em]">Contact Us</h4>
             <div className="space-y-1">
-              <p className="text-2xl font-black text-white tracking-tight">+91 522 456 7592</p>
+              <a href="tel:+919026764985" className="text-2xl font-black text-white tracking-tight hover:text-lh-purple transition-colors block">
+                +91 90267 64985
+              </a>
               <p className="text-gray-400 text-xs font-bold italic">info@csca.edu.in</p>
             </div>
           </div>
@@ -138,9 +147,14 @@ const Footer = () => {
           <div className="lg:col-span-4 flex flex-col md:flex-row lg:justify-center gap-8 border-white/5 md:border-l lg:border-l-0 lg:border-x px-0 md:px-12">
             <div className="space-y-2">
               <h4 className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Our Headquarters</h4>
-              <p className="text-white text-xs font-bold leading-relaxed max-w-[200px]">
-                1st Floor, Cyber Heights, Vibhuti Khand, Gomti Nagar, Lucknow, UP 226010 India.
-              </p>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=A76,+Chandganj+Garden+Road,+Kapoorthla,+Aliganj,+Sector+A,+Chandralok,+Lucknow,+Uttar+Pradesh+226024"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white text-xs font-bold leading-relaxed max-w-[200px] hover:text-lh-purple transition-colors block"
+              >
+                A76, Chandganj Garden Road, Kapoorthla, Aliganj, Sector A, Chandralok, Lucknow, Uttar Pradesh 226024
+              </a>
             </div>
           </div>
 
@@ -149,15 +163,36 @@ const Footer = () => {
               <Shield size={16} className="text-lh-purple" />
               <h4 className="text-white font-black uppercase text-xs tracking-widest">Connect Worldwide</h4>
             </div>
-            <div className="flex gap-3">
-              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                <a
+            <div className="flex gap-4">
+              {socialLinks.map(({ Icon, href, label }, i) => (
+                <motion.a
                   key={i}
-                  href="#"
-                  className="w-9 h-9 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white hover:bg-lh-purple hover:border-lh-purple transition-all transform hover:-translate-y-1"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial="initial"
+                  whileHover="hover"
+                  className="relative flex items-center justify-center group"
                 >
-                  <Icon size={16} />
-                </a>
+                  {/* Tooltip Label */}
+                  <motion.span
+                    variants={{
+                      initial: { opacity: 0, y: 10, scale: 0.8 },
+                      hover: { opacity: 1, y: -45, scale: 1 }
+                    }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="absolute z-20 px-3 py-1 bg-lh-purple text-white text-[10px] font-black uppercase tracking-widest rounded-md whitespace-nowrap pointer-events-none shadow-lg shadow-lh-purple/20"
+                  >
+                    {label}
+                    {/* Tiny Arrow */}
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-lh-purple rotate-45"></div>
+                  </motion.span>
+
+                  {/* Icon Circle */}
+                  <div className="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white group-hover:bg-lh-purple group-hover:border-lh-purple transition-all transform group-hover:scale-110 active:scale-95 shadow-lg shadow-transparent group-hover:shadow-lh-purple/10">
+                    <Icon size={18} />
+                  </div>
+                </motion.a>
               ))}
             </div>
           </div>
