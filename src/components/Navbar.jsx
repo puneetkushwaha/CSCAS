@@ -8,7 +8,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Certifications', path: '/#certifications' },
-    { name: 'Careers', path: '/#careers' },
+    { name: 'Careers', path: '/careers' },
     { name: 'Partners', path: '/#partners' },
     { name: 'Academic', path: '/#academic' },
     { name: 'Resources', path: '/#resources' }
@@ -16,7 +16,7 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-4 left-0 w-full z-50 px-6">
-      <div className="max-w-[1100px] mx-auto bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-full px-6 py-3 flex justify-center items-center relative lg:gap-20 gap-4 shadow-none">
+      <div className="max-w-[1100px] mx-auto bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-full px-6 py-3 flex justify-center items-center relative lg:gap-20 gap-10 shadow-none">
         <div className="flex items-center">
           <Link to="/" className="text-xl font-black tracking-tighter shrink-0 cursor-pointer text-white">
             CS<span className="text-lh-purple">CA</span>
@@ -27,13 +27,17 @@ export default function Navbar() {
         <nav className="hidden lg:flex gap-5 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
           <Link to="/" className="list-none hover:text-lh-purple cursor-pointer transition">Home</Link>
           {navLinks.map(link => (
-            <li key={link.name} className="list-none hover:text-lh-purple cursor-pointer transition">
+            <Link
+              key={link.name}
+              to={link.path}
+              className="list-none hover:text-lh-purple cursor-pointer transition"
+            >
               {link.name}
-            </li>
+            </Link>
           ))}
         </nav>
 
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-6 shrink-0">
           <button className="text-white/70 hover:text-lh-purple transition-all relative">
             <ShoppingCart size={20} />
             <span className="absolute -top-2 -right-2 w-4 h-4 bg-lh-purple rounded-full text-[9px] flex items-center justify-center text-white font-black">0</span>
@@ -59,14 +63,19 @@ export default function Navbar() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="absolute top-[calc(100%+15px)] left-0 w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 lg:hidden flex flex-col gap-6 shadow-2xl"
+              className="absolute top-[calc(100%+15px)] left-0 w-full bg-[#050505]/95 backdrop-blur-[40px] border border-white/10 rounded-[2.5rem] p-10 lg:hidden flex flex-col gap-10 shadow-2xl z-[60]"
             >
-              <nav className="flex flex-col gap-4 text-[14px] font-bold uppercase tracking-widest">
-                <li className="list-none text-lh-purple cursor-default" onClick={() => setIsOpen(false)}>Home</li>
+              <nav className="flex flex-col gap-8 text-[14px] font-bold uppercase tracking-widest">
+                <Link to="/" className="list-none text-lh-purple cursor-default border-b border-white/5 pb-4" onClick={() => setIsOpen(false)}>Home</Link>
                 {navLinks.map(item => (
-                  <li key={item} className="list-none hover:text-lh-purple cursor-pointer transition border-b border-white/5 pb-2" onClick={() => setIsOpen(false)}>
-                    {item}
-                  </li>
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className="list-none hover:text-lh-purple cursor-pointer transition border-b border-white/5 pb-4"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
                 ))}
               </nav>
               <div className="flex flex-col gap-4">
