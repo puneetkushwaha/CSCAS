@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Briefcase, Globe, Layers, ArrowRight, ShieldCheck, CheckCircle2, TrendingUp, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
@@ -136,9 +137,15 @@ const Careers = () => {
                                 </div>
 
                                 <div className="flex justify-end pt-6">
-                                    <button className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-all duration-500">
-                                        Learn more <ArrowRight size={16} />
-                                    </button>
+                                    {sector.title === "Explore Careers+" ? (
+                                        <Link to="/careers-plus" className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-all duration-500">
+                                            Learn more <ArrowRight size={16} />
+                                        </Link>
+                                    ) : (
+                                        <button className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-all duration-500">
+                                            Learn more <ArrowRight size={16} />
+                                        </button>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
