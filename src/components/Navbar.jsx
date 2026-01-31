@@ -1,27 +1,34 @@
 import { useState } from 'react';
 import { Menu, X, ShoppingCart, UserCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const navLinks = ['Certifications', 'Careers', 'Partners', 'Academic', 'Resources'];
+  const navLinks = [
+    { name: 'Certifications', path: '/#certifications' },
+    { name: 'Careers', path: '/#careers' },
+    { name: 'Partners', path: '/#partners' },
+    { name: 'Academic', path: '/#academic' },
+    { name: 'Resources', path: '/#resources' }
+  ];
 
   return (
     <header className="fixed top-4 left-0 w-full z-50 px-6">
       <div className="max-w-[1100px] mx-auto bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-full px-6 py-3 flex justify-center items-center relative lg:gap-20 gap-4 shadow-none">
         <div className="flex items-center">
-          <div className="text-xl font-black tracking-tighter shrink-0 cursor-default text-white">
+          <Link to="/" className="text-xl font-black tracking-tighter shrink-0 cursor-pointer text-white">
             CS<span className="text-lh-purple">CA</span>
-          </div>
+          </Link>
         </div>
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex gap-5 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
-          <li className="list-none text-lh-purple cursor-pointer">Home</li>
-          {navLinks.map(item => (
-            <li key={item} className="list-none hover:text-lh-purple cursor-pointer transition">
-              {item}
+          <Link to="/" className="list-none hover:text-lh-purple cursor-pointer transition">Home</Link>
+          {navLinks.map(link => (
+            <li key={link.name} className="list-none hover:text-lh-purple cursor-pointer transition">
+              {link.name}
             </li>
           ))}
         </nav>
@@ -32,9 +39,9 @@ export default function Navbar() {
             <span className="absolute -top-2 -right-2 w-4 h-4 bg-lh-purple rounded-full text-[9px] flex items-center justify-center text-white font-black">0</span>
           </button>
 
-          <button className="hidden sm:flex bg-lh-purple text-white px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest items-center gap-2 hover:bg-white hover:text-black transition-all">
+          <Link to="/login" className="hidden sm:flex bg-lh-purple text-white px-8 py-2.5 rounded-full text-[11px] font-black uppercase tracking-widest items-center gap-2 hover:bg-white hover:text-black transition-all">
             <UserCircle2 size={16} /> LOGIN
-          </button>
+          </Link>
 
           {/* Mobile Toggle Button */}
           <button
