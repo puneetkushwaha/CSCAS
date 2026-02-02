@@ -5,7 +5,18 @@ import * as random from 'maath/random/dist/maath-random.esm';
 
 function Particles({ color = "#bc13fe" }) {
     const ref = useRef();
-    const spheres = useMemo(() => random.inSphere(new Float32Array(5000), { radius: 1.5 }), []);
+    const spheres = useMemo(() => {
+        try {
+            const data = random.inSphere(new Float32Array(5000), { radius: 1.5 });
+            for (let i = 0; i < data.length; i++) {
+                if (isNaN(data[i])) data[i] = 0;
+            }
+            return data;
+        } catch (error) {
+            console.error("Three.js Random Generation Error:", error);
+            return new Float32Array(5000).fill(0);
+        }
+    }, []);
 
     useFrame((state, delta) => {
         ref.current.rotation.x -= delta / 10;

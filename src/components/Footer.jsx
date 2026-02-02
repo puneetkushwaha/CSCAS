@@ -119,8 +119,8 @@ const Footer = () => {
               <ul className="space-y-3">
                 {group.links.map((link, i) => (
                   <li key={i}>
-                    <a href="#" className="text-gray-500 hover:text-white text-xs font-medium transition-colors tracking-wide">
-                      {link}
+                    <a href={link.href} className="text-gray-500 hover:text-white text-xs font-medium transition-colors tracking-wide">
+                      {link.text}
                     </a>
                   </li>
                 ))}

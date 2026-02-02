@@ -13,26 +13,37 @@ const Careers = () => {
             desc: "Red Team Operator | SOC Analyst | Cloud Security Engineer | Threat Intelligence Analyst | Cyber Law & Compliance Specialist | AI Security Engineer | Security Architect | CISO Track",
             icon: <Briefcase size={40} className="text-lh-purple" />,
             border: "border-lh-purple/20",
-            stats: "Elite Roles"
+            stats: "Elite Roles",
+            link: "/tech-careers"
         },
         {
             title: "Explore Industry Sectors",
-            desc: "Comprehensive insights into critical industries driving global cybersecurity adoption.",
+            desc: "Comprehensive insights into critical industries driving global cybersecurity adoption and technical defense strategies.",
             icon: <Globe size={40} className="text-blue-500" />,
             border: "border-blue-500/20",
-            stats: "Global Insights"
+            stats: "Global Insights",
+            link: "/industry-sectors"
+        },
+        {
+            title: "Global Certifications",
+            desc: "Industry-standard certifications from Red Team Ops to Blue Team, Cloud Security, AI, and GRC pathways.",
+            icon: <ShieldCheck size={40} className="text-red-500" />,
+            border: "border-red-500/20",
+            stats: "Official Standard",
+            link: "/certifications"
         },
         {
             title: "Explore Careers+",
             desc: "Dive deeper into your career possibilities with Careers+, a curated roadmap of in-demand cybersecurity jobs.",
             icon: <Layers size={40} className="text-orange-500" />,
             border: "border-orange-500/20",
-            stats: "Curated Roadmaps"
+            stats: "Curated Roadmaps",
+            link: "/careers-plus"
         }
     ];
 
     return (
-        <div className="bg-[#050505] min-h-screen text-white font-plus-jakarta overflow-x-hidden">
+        <div className="bg-[#050505] min-h-screen text-white font-plus-jakarta overflow-x-hidden selection:bg-lh-purple selection:text-white">
             <Navbar />
 
             {/* --- Section 1: Hero --- */}
@@ -49,7 +60,7 @@ const Careers = () => {
                         className="space-y-8 relative z-10"
                     >
                         <div className="flex items-center gap-3 text-lh-purple">
-                            <Eye size={20} strokeWidth={2.5} />
+                            <Eye size={20} strokeWidth={2.5} className="animate-pulse" />
                             <span className="uppercase tracking-[0.4em] text-[11px] font-black">Elite Career Mapping</span>
                         </div>
 
@@ -90,7 +101,7 @@ const Careers = () => {
                         <img
                             src={ngdPic}
                             alt="Cyber Professional"
-                            className="relative z-10 w-full max-w-[450px] animate-float-glow"
+                            className="relative z-10 w-full max-w-[450px] animate-float-glow drop-shadow-[0_0_50px_rgba(188,19,254,0.3)]"
                         />
                     </motion.div>
                 </div>
@@ -98,7 +109,7 @@ const Careers = () => {
 
             {/* --- Section 2: Career Sectors Grid --- */}
             <section className="py-24 px-6 relative z-10">
-                <div className="max-w-[1300px] mx-auto">
+                <div className="max-w-[1400px] mx-auto">
                     <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16 px-4">
                         <div className="space-y-4">
                             <h2 className="text-2xl md:text-4xl font-[900] tracking-tighter uppercase leading-none">
@@ -111,7 +122,7 @@ const Careers = () => {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                         {careerSectors.map((sector, i) => (
                             <motion.div
                                 key={i}
@@ -137,15 +148,9 @@ const Careers = () => {
                                 </div>
 
                                 <div className="flex justify-end pt-6">
-                                    {sector.title === "Explore Careers+" ? (
-                                        <Link to="/careers-plus" className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-all duration-500">
-                                            Learn more <ArrowRight size={16} />
-                                        </Link>
-                                    ) : (
-                                        <button className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-all duration-500">
-                                            Learn more <ArrowRight size={16} />
-                                        </button>
-                                    )}
+                                    <Link to={sector.link} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-all duration-500">
+                                        Learn more <ArrowRight size={16} />
+                                    </Link>
                                 </div>
                             </motion.div>
                         ))}

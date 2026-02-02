@@ -17,8 +17,6 @@
     to {
       transform: translateX(-50%);
     }
-
-    /* Half translate is key for infinite loop */
   }
 
   --animate-float-glow: floatGlow 3s ease-in-out infinite;
@@ -36,16 +34,16 @@
       filter: drop-shadow(0 0 30px rgba(188, 19, 254, 0.8));
     }
   }
-
 }
 
-/* Custom Utility for word spacing as you asked earlier */
-.word-spaced {
+@utility word-spaced {
   word-spacing: 1rem;
 }
 
-body {
-  @apply bg-lh-dark text-white font-plus-jakarta overflow-x-hidden;
+@layer base {
+  body {
+    @apply bg-lh-dark text-white font-plus-jakarta overflow-x-hidden;
+  }
 }
 
 .bg-hero-main {
