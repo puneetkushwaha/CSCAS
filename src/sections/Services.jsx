@@ -53,7 +53,7 @@ const Certifications = () => {
                 <img
                   src={cert.pic}
                   alt={cert.name}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                 />
                 <div className="absolute top-6 left-6 bg-lh-purple text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
                   {cert.id}

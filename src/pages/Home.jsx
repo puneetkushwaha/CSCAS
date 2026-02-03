@@ -1,3 +1,6 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Careers from '../sections/Strategies';
 import ScrollingBanner from '../sections/ScrollingBanner';
@@ -10,6 +13,16 @@ import PartnerSection from '../sections/PartnerSection';
 import AcademicSection from '../sections/AcademicSection';
 
 function Home() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (user) {
+
+            navigate('/dashboard');
+        }
+    }, [user, navigate]);
+
     return (
         <div className="relative">
             <Navbar />

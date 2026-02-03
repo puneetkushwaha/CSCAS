@@ -81,7 +81,7 @@ const CertificateHero = ({ cert }) => {
                                 <img
                                     src={cert.image}
                                     alt={cert.title}
-                                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 grayscale group-hover:grayscale-0"
+                                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000"
                                     onError={(e) => {
                                         e.target.src = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800";
                                     }}

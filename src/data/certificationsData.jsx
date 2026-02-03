@@ -14,7 +14,7 @@ export const certifications = [
         id: 'csca-apt',
         title: 'CSCA-APT – Advanced Penetration Tester',
         code: 'APT',
-        image: placeholderImg,
+        image: '/assets/apt.jpg',
         level: 'Advanced',
         description:
             "CSCA-APT prepares professionals to conduct advanced exploitation and high-impact penetration testing in enterprise environments. Focuses on adversary simulation and stealth operations.",
@@ -27,7 +27,7 @@ export const certifications = [
         id: 'csca-wapt',
         title: 'CSCA-WAPT – Web Application Penetration Tester',
         code: 'WAPT',
-        image: placeholderImg,
+        image: '/assets/wapt.jpg',
         level: 'Specialist',
         description:
             "Provides deep expertise in identifying and exploiting critical vulnerabilities in modern web applications, including API hacking and advanced logic flaws.",
@@ -40,7 +40,7 @@ export const certifications = [
         id: 'csca-mapt',
         title: 'CSCA-MAPT – Mobile Application Penetration Tester',
         code: 'MAPT',
-        image: placeholderImg,
+        image: '/assets/mapt.jpg',
         level: 'Specialist',
         description:
             "Trains students to attack Android and iOS applications with both static and dynamic analysis techniques, covering reverse engineering and SSL pinning bypass.",
@@ -53,7 +53,7 @@ export const certifications = [
         id: 'csca-rto',
         title: 'CSCA-RTO – Red Team Operations',
         code: 'RTO',
-        image: placeholderImg,
+        image: '/assets/rto.jpg',
         level: 'Expert',
         description:
             "Complete training in full-scope red team engagements. Learn stealthy initial access, OPSEC, persistence, and command-and-control setup.",
@@ -69,7 +69,7 @@ export const certifications = [
         id: 'csca-soc',
         title: 'CSCA-SOC – SOC Analyst Professional',
         code: 'SOC',
-        image: placeholderImg,
+        image: '/assets/soc.jpg',
         level: 'Associate',
         description:
             "Introduces students to real SOC environments. Build a strong foundation in SIEM monitoring, alert triage, and log analysis workflows.",
@@ -83,7 +83,7 @@ export const certifications = [
         id: 'csca-tmdr',
         title: 'CSCA-TMDR – Threat Monitoring & Detection Response',
         code: 'TMDR',
-        image: placeholderImg,
+        image: '/assets/tmdr.jpg',
         level: 'Professional',
         description:
             "Develop advanced skills in detection engineering. Design alert pipelines, correlate logs, and hunt for hidden threats mapped to MITRE ATT&CK.",
@@ -96,7 +96,7 @@ export const certifications = [
         id: 'csca-dfir',
         title: 'CSCA-DFIR – Digital Forensics & Incident Response',
         code: 'DFIR',
-        image: placeholderImg,
+        image: '/assets/dfir.jpg',
         level: 'Specialist',
         description:
             "Teaches the complete investigation cycle of digital evidence. Practice memory forensics, disk analysis, and malware triage.",
@@ -109,7 +109,7 @@ export const certifications = [
         id: 'csca-map',
         title: 'CSCA-MAP – Malware Analysis Professional',
         code: 'MAP',
-        image: placeholderImg,
+        image: '/assets/map.jpg',
         level: 'Professional',
         description:
             "Build strong skills in understanding malicious software behavior. Explore static/dynamic analysis, sandboxing, and basic reverse engineering.",
@@ -124,7 +124,7 @@ export const certifications = [
         id: 'csca-cpcs',
         title: 'CSCA-CPCS – Certified Cloud Security Specialist',
         code: 'CPCS',
-        image: placeholderImg,
+        image: '/assets/cpcs.jpg',
         level: 'Specialist',
         description:
             "Secure workloads across AWS, Azure, and GCP. Focuses on IAM protection, cloud networking, and misconfiguration defense.",
@@ -137,7 +137,7 @@ export const certifications = [
         id: 'csca-cpdso',
         title: 'CSCA-CPDSO – Certified DevSecOps Professional',
         code: 'CPDSO',
-        image: placeholderImg,
+        image: '/assets/cpdso.jpg',
         level: 'Professional',
         description:
             "Integrate security into the modern DevOps lifecycle. Study CI/CD security, automation frameworks, and container protection.",
@@ -152,7 +152,7 @@ export const certifications = [
         id: 'csca-aisec',
         title: 'CSCA-AISEC – AI Security Professional',
         code: 'AISEC',
-        image: placeholderImg,
+        image: '/assets/aisec.jpg',
         level: 'Specialist',
         description:
             "Secure AI systems and protect ML models. Covers prompt attacks, adversarial inputs, and data poisoning mitigation.",
@@ -167,7 +167,7 @@ export const certifications = [
         id: 'csca-cpisli',
         title: 'CSCA-CPISLI – ISO 27001 Lead Implementer',
         code: 'CPISLI',
-        image: placeholderImg,
+        image: '/assets/cpisli.jpg',
         level: 'Professional',
         description:
             "Teaches the full implementation process of an ISO 27001-aligned ISMS. Study risk assessments and policy frameworks.",
@@ -180,7 +180,7 @@ export const certifications = [
         id: 'csca-cpisla',
         title: 'CSCA-CPISLA – ISO 27001 Lead Auditor',
         code: 'CPISLA',
-        image: placeholderImg,
+        image: '/assets/cpisla.jpg',
         level: 'Professional',
         description:
             "Prepare to conduct internal and external audits. Learn audit planning, evidence collection, and gap identification.",
@@ -195,7 +195,7 @@ export const certifications = [
         id: 'csca-snp',
         title: 'CSCA-SNP – Security Network Professional',
         code: 'SNP',
-        image: placeholderImg,
+        image: '/assets/snp.jpg',
         level: 'Professional',
         description:
             "Enterprise network security architecture and defense. Learn firewall rules, VPN setup, and protocol hardening.",
@@ -210,7 +210,7 @@ export const certifications = [
         id: 'csca-ir',
         title: 'CSCA-IR – Incident Response Specialist',
         code: 'IR',
-        image: placeholderImg,
+        image: '/assets/ir.jpg',
         level: 'Specialist',
         description:
             "Structured and effective response to cyber incidents. Practice triage, containment, and system recovery procedures.",
@@ -225,7 +225,7 @@ export const certifications = [
         id: 'csca-bde',
         title: 'CSCA-BDE – Big Data Engineering Professional',
         code: 'BDE',
-        image: placeholderImg,
+        image: '/assets/bde.jpg',
         level: 'Professional',
         description:
             "Manage and secure large-scale data environments. Covers pipelines, distributed systems, and cluster architecture.",
