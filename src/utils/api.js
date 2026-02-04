@@ -1,7 +1,16 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+    let url = import.meta.env.VITE_BASE_URL || 'https://csca.onrender.com';
+    // Safety net: Fix common typo where .com is missing from onrender URL
+    if (url.includes('onrender') && !url.endsWith('.com')) {
+        url = url.replace(/onrender\/?$/, 'onrender.com');
+    }
+    return url.endsWith('/') ? `${url}api` : `${url}/api`;
+};
+
 const api = axios.create({
-    baseURL: `${import.meta.env.VITE_BASE_URL || 'https://csca.onrender.com'}/api`,
+    baseURL: getBaseURL(),
 });
 
 // Add a request interceptor to add the auth token to every request
