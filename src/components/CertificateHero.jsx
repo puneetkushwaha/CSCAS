@@ -13,7 +13,7 @@ const CertificateHero = ({ cert }) => {
                 {/* Background Branded Texture */}
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
                     <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-lh-purple/20 blur-[120px] rounded-full"></div>
-                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+                    <div className="absolute inset-0 bg-lh-purple/5 mix-blend-overlay"></div>
                 </div>
 
                 {/* LEFT CONTENT AREA */}

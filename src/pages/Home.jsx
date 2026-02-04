@@ -16,12 +16,6 @@ function Home() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        if (user) {
-
-            navigate('/dashboard');
-        }
-    }, [user, navigate]);
 
     return (
         <div className="relative">

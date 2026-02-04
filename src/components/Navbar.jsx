@@ -6,19 +6,21 @@ import { useAuth } from '../context/AuthContext';
 import CountrySelector from './CountrySelector';
 import CartDrawer from './CartDrawer';
 import { certifications } from '../data/certificationsData';
+import { useCart } from '../context/CartContext';
 
 export default function Navbar() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { setIsCartOpen, cartCount } = useCart();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [showMegaMenu, setShowMegaMenu] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const categories = [
-    { name: 'Offensive Security', key: 'RED TEAM / OFFENSIVE SECURITY', icon: <Target size={16} /> },
-    { name: 'Defensive Security', key: 'BLUE TEAM / DEFENSIVE SECURITY', icon: <Shield size={16} /> },
-    { name: 'Cloud & Infrastructure', key: 'CLOUD & DEVSECOPS', icon: <Cloud size={16} /> },
-    { name: 'Emerging Tech', key: 'AI & EMERGING TECH', icon: <Cpu size={16} /> },
+    { name: 'Offensive Security', key: 'Red / Offensive', icon: <Target size={16} /> },
+    { name: 'Defensive Security', key: 'Blue / Defensive', icon: <Shield size={16} /> },
+    { name: 'Cloud & Infrastructure', key: 'Cloud & DevSecOps', icon: <Cloud size={16} /> },
+    { name: 'Emerging Tech', key: 'AI & Emerging Tech', icon: <Cpu size={16} /> },
   ];
 
   const groupedCerts = categories.map(cat => ({
@@ -39,7 +41,7 @@ export default function Navbar() {
   return (
     <>
       <header className="fixed top-4 left-0 w-full z-50 px-6 font-plus-jakarta">
-        <div className="max-w-[1100px] mx-auto bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-2xl px-6 py-3 flex justify-center items-center relative lg:gap-16 gap-6 shadow-none">
+        <div className="max-w-[1240px] mx-auto bg-white/[0.03] backdrop-blur-3xl border border-white/5 rounded-2xl px-6 py-2 flex justify-between items-center relative lg:gap-8 gap-6 shadow-none">
 
           <div className="flex items-center">
             <Link to="/" className="text-xl font-black tracking-tighter shrink-0 cursor-pointer text-white">
@@ -53,7 +55,7 @@ export default function Navbar() {
 
             {/* Certifications with Mega Menu */}
             <div
-              className="relative py-4 group cursor-pointer"
+              className="relative py-3 group cursor-pointer"
               onMouseEnter={() => setShowMegaMenu(true)}
               onMouseLeave={() => setShowMegaMenu(false)}
             >
@@ -137,13 +139,50 @@ export default function Navbar() {
               className="text-white/70 hover:text-lh-purple transition-all relative"
             >
               <ShoppingCart size={18} />
-              <span className="absolute -top-2 -right-2 w-4 h-4 bg-lh-purple rounded-full text-[9px] flex items-center justify-center text-white font-black">2</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-lh-purple rounded-full text-[9px] flex items-center justify-center text-white font-black">
+                  {cartCount}
+                </span>
+              )}
             </button>
 
             {user ? (
-              <Link to="/dashboard" className="hidden md:flex bg-lh-purple text-white px-7 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest items-center gap-2 hover:bg-white hover:text-black transition-all">
-                DASHBOARD
-              </Link>
+              <div className="hidden sm:block relative" onMouseEnter={() => setShowProfileMenu(true)} onMouseLeave={() => setShowProfileMenu(false)}>
+                <button className="flex items-center gap-2 bg-white/[0.05] border border-white/10 sm:px-4 px-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-lh-purple/20 transition-all">
+                  {user.profileImage ? (
+                    <img src={user.profileImage} alt={user.displayName} className="w-5 h-5 rounded-full object-cover" />
+                  ) : (
+                    <UserCircle2 size={18} className="text-lh-purple" />
+                  )}
+                  <span className="hidden sm:inline-block max-w-[80px] truncate ml-1">{user.displayName || user.email.split('@')[0]}</span>
+                  <ChevronDown size={12} className={`transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showProfileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-full right-0 mt-2 w-48 bg-[#0a0a0a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-2 shadow-2xl z-[60]"
+                    >
+                      <Link to="/profile" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-lh-purple hover:bg-white/[0.03] rounded-xl transition-all">
+                        <UserCircle2 size={16} /> Profile
+                      </Link>
+                      <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-lh-purple hover:bg-white/[0.03] rounded-xl transition-all">
+                        <Activity size={16} /> Dashboard
+                      </Link>
+                      <div className="h-[1px] bg-white/5 my-2 mx-2"></div>
+                      <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-500/70 hover:text-red-500 hover:bg-white/[0.03] rounded-xl transition-all"
+                      >
+                        <ShieldAlert size={16} /> Logout
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ) : (
               <Link to="/login" className="hidden md:flex bg-lh-purple text-white px-7 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest items-center gap-2 hover:bg-white hover:text-black transition-all">
                 LOGIN
@@ -166,9 +205,9 @@ export default function Navbar() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="absolute top-[calc(100%+15px)] left-0 w-full bg-[#050505]/95 backdrop-blur-[40px] border border-white/10 rounded-[2.5rem] p-10 lg:hidden flex flex-col gap-10 shadow-2xl z-[60]"
+                className="absolute top-[calc(100%+15px)] left-0 w-full bg-[#050505]/95 backdrop-blur-[40px] border border-white/10 rounded-[2.5rem] p-8 lg:hidden flex flex-col gap-8 shadow-2xl z-[60] overflow-y-auto max-h-[80vh] custom-scrollbar"
               >
-                <nav className="flex flex-col gap-6 text-[14px] font-bold uppercase tracking-widest overflow-y-auto max-h-[60vh] pr-4 custom-scrollbar">
+                <nav className="flex flex-col gap-6 text-[14px] font-bold uppercase tracking-widest pr-2">
                   <Link to="/" className="text-lh-purple border-b border-white/5 pb-4" onClick={() => setIsOpen(false)}>Home</Link>
 
                   {/* Mobile Certifications Accordion */}
@@ -227,9 +266,20 @@ export default function Navbar() {
                     </div>
                   </div>
                   {user ? (
-                    <Link to="/dashboard" className="bg-lh-purple text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full mt-4" onClick={() => setIsOpen(false)}>
-                      DASHBOARD
-                    </Link>
+                    <div className="flex flex-col gap-4 mt-4">
+                      <Link to="/profile" className="bg-white/[0.05] border border-white/10 text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full" onClick={() => setIsOpen(false)}>
+                        <UserCircle2 size={16} /> PROFILE
+                      </Link>
+                      <Link to="/dashboard" className="bg-lh-purple text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full" onClick={() => setIsOpen(false)}>
+                        <Activity size={16} /> DASHBOARD
+                      </Link>
+                      <button
+                        onClick={() => { logout(); setIsOpen(false); }}
+                        className="bg-red-500/10 border border-red-500/20 text-red-500 px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full"
+                      >
+                        <ShieldAlert size={16} /> LOGOUT
+                      </button>
+                    </div>
                   ) : (
                     <Link to="/login" className="bg-lh-purple text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full mt-4" onClick={() => setIsOpen(false)}>
                       LOGIN
@@ -242,7 +292,6 @@ export default function Navbar() {
         </div>
       </header>
 
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );
 }

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, ArrowLeft, Chrome, Shield, Eye, EyeOff, AlertTriangle, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Shield, Eye, EyeOff, AlertTriangle, Loader2 } from 'lucide-react';
 import ngdPic from '../assets/images/ngd-pic.png';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../firebase';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+import api from '../utils/api';
 
 const Login = () => {
     const { login } = useAuth();
@@ -30,7 +32,7 @@ const Login = () => {
 
     useEffect(() => {
         if (user) {
-            navigate('/dashboard');
+            navigate('/');
         }
     }, [user, navigate]);
 
@@ -56,7 +58,6 @@ const Login = () => {
         e.preventDefault();
         setIsLoading(true);
         if (!identifier || !password) {
-            alert("All fields are required");
             setIsLoading(false);
             return;
         }
@@ -67,40 +68,42 @@ const Login = () => {
         };
 
         try {
-            const res = await fetch(`${BASE_URL}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            const res = await api.post('/auth/login', payload);
 
-            const data = await res.json();
-            if (!res.ok) {
-                alert(data.message || 'Invalid credentials');
-                return;
-            }
-
-            login(data.user, data.token);
-            alert("Success! Now redirecting to NEW DASHBOARD...");
-            navigate('/dashboard');
+            login(res.data.user, res.data.token);
+            navigate('/');
         } catch (error) {
             console.error(error);
-            alert('Server error');
+            const message = error.response?.data?.message || 'Invalid credentials';
         } finally {
             setIsLoading(false);
         }
     };
 
     const socialLogin = async (provider) => {
-        setIsLoading(true);
-        try {
-            // Warm up the server before redirecting (important for Render free tier)
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-            await fetch(BASE_URL, { signal: controller.signal, mode: 'no-cors' }).catch(() => { });
-            clearTimeout(timeoutId);
-            window.location.href = `${BASE_URL}/api/auth/${provider}`;
-        } catch (error) {
-            window.location.href = `${BASE_URL}/api/auth/${provider}`;
+        if (provider === 'google') {
+            setIsLoading(true);
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+
+                // Send to backend
+                const res = await api.post('/auth/google-login', {
+                    email: user.email,
+                    name: user.displayName,
+                    avatar: user.photoURL,
+                    uid: user.uid
+                });
+
+                login(res.data.user, res.data.token);
+                navigate('/');
+
+            } catch (error) {
+                console.error("Google Login Error:", error);
+                const message = error.response?.data?.message || error.message || 'Google Login Failed';
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -230,7 +233,7 @@ const Login = () => {
                                         </div>
                                         <span>Maintain Session</span>
                                     </label>
-                                    <Link to="/forgot-password" title="Recover Key" className="text-lh-purple hover:text-white hover:underline transition-all">Recover Key?</Link>
+                                    <Link to="/forgot-password" title="Recover Key" className="text-lh-purple hover:text-white hover:underline transition-all">FORGOT PASSWORD</Link>
                                 </motion.div>
 
                                 <motion.button
@@ -257,7 +260,14 @@ const Login = () => {
                                     onClick={() => socialLogin("google")}
                                     className="w-full flex items-center justify-center gap-3 bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 py-4 rounded-xl transition-all group/social"
                                 >
-                                    <Chrome size={18} className="text-gray-400 group-hover/social:text-white" />
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                                            <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
+                                            <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" />
+                                            <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.769 -21.864 51.959 -21.864 51.129 C -21.864 50.299 -21.734 49.489 -21.484 48.729 L -21.484 45.639 L -25.464 45.639 C -26.274 47.249 -26.734 49.069 -26.734 51.129 C -26.734 53.189 -26.274 55.009 -25.464 56.619 L -21.484 53.529 Z" />
+                                            <path fill="#EA4335" d="M -14.754 43.749 C -12.984 43.749 -11.404 44.359 -10.154 45.549 L -6.744 42.139 C -8.804 40.219 -11.514 39.009 -14.754 39.009 C -19.444 39.009 -23.494 41.709 -25.464 45.639 L -21.484 48.729 C -20.534 45.879 -17.884 43.749 -14.754 43.749 Z" />
+                                        </g>
+                                    </svg>
                                     <span className="text-[10px] font-black uppercase tracking-widest leading-none pt-1">Continue with Google</span>
                                 </motion.button>
                             </div>

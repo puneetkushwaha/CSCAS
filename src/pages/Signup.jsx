@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowLeft, ShieldCheck, Chrome, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowLeft, Phone, Eye, EyeOff, Loader2 } from 'lucide-react';
 import ngdPic from '../assets/images/ngd-pic.png';
 import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../firebase';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+import api from '../utils/api';
 
 const Signup = () => {
     // Parallax logic
@@ -20,18 +23,22 @@ const Signup = () => {
     const [ripples, setRipples] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [showOtp, setShowOtp] = useState(false);
-    const [otp, setOtp] = useState("");
-    const [userId, setUserId] = useState(null);
-    const [identifier, setIdentifier] = useState('');
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        email: '',
+        phone: '',
         password: '',
-        confirmPassword: ''
     });
 
     const navigate = useNavigate();
+    const { login, user } = useAuth();
+
+    useEffect(() => {
+        if (user) {
+            navigate('/');
+        }
+    }, [user, navigate]);
 
     useEffect(() => {
         const handleMouseMove = (e) => {
@@ -51,82 +58,62 @@ const Signup = () => {
         setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 1000);
     };
 
-    const socialLogin = (provider) => {
-        window.location.href = `${BASE_URL}/api/auth/${provider}`;
+    const socialLogin = async (provider) => {
+        if (provider === 'google') {
+            setIsLoading(true);
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+
+                // Send to backend
+                const res = await api.post('/auth/google-login', {
+                    email: user.email,
+                    name: user.displayName,
+                    avatar: user.photoURL,
+                    uid: user.uid
+                });
+
+                login(res.data.user, res.data.token);
+                navigate('/');
+
+            } catch (error) {
+                console.error("Google Login Error:", error);
+                const message = error.response?.data?.message || error.message || 'Google Login Failed';
+            } finally {
+                setIsLoading(false);
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.firstName || !formData.lastName || !identifier || !formData.password) {
-            alert("All fields are required");
-            return;
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match");
+        if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
             return;
         }
 
         setIsLoading(true);
 
-        const isEmail = identifier.includes("@");
         const payload = {
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName.trim(),
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
             password: formData.password,
-            identifier: identifier.trim(),
-            ...(isEmail ? { email: identifier.trim() } : { phone: identifier.trim() })
         };
 
         try {
-            const res = await fetch(`${BASE_URL}/api/auth/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
+            const res = await api.post('/auth/register', payload);
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                alert(data.message || "Registration failed");
-                return;
-            }
-
-            const extractedUserId = data.userId || data.id || (data.user && data.user._id) || data._id;
-            setUserId(extractedUserId);
-            setShowOtp(true);
+            navigate('/login');
         } catch (error) {
             console.error("Signup error:", error);
-            alert("Server error. Please try again later.");
+            const message = error.response?.data?.message || "Registration failed";
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleVerifyOtp = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        try {
-            const res = await fetch(`${BASE_URL}/api/auth/verify-otp`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userId, otp }),
-            });
 
-            const data = await res.json();
-            if (!res.ok) {
-                alert(data.message || "OTP verification failed");
-                return;
-            }
-            navigate("/login");
-        } catch (error) {
-            console.error(error);
-            alert("Server error");
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -181,149 +168,118 @@ const Signup = () => {
                                     <ArrowLeft size={14} className="group-hover/back:-translate-x-1 transition-transform" /> Back to Home
                                 </Link>
                                 <h1 className="text-3xl md:text-5xl font-[900] uppercase tracking-tighter text-white">
-                                    {!showOtp ? <>Create <span className="text-lh-purple">Account</span></> : <>Verify <span className="text-lh-purple">Identity</span></>}
+                                    Create <span className="text-lh-purple">Account</span>
                                 </h1>
                                 <p className="text-gray-400 font-bold text-[10px] tracking-wide border-l-2 border-lh-purple pl-4 uppercase">
-                                    {!showOtp ? "Fill in the details to join our network." : "Please enter the authentication code sent to you."}
+                                    Fill in the details to join our network.
                                 </p>
                             </motion.div>
 
-                            {!showOtp ? (
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <motion.div variants={itemVariants} className="relative group/input">
-                                            <User className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="FIRST NAME"
-                                                value={formData.firstName}
-                                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
-                                            />
-                                        </motion.div>
-                                        <motion.div variants={itemVariants} className="relative group/input">
-                                            <User className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="LAST NAME"
-                                                value={formData.lastName}
-                                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
-                                            />
-                                        </motion.div>
-                                    </div>
-
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-4">
                                     <motion.div variants={itemVariants} className="relative group/input">
-                                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
+                                        <User className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
                                         <input
                                             type="text"
                                             required
-                                            placeholder="EMAIL OR MOBILE NUMBER"
-                                            value={identifier}
-                                            onChange={(e) => setIdentifier(e.target.value)}
+                                            placeholder="FIRST NAME"
+                                            value={formData.firstName}
+                                            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                             className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
                                         />
                                     </motion.div>
-
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <motion.div variants={itemVariants} className="relative group/input">
-                                            <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
-                                            <input
-                                                type={showPassword ? "text" : "password"}
-                                                required
-                                                placeholder="PASSWORD"
-                                                value={formData.password}
-                                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors"
-                                            >
-                                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                            </button>
-                                        </motion.div>
-                                        <motion.div variants={itemVariants} className="relative group/input">
-                                            <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
-                                            <input
-                                                type="password"
-                                                required
-                                                placeholder="CONFIRM PASSWORD"
-                                                value={formData.confirmPassword}
-                                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
-                                            />
-                                        </motion.div>
-                                    </div>
-
-                                    <motion.button
-                                        variants={itemVariants}
-                                        disabled={isLoading}
-                                        whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(188, 19, 254, 0.3)" }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="w-full bg-lh-purple text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] transition-all relative overflow-hidden group/btn mt-2 shadow-xl flex items-center justify-center gap-2"
-                                    >
-                                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="relative z-10">Sign Up</span>}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
-                                    </motion.button>
-                                </form>
-                            ) : (
-                                <form onSubmit={handleVerifyOtp} className="space-y-6">
                                     <motion.div variants={itemVariants} className="relative group/input">
+                                        <User className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
                                         <input
                                             type="text"
                                             required
-                                            maxLength={6}
-                                            placeholder="ENTER 6-DIGIT OTP"
-                                            value={otp}
-                                            onChange={(e) => setOtp(e.target.value)}
-                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-6 text-center text-xl font-black tracking-[0.5em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700 placeholder:text-[10px] placeholder:tracking-[0.2em]"
+                                            placeholder="LAST NAME"
+                                            value={formData.lastName}
+                                            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
                                         />
                                     </motion.div>
+                                </div>
 
-                                    <motion.button
-                                        variants={itemVariants}
-                                        disabled={isLoading}
-                                        whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(188, 19, 254, 0.3)" }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="w-full bg-lh-purple text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] transition-all relative overflow-hidden group/btn shadow-xl flex items-center justify-center gap-2"
-                                    >
-                                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="relative z-10">Verify Identity</span>}
-                                    </motion.button>
+                                <motion.div variants={itemVariants} className="relative group/input">
+                                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
+                                    <input
+                                        type="email"
+                                        required
+                                        placeholder="EMAIL ADDRESS"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
+                                    />
+                                </motion.div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowOtp(false)}
-                                        className="w-full text-center text-gray-500 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors"
-                                    >
-                                        Back to Registration
-                                    </button>
-                                </form>
-                            )}
+                                <motion.div variants={itemVariants} className="relative group/input">
+                                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
+                                    <input
+                                        type="tel"
+                                        required
+                                        placeholder="PHONE NUMBER"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-6 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
+                                    />
+                                </motion.div>
 
-                            {!showOtp && (
-                                <>
-                                    <motion.div variants={itemVariants} className="relative flex items-center gap-4 py-1">
-                                        <div className="flex-1 h-[1px] bg-white/5"></div>
-                                        <span className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">Or continue with</span>
-                                        <div className="flex-1 h-[1px] bg-white/5"></div>
-                                    </motion.div>
-
-                                    <div className="space-y-4">
-                                        <motion.button
-                                            variants={itemVariants}
-                                            onClick={() => socialLogin("google")}
-                                            className="w-full flex items-center justify-center gap-3 bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 py-3 rounded-xl transition-all group/social"
+                                <div className="grid md:grid-cols-1 gap-4">
+                                    <motion.div variants={itemVariants} className="relative group/input">
+                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            placeholder="PASSWORD"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-[10px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.02] transition-all placeholder:text-gray-700"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors"
                                         >
-                                            <Chrome size={18} className="text-gray-400 group-hover/social:text-white" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest leading-none pt-1">Continue with Google</span>
-                                        </motion.button>
-                                    </div>
-                                </>
-                            )}
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </motion.div>
+                                </div>
+
+                                <motion.button
+                                    variants={itemVariants}
+                                    disabled={isLoading}
+                                    whileHover={{ scale: 1.02, boxShadow: "0 0 25px rgba(188, 19, 254, 0.3)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full bg-lh-purple text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] transition-all relative overflow-hidden group/btn mt-2 shadow-xl flex items-center justify-center gap-2"
+                                >
+                                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span className="relative z-10">Sign Up</span>}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
+                                </motion.button>
+                            </form>
+                            <motion.div variants={itemVariants} className="relative flex items-center gap-4 py-1">
+                                <div className="flex-1 h-[1px] bg-white/5"></div>
+                                <span className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">Or continue with</span>
+                                <div className="flex-1 h-[1px] bg-white/5"></div>
+                            </motion.div>
+
+                            <div className="space-y-4">
+                                <motion.button
+                                    variants={itemVariants}
+                                    onClick={() => socialLogin("google")}
+                                    className="w-full flex items-center justify-center gap-3 bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 py-3 rounded-xl transition-all group/social"
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                                            <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
+                                            <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" />
+                                            <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.769 -21.864 51.959 -21.864 51.129 C -21.864 50.299 -21.734 49.489 -21.484 48.729 L -21.484 45.639 L -25.464 45.639 C -26.274 47.249 -26.734 49.069 -26.734 51.129 C -26.734 53.189 -26.274 55.009 -25.464 56.619 L -21.484 53.529 Z" />
+                                            <path fill="#EA4335" d="M -14.754 43.749 C -12.984 43.749 -11.404 44.359 -10.154 45.549 L -6.744 42.139 C -8.804 40.219 -11.514 39.009 -14.754 39.009 C -19.444 39.009 -23.494 41.709 -25.464 45.639 L -21.484 48.729 C -20.534 45.879 -17.884 43.749 -14.754 43.749 Z" />
+                                        </g>
+                                    </svg>
+                                    <span className="text-[10px] font-black uppercase tracking-widest leading-none pt-1">Continue with Google</span>
+                                </motion.button>
+                            </div>
 
                             <motion.p variants={itemVariants} className="text-center text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] pt-2">
                                 Already have an account? <Link to="/login" className="text-lh-purple hover:text-white transition-colors underline underline-offset-4">Login</Link>

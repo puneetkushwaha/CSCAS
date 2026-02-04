@@ -7,20 +7,36 @@ function Particles({ color = "#bc13fe" }) {
     const ref = useRef();
     const spheres = useMemo(() => {
         try {
-            const data = random.inSphere(new Float32Array(5000), { radius: 1.5 });
+            const count = 6000;
+            const positions = new Float32Array(count);
+            const data = random.inSphere(positions, { radius: 1.5 });
+
+            // Robust check for invalid values (NaN or Infinity)
+            let hasInvalid = false;
             for (let i = 0; i < data.length; i++) {
-                if (isNaN(data[i])) data[i] = 0;
+                if (isNaN(data[i]) || !isFinite(data[i])) {
+                    data[i] = 0;
+                    hasInvalid = true;
+                }
             }
+
+            if (hasInvalid) {
+                console.warn("Three.js Background: Invalid vertex data detected and sanitized.");
+            }
+
             return data;
         } catch (error) {
             console.error("Three.js Random Generation Error:", error);
+            // Fallback to a safe empty array if generation fails completely
             return new Float32Array(5000).fill(0);
         }
     }, []);
 
     useFrame((state, delta) => {
-        ref.current.rotation.x -= delta / 10;
-        ref.current.rotation.y -= delta / 15;
+        if (ref.current) {
+            ref.current.rotation.x -= delta / 10;
+            ref.current.rotation.y -= delta / 15;
+        }
     });
 
     return (

@@ -1,148 +1,151 @@
 import React from 'react';
+import { Shield, ChevronRight, ChevronLeft, ShoppingCart, Activity, LayoutDashboard, FileText, Globe2, LogOut } from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, User, Settings, LogOut, LayoutDashboard, Bell, Search } from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import { useCart } from '../context/CartContext';
 
 const Dashboard = () => {
-    const { user, logout } = useAuth();
+    const { logout, user } = useAuth();
+    const { toggleCart, cartCount } = useCart();
+    const location = useLocation();
     const navigate = useNavigate();
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
-    alert("YOU HAVE REACHED THE NEW DASHBOARD COMPONENT! Path: " + window.location.pathname);
+    const menuItems = [
+        { icon: <LayoutDashboard size={18} />, label: 'Overview', path: '/dashboard' },
+        { icon: <Activity size={18} />, label: 'Certifications', path: '/certifications' },
+        { icon: <FileText size={18} />, label: 'My Exams', path: '/dashboard/exam' },
+    ];
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
+    const isActive = (path) => {
+        if (path === '/dashboard') {
+            return location.pathname === '/dashboard';
+        }
+        return location.pathname.startsWith(path);
     };
 
     return (
-        <div className="min-h-screen w-full bg-[#0a0a0a] text-white font-plus-jakarta flex flex-col">
-            <Navbar />
+        <div className="min-h-screen h-screen bg-lh-dark text-white font-plus-jakarta flex overflow-hidden relative">
+            {/* Background Effects */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute top-[-10%] left-[-10%] w-[30%] h-[30%] bg-lh-purple/10 blur-[100px] rounded-full animate-pulse"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[25%] h-[25%] bg-lh-purple/5 blur-[80px] rounded-full"></div>
+            </div>
 
-            <div className="flex-1 flex flex-col p-6 lg:p-10 max-w-7xl mx-auto w-full pt-24">
-                {/* Header Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12"
-                >
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-3 text-lh-purple uppercase tracking-[0.3em] text-[10px] font-black">
-                            <LayoutDashboard size={14} />
-                            <span>System Overview</span>
-                        </div>
-                        <h1 className="text-4xl md:text-6xl font-[900] uppercase tracking-tighter">
-                            Welcome, <span className="text-lh-purple">{user?.firstName || 'User'}</span>
-                        </h1>
-                        <p className="text-gray-500 font-bold text-xs tracking-wide border-l-2 border-lh-purple pl-4 uppercase">
-                            Your security clearance level: Elite Associate
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 bg-white/[0.03] border border-white/5 p-2 rounded-2xl backdrop-blur-xl">
-                        <button className="p-3 hover:bg-white/5 rounded-xl transition-all text-gray-400 hover:text-white relative">
-                            <Bell size={20} />
-                            <span className="absolute top-3 right-3 w-2 h-2 bg-lh-purple rounded-full border-2 border-[#0a0a0a]"></span>
-                        </button>
-                        <div className="h-8 w-[1px] bg-white/5"></div>
-                        <div className="flex items-center gap-3 pl-2 pr-4">
-                            <div className="w-10 h-10 rounded-xl bg-lh-purple/20 border border-lh-purple/30 flex items-center justify-center text-lh-purple font-black">
-                                {user?.firstName?.[0] || 'U'}
-                            </div>
-                            <div className="hidden sm:block text-left">
-                                <p className="text-[10px] font-black uppercase tracking-widest">{user?.firstName} {user?.lastName}</p>
-                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">{user?.email}</p>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Dashboard Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Stats Card 1 */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="bg-white/[0.02] border border-white/5 rounded-[32px] p-8 relative overflow-hidden group hover:border-lh-purple/30 transition-all duration-500"
+            {/* Sidebar */}
+            <aside
+                className={`relative z-20 bg-[#0a0a0a]/80 backdrop-blur-3xl border-r border-white/5 transition-all duration-500 ease-in-out flex flex-col ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
+            >
+                {/* Logo Section */}
+                <div className="p-6 flex items-center justify-between">
+                    {!isSidebarCollapsed && (
+                        <Link to="/" className="text-xl font-black tracking-tighter cursor-pointer text-white">
+                            CS<span className="text-lh-purple italic">CA</span>
+                        </Link>
+                    )}
+                    <button
+                        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                        className="p-1.5 hover:bg-lh-purple/10 rounded-lg transition-colors text-gray-400 hover:text-white"
                     >
-                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <Shield size={80} className="text-lh-purple" />
-                        </div>
-                        <div className="relative z-10 space-y-4">
-                            <div className="w-12 h-12 rounded-2xl bg-lh-purple/10 border border-lh-purple/20 flex items-center justify-center text-lh-purple">
-                                <Shield size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-1">Protection Status</h3>
-                                <p className="text-2xl font-black uppercase tracking-tight">Active & Secure</p>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Stats Card 2 */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="bg-white/[0.02] border border-white/5 rounded-[32px] p-8 relative overflow-hidden group hover:border-lh-purple/30 transition-all duration-500"
-                    >
-                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <User size={80} className="text-lh-purple" />
-                        </div>
-                        <div className="relative z-10 space-y-4">
-                            <div className="w-12 h-12 rounded-2xl bg-lh-purple/10 border border-lh-purple/20 flex items-center justify-center text-lh-purple">
-                                <User size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-1">Profile Integrity</h3>
-                                <p className="text-2xl font-black uppercase tracking-tight">Verified Elite</p>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Quick Actions */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-white/[0.02] border border-white/5 rounded-[32px] p-8 flex flex-col justify-between hover:border-lh-purple/30 transition-all duration-500"
-                    >
-                        <div className="space-y-4">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-lh-purple">Quick Actions</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <button className="flex flex-col items-center gap-2 p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-lh-purple/10 hover:border-lh-purple/20 transition-all group">
-                                    <Settings size={20} className="text-gray-400 group-hover:text-lh-purple transition-colors" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest">Settings</span>
-                                </button>
-                                <button
-                                    onClick={handleLogout}
-                                    className="flex flex-col items-center gap-2 p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-red-500/10 hover:border-red-500/20 transition-all group"
-                                >
-                                    <LogOut size={20} className="text-gray-400 group-hover:text-red-500 transition-colors" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 group-hover:text-red-500 transition-colors">Logout</span>
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
+                        {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                    </button>
                 </div>
 
-                {/* Main Content Area Placeholder */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="mt-8 flex-1 bg-white/[0.01] border border-white/5 rounded-[40px] border-dashed flex flex-col items-center justify-center p-12 text-center group"
-                >
-                    <div className="w-20 h-20 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center mb-6 group-hover:border-lh-purple/30 transition-colors">
-                        <LayoutDashboard size={40} className="text-white/10 group-hover:text-lh-purple/30 transition-colors" />
+                {/* Nav Menu */}
+                <nav className="flex-1 px-3 space-y-1 mt-6 overflow-y-auto custom-scrollbar">
+                    {menuItems.map((item) => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-300 group relative ${isActive(item.path)
+                                ? 'bg-lh-purple text-white shadow-[0_0_20px_rgba(188,19,254,0.3)]'
+                                : 'text-gray-500 hover:text-white hover:bg-white/5'
+                                }`}
+                        >
+                            <span className={`${isActive(item.path) ? 'text-white' : 'text-lh-purple group-hover:scale-110 transition-transform'}`}>
+                                {item.icon}
+                            </span>
+                            {!isSidebarCollapsed && (
+                                <span className={`text-[10px] font-black uppercase tracking-[0.15em] ${isActive(item.path) ? 'block' : 'opacity-70 group-hover:opacity-100'}`}>
+                                    {item.label}
+                                </span>
+                            )}
+                            {isActive(item.path) && !isSidebarCollapsed && (
+                                <motion.div
+                                    layoutId="active-indicator"
+                                    className="absolute right-3 w-1 h-1 bg-white rounded-full"
+                                />
+                            )}
+                        </Link>
+                    ))}
+                </nav>
+
+                {/* Bottom Profile/Actions */}
+                <div className="p-3 space-y-3 border-t border-white/5 bg-black/20">
+                    <button
+                        onClick={toggleCart}
+                        className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-white/5 text-gray-400 hover:text-white hover:bg-lh-purple/20 transition-all group relative"
+                    >
+                        <ShoppingCart size={18} className="text-lh-purple group-hover:scale-110 transition-transform" />
+                        {!isSidebarCollapsed && (
+                            <span className="text-[10px] font-black uppercase tracking-[0.15em]">Cart</span>
+                        )}
+                        {cartCount > 0 && (
+                            <span className="absolute top-2.5 left-6 w-3.5 h-3.5 bg-lh-purple text-white text-[7px] font-black flex items-center justify-center rounded-full shadow-lg border border-black">
+                                {cartCount}
+                            </span>
+                        )}
+                    </button>
+
+                    <div className="flex items-center gap-3 p-1.5 rounded-xl bg-white/[0.02] border border-white/5">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-lh-purple to-[#ff00ff] p-0.5 shadow-lg">
+                            <div className="w-full h-full rounded-full bg-lh-dark flex items-center justify-center text-[10px] font-black uppercase italic">
+                                {user?.firstName?.[0] || user?.email?.[0] || 'A'}
+                            </div>
+                        </div>
+                        {!isSidebarCollapsed && (
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-[9px] font-black uppercase tracking-tight text-white truncate">{user?.firstName} {user?.lastName}</span>
+                                <span className="text-[7px] font-bold text-gray-500 uppercase tracking-widest truncate">Authorized</span>
+                            </div>
+                        )}
                     </div>
-                    <h2 className="text-xl font-black uppercase tracking-[0.2em] mb-2">Module Development in Progress</h2>
-                    <p className="text-gray-500 text-xs font-bold uppercase tracking-widest max-w-sm mx-auto leading-relaxed">
-                        Our engineering team is currently deploying high-priority modules. Check back soon for full system access.
-                    </p>
-                </motion.div>
+
+                    <button
+                        onClick={() => { logout(); navigate('/login'); }}
+                        className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition-all group"
+                    >
+                        <LogOut size={18} />
+                        {!isSidebarCollapsed && (
+                            <span className="text-[10px] font-black uppercase tracking-[0.15em]">Logout</span>
+                        )}
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col relative overflow-hidden">
+                <header className="h-16 px-8 flex items-center justify-between border-b border-white/5 bg-[#0a0a0a]/40 backdrop-blur-xl z-20">
+                    <div className="flex items-center gap-4">
+                        <div className="h-3 w-[2px] bg-lh-purple"></div>
+                        <h2 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.4em]">Command_Center / <span className="text-white italic">{location.pathname.split('/').pop() || 'overview'}</span></h2>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[8px] font-black text-lh-purple uppercase tracking-widest italic animate-pulse">System_Live</span>
+                            <span className="text-[10px] font-bold text-gray-500">Sector_01_Online</span>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 relative overflow-y-auto custom-scrollbar z-10 p-8">
+                    <div className="max-w-[1400px] mx-auto min-h-full">
+                        <Outlet />
+                    </div>
+                </main>
             </div>
         </div>
     );
