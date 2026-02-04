@@ -21,7 +21,9 @@ export default function WhyChoose() {
   ];
 
   return (
-    <section className="bg-defense py-20 md:py-32 px-6 md:px-8 relative z-20 -mt-20 mask-gradient-top">
+    <section className="bg-defense py-20 md:py-32 px-6 md:px-8 relative z-20 mt-20 lg:mt-0 lg:-mt-24">
+      {/* Seamless blend overlay */}
+      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#050505] to-transparent z-10 pointer-events-none"></div>
 
       <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-12 md:gap-16 items-center">
 
@@ -32,7 +34,7 @@ export default function WhyChoose() {
             <span className="outline-text block my-1 md:my-2">CSCA</span>
             CERTIFICATIONS
           </h2>
-          <p className="text-gray-400 text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0">
+          <p className="text-white text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0">
             CSCA sets the benchmark for practical cybersecurity excellence, ensuring that certified professionals are ready for the complex challenges of modern enterprise security.
           </p>
           <button className="bg-lh-purple p-4 md:p-5 px-10 md:px-12 rounded-full text-[10px] md:text-[11px] font-black tracking-widest flex items-center gap-3 hover:bg-white hover:text-black transition-all mx-auto lg:mx-0">
@@ -45,7 +47,7 @@ export default function WhyChoose() {
           {points.map((p, idx) => (
             <div key={idx} className="bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-[40px] hover:border-lh-purple transition-all group">
               <h3 className="text-xl font-black text-white mb-4 group-hover:text-lh-purple">{p.title}</h3>
-              <p className="text-gray-400 text-sm leading-relaxed font-medium">{p.desc}</p>
+              <p className="text-white text-sm leading-relaxed font-medium">{p.desc}</p>
             </div>
           ))}
         </div>
