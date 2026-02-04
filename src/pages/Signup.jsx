@@ -95,9 +95,11 @@ const Signup = () => {
         setIsLoading(true);
 
         const payload = {
-            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
             email: formData.email.trim(),
             phone: formData.phone.trim(),
+            identifier: formData.email.trim(), // Backend likely expects identifier for unique lookup
             password: formData.password,
         };
 
