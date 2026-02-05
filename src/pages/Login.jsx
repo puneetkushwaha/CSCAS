@@ -64,10 +64,13 @@ const Login = () => {
         }
 
 
-        const payload = {
-            email: identifier.trim(),
+        // Try with identifier field (some backends expect this)
+        let payload = {
+            identifier: identifier.trim(),
             password: password,
         };
+
+        console.log("📤 Sending login payload:", payload);
 
         try {
             const res = await api.post('/auth/login', payload);
@@ -84,6 +87,30 @@ const Login = () => {
             }, 100);
         } catch (error) {
             console.error("Login error:", error);
+
+            // If identifier fails with 401, try with email field
+            if (error.response?.status === 401 && payload.identifier) {
+                console.log("🔄 Retrying with 'email' field instead of 'identifier'");
+                try {
+                    const emailPayload = {
+                        email: identifier.trim(),
+                        password: password,
+                    };
+                    const res = await api.post('/auth/login', emailPayload);
+
+                    console.log("📧 Manual Login Response (email field):", res.data);
+                    login(res.data.user, res.data.token);
+
+                    setTimeout(() => {
+                        navigate('/');
+                    }, 100);
+                    setIsLoading(false);
+                    return;
+                } catch (retryError) {
+                    console.error("Retry with email also failed:", retryError);
+                }
+            }
+
             const message = error.response?.data?.message || 'Invalid credentials';
             console.error(message);
         } finally {
