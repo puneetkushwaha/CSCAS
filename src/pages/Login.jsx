@@ -63,13 +63,15 @@ const Login = () => {
         }
 
         const payload = {
-            identifier: identifier.trim(),
+            email: identifier.trim(),
             password: password,
         };
 
         try {
             const res = await api.post('/auth/login', payload);
             console.log("Login Response Data:", res.data);
+
+            // Adjust to handle different response structures
             const userData = res.data.user || res.data.data?.user;
             const token = res.data.token || res.data.data?.token;
 
