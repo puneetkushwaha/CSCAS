@@ -63,13 +63,18 @@ const Login = () => {
             return;
         }
 
+
         const payload = {
-            identifier: identifier.trim(),
+            email: identifier.trim(),
             password: password,
         };
 
         try {
             const res = await api.post('/auth/login', payload);
+
+            console.log("📧 Manual Login Response:", res.data);
+            console.log("📧 User data:", res.data.user);
+            console.log("📧 Token:", res.data.token);
 
             login(res.data.user, res.data.token);
 
@@ -100,6 +105,10 @@ const Login = () => {
                     avatar: user.photoURL,
                     uid: user.uid
                 });
+
+                console.log("🔵 Google Login Response:", res.data);
+                console.log("🔵 User data:", res.data.user);
+                console.log("🔵 Token:", res.data.token);
 
                 login(res.data.user, res.data.token);
 
