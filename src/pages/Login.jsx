@@ -69,8 +69,10 @@ const Login = () => {
 
         try {
             const res = await api.post('/auth/login', payload);
-
-            login(res.data.user, res.data.token);
+            console.log("Login Response Data:", res.data);
+            const userData = res.data.user || res.data.data?.user;
+            const token = res.data.token || res.data.data?.token;
+            login(userData, token);
             navigate('/');
         } catch (error) {
             console.error(error);
