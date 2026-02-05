@@ -68,7 +68,7 @@ const Login = () => {
         };
 
         try {
-            const res = await api.post('/auth/login', payload);
+            const res = await api.post('/auth/admin/login', payload);
             console.log("Login Response Data:", res.data);
 
             // Adjust to handle different response structures
