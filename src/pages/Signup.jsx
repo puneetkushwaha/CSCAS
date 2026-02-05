@@ -32,13 +32,7 @@ const Signup = () => {
     });
 
     const navigate = useNavigate();
-    const { login, user } = useAuth();
-
-    useEffect(() => {
-        if (user) {
-            navigate('/');
-        }
-    }, [user, navigate]);
+    const { login } = useAuth();
 
     useEffect(() => {
         const handleMouseMove = (e) => {
@@ -74,11 +68,13 @@ const Signup = () => {
                 });
 
                 login(res.data.user, res.data.token);
-                navigate('/');
+                alert("Success! Now redirecting to NEW DASHBOARD...");
+                navigate('/dashboard');
 
             } catch (error) {
                 console.error("Google Login Error:", error);
                 const message = error.response?.data?.message || error.message || 'Google Login Failed';
+                alert(message);
             } finally {
                 setIsLoading(false);
             }
@@ -89,31 +85,29 @@ const Signup = () => {
         e.preventDefault();
 
         if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
+            alert("All fields are required");
             return;
         }
 
         setIsLoading(true);
 
         const payload = {
-            fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
             email: formData.email.trim(),
-            mobile: formData.phone.trim(),
+            phone: formData.phone.trim(),
             password: formData.password,
-            // Required company fields with defaults
-            companyName: `${formData.firstName.trim()}'s Company`,
-            officeAddress: 'Not Provided',
-            timezone: 'Asia/Kolkata',
-            workingHoursStart: '09:00',
-            workingHoursEnd: '18:00',
         };
 
         try {
             const res = await api.post('/auth/register', payload);
 
+            alert("Registration Successful!");
             navigate('/login');
         } catch (error) {
             console.error("Signup error:", error);
             const message = error.response?.data?.message || "Registration failed";
+            alert(message);
         } finally {
             setIsLoading(false);
         }
