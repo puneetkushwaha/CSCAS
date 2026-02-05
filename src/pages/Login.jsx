@@ -32,7 +32,7 @@ const Login = () => {
 
     useEffect(() => {
         if (user) {
-            navigate('/dashboard');
+            navigate('/');
         }
     }, [user, navigate]);
 
@@ -72,8 +72,8 @@ const Login = () => {
             const res = await api.post('/auth/login', payload);
 
             login(res.data.user, res.data.token);
-            alert("Success! Now redirecting to NEW DASHBOARD...");
-            navigate('/dashboard');
+            alert("Success! Redirecting to home page...");
+            navigate('/');
         } catch (error) {
             console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
@@ -99,8 +99,8 @@ const Login = () => {
                 });
 
                 login(res.data.user, res.data.token);
-                alert("Success! Now redirecting to NEW DASHBOARD...");
-                navigate('/dashboard');
+                alert("Success! Redirecting to home page...");
+                navigate('/');
 
             } catch (error) {
                 console.error("Google Login Error:", error);
