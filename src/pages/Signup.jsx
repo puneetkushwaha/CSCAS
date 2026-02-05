@@ -95,12 +95,16 @@ const Signup = () => {
         setIsLoading(true);
 
         const payload = {
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName.trim(),
+            fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
             email: formData.email.trim(),
-            phone: formData.phone.trim(),
-            identifier: formData.email.trim(), // Backend likely expects identifier for unique lookup
+            mobile: formData.phone.trim(),
             password: formData.password,
+            // Required company fields with defaults
+            companyName: `${formData.firstName.trim()}'s Company`,
+            officeAddress: 'Not Provided',
+            timezone: 'Asia/Kolkata',
+            workingHoursStart: '09:00',
+            workingHoursEnd: '18:00',
         };
 
         try {
