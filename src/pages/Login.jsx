@@ -32,7 +32,7 @@ const Login = () => {
 
     useEffect(() => {
         if (user) {
-            navigate('/');
+            navigate('/dashboard');
         }
     }, [user, navigate]);
 
@@ -58,35 +58,26 @@ const Login = () => {
         e.preventDefault();
         setIsLoading(true);
         if (!identifier || !password) {
+            alert("All fields are required");
             setIsLoading(false);
             return;
         }
 
         const payload = {
-            email: identifier.trim(),
+            identifier: identifier.trim(),
             password: password,
         };
 
         try {
             const res = await api.post('/auth/login', payload);
-            console.log("Login Response Data:", res.data);
 
-            // Adjust to handle different response structures
-            const userData = res.data.user || res.data.data?.user;
-            const token = res.data.token || res.data.data?.token;
-
-            if (!userData || !token) {
-                console.error("Invalid login response structure:", res.data);
-                alert("Login failed: Unexpected response from server. Please check console.");
-                setIsLoading(false);
-                return;
-            }
-
-            login(userData, token);
-            navigate('/');
+            login(res.data.user, res.data.token);
+            alert("Success! Now redirecting to NEW DASHBOARD...");
+            navigate('/dashboard');
         } catch (error) {
             console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
+            alert(message);
         } finally {
             setIsLoading(false);
         }
@@ -108,11 +99,13 @@ const Login = () => {
                 });
 
                 login(res.data.user, res.data.token);
-                navigate('/');
+                alert("Success! Now redirecting to NEW DASHBOARD...");
+                navigate('/dashboard');
 
             } catch (error) {
                 console.error("Google Login Error:", error);
                 const message = error.response?.data?.message || error.message || 'Google Login Failed';
+                alert(message);
             } finally {
                 setIsLoading(false);
             }
