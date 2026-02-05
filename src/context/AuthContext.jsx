@@ -25,10 +25,12 @@ export const AuthProvider = ({ children }) => {
             console.error("Login called with missing data:", { userData, userToken });
             return;
         }
+        console.log("🔐 Logging in user:", userData);
         setUser(userData);
         setToken(userToken);
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('token', userToken);
+        console.log("✅ Auth state saved to localStorage");
     };
 
     const logout = () => {

@@ -73,7 +73,11 @@ const Login = () => {
 
             login(res.data.user, res.data.token);
             alert("Success! Redirecting to home page...");
-            navigate('/');
+
+            // Delay navigation to ensure auth state is saved
+            setTimeout(() => {
+                navigate('/');
+            }, 100);
         } catch (error) {
             console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
@@ -100,7 +104,11 @@ const Login = () => {
 
                 login(res.data.user, res.data.token);
                 alert("Success! Redirecting to home page...");
-                navigate('/');
+
+                // Delay navigation to ensure auth state is saved
+                setTimeout(() => {
+                    navigate('/');
+                }, 100);
 
             } catch (error) {
                 console.error("Google Login Error:", error);
