@@ -9,13 +9,22 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const savedUser = localStorage.getItem('user');
-        if (savedUser && token) {
-            setUser(JSON.parse(savedUser));
+        if (savedUser && savedUser !== 'undefined' && token) {
+            try {
+                setUser(JSON.parse(savedUser));
+            } catch (error) {
+                console.error("Error parsing user from localStorage:", error);
+                localStorage.removeItem('user');
+            }
         }
         setLoading(false);
     }, [token]);
 
     const login = (userData, userToken) => {
+        if (!userData || !userToken) {
+            console.error("Login called with missing data:", { userData, userToken });
+            return;
+        }
         setUser(userData);
         setToken(userToken);
         localStorage.setItem('user', JSON.stringify(userData));
@@ -30,10 +39,15 @@ export const AuthProvider = ({ children }) => {
     };
 
     const updateUser = (userData) => {
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const updatedUser = { ...currentUser, ...userData };
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        try {
+            const savedUser = localStorage.getItem('user');
+            const currentUser = (savedUser && savedUser !== 'undefined') ? JSON.parse(savedUser) : {};
+            const updatedUser = { ...currentUser, ...userData };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        } catch (error) {
+            console.error("Error updating user:", error);
+        }
     };
 
     return (

@@ -72,6 +72,14 @@ const Login = () => {
             console.log("Login Response Data:", res.data);
             const userData = res.data.user || res.data.data?.user;
             const token = res.data.token || res.data.data?.token;
+
+            if (!userData || !token) {
+                console.error("Invalid login response structure:", res.data);
+                alert("Login failed: Unexpected response from server. Please check console.");
+                setIsLoading(false);
+                return;
+            }
+
             login(userData, token);
             navigate('/');
         } catch (error) {
