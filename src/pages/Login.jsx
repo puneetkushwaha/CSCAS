@@ -75,11 +75,20 @@ const Login = () => {
         try {
             const res = await api.post('/auth/login', payload);
 
-            console.log("📧 Manual Login Response:", res.data);
+            console.log("📧 Full Response:", res);
+            console.log("📧 Response Data:", res.data);
+            console.log("📧 Response Data Keys:", Object.keys(res.data));
             console.log("📧 User data:", res.data.user);
             console.log("📧 Token:", res.data.token);
 
-            login(res.data.user, res.data.token);
+            // Check if data is nested or has different structure
+            const userData = res.data.user || res.data.data?.user || res.data;
+            const token = res.data.token || res.data.data?.token || res.data.accessToken || res.data.authToken;
+
+            console.log("✅ Extracted User:", userData);
+            console.log("✅ Extracted Token:", token);
+
+            login(userData, token);
 
             // Delay navigation to ensure auth state is saved
             setTimeout(() => {
