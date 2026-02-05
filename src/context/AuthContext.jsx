@@ -8,14 +8,23 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log("🔍 AuthContext: Loading user from localStorage");
         const savedUser = localStorage.getItem('user');
+        const savedToken = localStorage.getItem('token');
+        console.log("🔍 Saved user:", savedUser);
+        console.log("🔍 Saved token:", savedToken ? "exists" : "missing");
+
         if (savedUser && savedUser !== 'undefined' && token) {
             try {
-                setUser(JSON.parse(savedUser));
+                const parsedUser = JSON.parse(savedUser);
+                console.log("✅ User loaded from localStorage:", parsedUser);
+                setUser(parsedUser);
             } catch (error) {
-                console.error("Error parsing user from localStorage:", error);
+                console.error("❌ Error parsing user from localStorage:", error);
                 localStorage.removeItem('user');
             }
+        } else {
+            console.log("⚠️ No valid user in localStorage");
         }
         setLoading(false);
     }, [token]);

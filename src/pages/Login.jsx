@@ -58,7 +58,7 @@ const Login = () => {
         e.preventDefault();
         setIsLoading(true);
         if (!identifier || !password) {
-            alert("All fields are required");
+            console.error("All fields are required");
             setIsLoading(false);
             return;
         }
@@ -72,16 +72,15 @@ const Login = () => {
             const res = await api.post('/auth/login', payload);
 
             login(res.data.user, res.data.token);
-            alert("Success! Redirecting to home page...");
 
             // Delay navigation to ensure auth state is saved
             setTimeout(() => {
                 navigate('/');
             }, 100);
         } catch (error) {
-            console.error(error);
+            console.error("Login error:", error);
             const message = error.response?.data?.message || 'Invalid credentials';
-            alert(message);
+            console.error(message);
         } finally {
             setIsLoading(false);
         }
@@ -103,7 +102,6 @@ const Login = () => {
                 });
 
                 login(res.data.user, res.data.token);
-                alert("Success! Redirecting to home page...");
 
                 // Delay navigation to ensure auth state is saved
                 setTimeout(() => {
@@ -113,7 +111,7 @@ const Login = () => {
             } catch (error) {
                 console.error("Google Login Error:", error);
                 const message = error.response?.data?.message || error.message || 'Google Login Failed';
-                alert(message);
+                console.error("Google login failed:", message);
             } finally {
                 setIsLoading(false);
             }

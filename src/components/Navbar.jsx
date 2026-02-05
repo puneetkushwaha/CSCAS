@@ -9,7 +9,7 @@ import { certifications } from '../data/certificationsData';
 import { useCart } from '../context/CartContext';
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { setIsCartOpen, cartCount } = useCart();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -196,7 +196,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            {user ? (
+            {!isLoading && user ? (
               <div className="hidden sm:block relative" onMouseEnter={() => setShowProfileMenu(true)} onMouseLeave={() => setShowProfileMenu(false)}>
                 <button className="flex items-center gap-2 bg-white/[0.05] border border-white/10 sm:px-4 px-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-lh-purple/20 transition-all">
                   {user.profileImage ? (
@@ -233,11 +233,11 @@ export default function Navbar() {
                   )}
                 </AnimatePresence>
               </div>
-            ) : (
+            ) : !isLoading ? (
               <Link to="/login" className="hidden md:flex bg-lh-purple text-white px-7 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest items-center gap-2 hover:bg-white hover:text-black transition-all">
                 LOGIN
               </Link>
-            )}
+            ) : null}
 
             {/* Mobile Toggle Button */}
             <button
@@ -315,7 +315,7 @@ export default function Navbar() {
                       <CountrySelector />
                     </div>
                   </div>
-                  {user ? (
+                  {!isLoading && user ? (
                     <div className="flex flex-col gap-4 mt-4">
                       <Link to="/profile" className="bg-white/[0.05] border border-white/10 text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full" onClick={() => setIsOpen(false)}>
                         <UserCircle2 size={16} /> PROFILE
@@ -330,11 +330,11 @@ export default function Navbar() {
                         <ShieldAlert size={16} /> LOGOUT
                       </button>
                     </div>
-                  ) : (
+                  ) : !isLoading ? (
                     <Link to="/login" className="bg-lh-purple text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full mt-4" onClick={() => setIsOpen(false)}>
                       LOGIN
                     </Link>
-                  )}
+                  ) : null}
                 </div>
               </motion.div>
             )}
