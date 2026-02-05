@@ -23,7 +23,8 @@ import {
     Activity,
     LayoutDashboard,
     Globe2,
-    Monitor
+    Monitor,
+    Clock
 } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -40,6 +41,62 @@ const PrecisionPanel = ({ children, className = "" }) => (
         <div className="relative z-10">{children}</div>
     </div>
 );
+
+const CountdownTimer = ({ examData }) => {
+    const [timeLeft, setTimeLeft] = React.useState(null);
+
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const timestamp = examData?.timestamp || 0;
+            const distance = timestamp - now;
+
+            if (distance < 0) {
+                clearInterval(timer);
+                setTimeLeft('MISSION_ACTIVE');
+            } else {
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+            }
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [examData?.timestamp]);
+
+    return (
+        <div className="p-6 bg-lh-purple/5 border border-lh-purple/20 rounded-[2rem] relative overflow-hidden group w-full text-left">
+            <div className="absolute inset-0 bg-lh-purple/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <Clock size={14} className="text-lh-purple animate-pulse" />
+                        <span className="text-[9px] font-black text-lh-purple uppercase tracking-[0.3em]">Mission_Countdown</span>
+                    </div>
+                    <h4 className="text-[14px] font-black text-white uppercase tracking-widest">
+                        {examData.examName}
+                    </h4>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-1 opacity-70">
+                        Target_Date: {examData?.date ? new Date(examData.date).toDateString() : 'TBD'} // Time: {examData?.time || 'TBD'}
+                    </p>
+                </div>
+                {timeLeft === 'MISSION_ACTIVE' ? (
+                    <button
+                        onClick={() => window.location.href = '/dashboard/exam-player'}
+                        className="text-[12px] font-black text-white bg-lh-purple px-6 py-3 rounded-2xl shadow-[0_0_20px_rgba(188,19,254,0.4)] hover:scale-105 transition-all active:scale-95 animate-pulse cursor-pointer relative z-20"
+                    >
+                        START_MISSION_NOW
+                    </button>
+                ) : (
+                    <div className="text-2xl font-black text-lh-purple tracking-tighter glow-lh-purple bg-lh-purple/10 px-6 py-3 rounded-2xl border border-lh-purple/20">
+                        {timeLeft || 'SYNCHRONIZING...'}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const PearsonDashboard = () => {
     const navigate = useNavigate();
@@ -62,9 +119,9 @@ const PearsonDashboard = () => {
                 <div>
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-2 h-2 bg-lh-purple rounded-full shadow-[0_0_15px_rgba(188,19,254,0.6)] animate-pulse"></div>
-                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] italic opacity-80">Operational_Interface_Active</span>
+                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] opacity-80">Operational_Interface_Active</span>
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase italic leading-none">
+                    <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter uppercase leading-none">
                         EXAM <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>CENTRAL</span>
                     </h1>
                 </div>
@@ -85,17 +142,17 @@ const PearsonDashboard = () => {
                                 <Activity className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Registration_Sequence</h3>
-                                <p className="text-[11px] font-black text-lh-purple uppercase tracking-[0.2em] italic mt-2 opacity-80 flex items-center gap-2">
+                                <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none">Registration_Sequence</h3>
+                                <div className="text-[11px] font-black text-lh-purple uppercase tracking-[0.2em] mt-2 opacity-80 flex items-center gap-2">
                                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
                                     Status: Sync_Verified
-                                </p>
+                                </div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative z-10">
                             <div className="space-y-8">
-                                <p className="text-[14px] text-gray-400 font-bold leading-relaxed tracking-wide italic border-l-4 border-lh-purple/40 pl-6 bg-white/[0.01] py-4 rounded-r-2xl">
+                                <p className="text-[14px] text-gray-400 font-bold leading-relaxed tracking-wide border-l-4 border-lh-purple/40 pl-6 bg-white/[0.01] py-4 rounded-r-2xl">
                                     Initialize the certification protocol to discover available examination parameters and secure testing slots within our global network.
                                 </p>
                                 <button
@@ -111,14 +168,14 @@ const PearsonDashboard = () => {
                             <div className="p-8 bg-white/[0.03] border border-white/10 rounded-[2.5rem] flex flex-col justify-center relative group/inner">
                                 <div className="absolute inset-0 bg-lh-purple/5 opacity-0 group-hover/inner:opacity-100 transition-opacity rounded-[2.5rem]"></div>
                                 <div className="flex items-center justify-between mb-5 group cursor-pointer relative z-10">
-                                    <p className="text-[11px] font-black text-lh-purple uppercase tracking-[0.2em] italic flex items-center gap-3">
+                                    <div className="text-[11px] font-black text-lh-purple uppercase tracking-[0.2em] flex items-center gap-3">
                                         <div className="w-1.5 h-[10px] bg-lh-purple"></div>
                                         Have a Voucher Code?
-                                    </p>
+                                    </div>
                                     <ChevronDown size={16} className="text-gray-500 group-hover:text-lh-purple transition-colors" />
                                 </div>
                                 <div className="h-px bg-white/10 my-4 relative z-10"></div>
-                                <p className="text-[10px] text-gray-600 font-mono uppercase tracking-[0.2em] italic leading-relaxed relative z-10 opacity-70">
+                                <p className="text-[10px] text-gray-600 font-mono uppercase tracking-[0.2em] leading-relaxed relative z-10 opacity-70">
                                     Specialized access keys grant entry to restricted professional tiers. Enter your code to bypass standard protocols.
                                 </p>
                             </div>
@@ -131,22 +188,31 @@ const PearsonDashboard = () => {
                             <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 group-hover/logs:border-lh-purple/30 transition-colors">
                                 <Calendar className="w-6 h-6 text-lh-purple drop-shadow-[0_0_15px_rgba(188,19,254,0.5)]" />
                             </div>
-                            <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Operational_Logs</h3>
+                            <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none">Operational_Logs</h3>
                         </div>
 
-                        <div className="relative p-12 border-2 border-dashed border-white/10 rounded-[3rem] flex flex-col items-center justify-center text-center bg-black/50 group-hover/logs:border-lh-purple/40 transition-all duration-1000 overflow-hidden">
-                            {/* Inner Glow */}
-                            <div className="absolute inset-0 bg-lh-purple/5 opacity-0 group-hover/logs:opacity-100 transition-opacity blur-3xl"></div>
+                        <div className="relative p-6 border-2 border-dashed border-white/10 rounded-[3rem] flex flex-col items-center justify-center text-center bg-black/50 group-hover/logs:border-lh-purple/40 transition-all duration-1000 overflow-hidden space-y-4">
+                            {(() => {
+                                const exams = JSON.parse(localStorage.getItem('scheduledExams') || '[]');
+                                if (exams.length > 0) {
+                                    return exams.map((exam, idx) => (
+                                        <CountdownTimer key={idx} examData={exam} />
+                                    ));
+                                }
+                                return (
+                                    <>
+                                        <div className="relative z-10 p-8 bg-white/10 rounded-full mb-8 scale-110 group-hover/logs:scale-125 transition-transform duration-700">
+                                            <History className="w-12 h-12 text-gray-700 opacity-40 group-hover/logs:text-lh-purple/50 transition-colors" />
+                                            <div className="absolute inset-0 bg-lh-purple/20 rounded-full blur-[40px] opacity-0 group-hover/logs:opacity-100 transition-opacity animate-pulse"></div>
+                                        </div>
 
-                            <div className="relative z-10 p-8 bg-white/10 rounded-full mb-8 scale-110 group-hover/logs:scale-125 transition-transform duration-700">
-                                <History className="w-12 h-12 text-gray-700 opacity-40 group-hover/logs:text-lh-purple/50 transition-colors" />
-                                <div className="absolute inset-0 bg-lh-purple/20 rounded-full blur-[40px] opacity-0 group-hover/logs:opacity-100 transition-opacity animate-pulse"></div>
-                            </div>
-
-                            <h4 className="text-[12px] font-black text-gray-400 uppercase tracking-[0.4em] mb-4 relative z-10">NO_PENDING_OBJECTIVES</h4>
-                            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] leading-relaxed max-w-sm italic opacity-70 relative z-10">
-                                Your mission queue is currently empty. Synchronize with a certification node to populate your active history.
-                            </p>
+                                        <h4 className="text-[12px] font-black text-gray-400 uppercase tracking-[0.4em] mb-4 relative z-10">NO_PENDING_OBJECTIVES</h4>
+                                        <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] leading-relaxed max-w-sm opacity-70 relative z-10">
+                                            Your mission queue is currently empty. Synchronize with a certification node to populate your active history.
+                                        </p>
+                                    </>
+                                );
+                            })()}
                         </div>
                     </PrecisionPanel>
                 </div>
@@ -159,7 +225,7 @@ const PearsonDashboard = () => {
                             <img src={ngdPic} alt="" className="w-full h-full object-contain -scale-x-100" />
                         </div>
 
-                        <h3 className="text-[12px] font-black text-lh-purple uppercase tracking-[0.5em] mb-12 pb-6 border-b border-white/10 italic flex items-center justify-between relative z-10">
+                        <h3 className="text-[12px] font-black text-lh-purple uppercase tracking-[0.5em] mb-12 pb-6 border-b border-white/10 flex items-center justify-between relative z-10">
                             My Account intel
                             <Activity size={16} className="animate-pulse" />
                         </h3>
@@ -187,35 +253,6 @@ const PearsonDashboard = () => {
                         </ul>
                     </PrecisionPanel>
 
-                    {/* Marketplace AD */}
-                    <motion.div
-                        whileHover={{ y: -10 }}
-                        className="relative rounded-[3rem] overflow-hidden group/ad h-[420px] shadow-[0_30px_100px_rgba(0,0,0,0.8)] border border-white/10"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-lh-purple via-lh-dark to-black"></div>
-                        <div className="absolute inset-0 bg-lh-purple/10 pointer-events-none"></div>
-
-                        {/* Animated Orbs */}
-                        <div className="absolute top-[-10%] right-[-10%] w-40 h-40 bg-white/10 rounded-full blur-[60px]"></div>
-                        <div className="absolute bottom-[-10%] left-[-10%] w-32 h-32 bg-lh-purple/20 rounded-full blur-[50px]"></div>
-
-                        <div className="relative z-10 p-12 h-full flex flex-col justify-between">
-                            <div className="space-y-6">
-                                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20">
-                                    <Monitor size={14} className="text-lh-purple" />
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-white italic">MARKET_RELAY</span>
-                                </div>
-                                <h4 className="text-5xl font-black italic uppercase tracking-tighter leading-[0.9] text-white">Operational <br /><span className="text-lh-purple">Market</span></h4>
-                                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed italic opacity-80">
-                                    Access certified physical hardware and intellectual nodes required for operational success.
-                                </p>
-                            </div>
-
-                            <button className="w-full py-6 bg-white text-lh-dark font-black text-[12px] uppercase tracking-[0.4em] rounded-2xl hover:bg-lh-purple hover:text-white transition-all transform hover:shadow-[0_20px_40px_rgba(188,19,254,0.4)] active:scale-95 shadow-2xl">
-                                VIEW_MARKET
-                            </button>
-                        </div>
-                    </motion.div>
                 </aside>
             </div>
         </div>

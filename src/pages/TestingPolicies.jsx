@@ -104,8 +104,8 @@ const TestingPolicies = () => {
                                         onChange={(e) => setAgreedOnlinePolicy(e.target.checked)}
                                         className="peer sr-only"
                                     />
-                                    <div className="w-5 h-5 rounded-md border-2 border-gray-600 peer-checked:border-lh-purple peer-checked:bg-lh-purple transition-all flex items-center justify-center">
-                                        <CheckCircle2 className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                    <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${agreedOnlinePolicy ? 'border-lh-purple bg-lh-purple shadow-[0_0_15px_rgba(188,19,254,0.4)]' : 'border-gray-600'}`}>
+                                        <CheckCircle2 className={`w-3 h-3 text-white transition-opacity ${agreedOnlinePolicy ? 'opacity-100' : 'opacity-0'}`} />
                                     </div>
                                 </div>
                                 <div className="flex-1">
@@ -143,8 +143,8 @@ const TestingPolicies = () => {
                                         onChange={(e) => setAgreedCSCAPolicy(e.target.checked)}
                                         className="peer sr-only"
                                     />
-                                    <div className="w-5 h-5 rounded-md border-2 border-gray-600 peer-checked:border-lh-purple peer-checked:bg-lh-purple transition-all flex items-center justify-center">
-                                        <CheckCircle2 className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                    <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${agreedCSCAPolicy ? 'border-lh-purple bg-lh-purple shadow-[0_0_15px_rgba(188,19,254,0.4)]' : 'border-gray-600'}`}>
+                                        <CheckCircle2 className={`w-3 h-3 text-white transition-opacity ${agreedCSCAPolicy ? 'opacity-100' : 'opacity-0'}`} />
                                     </div>
                                 </div>
                                 <div className="flex-1">

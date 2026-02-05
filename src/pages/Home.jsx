@@ -11,6 +11,7 @@ import Hero from '../components/Hero';
 import WhyChoose from '../sections/Defense';
 import PartnerSection from '../sections/PartnerSection';
 import AcademicSection from '../sections/AcademicSection';
+import ExamAlertPopup from '../components/ExamAlertPopup';
 
 function Home() {
     const { user } = useAuth();
@@ -21,6 +22,7 @@ function Home() {
         <div className="relative">
             <Navbar />
             <Hero />
+            <ExamAlertPopup />
             <main>
                 <WhyChoose />
                 <Certifications />

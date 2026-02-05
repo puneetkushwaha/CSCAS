@@ -16,7 +16,7 @@ const Dashboard = () => {
     const menuItems = [
         { icon: <LayoutDashboard size={18} />, label: 'Overview', path: '/dashboard' },
         { icon: <Activity size={18} />, label: 'Certifications', path: '/certifications' },
-        { icon: <FileText size={18} />, label: 'My Exams', path: '/dashboard/exam' },
+        { icon: <FileText size={18} />, label: 'My Exams', path: '/dashboard/pearson' },
     ];
 
     const isActive = (path) => {

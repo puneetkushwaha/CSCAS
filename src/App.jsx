@@ -9,6 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import DashboardHome from './pages/DashboardHome';
 import Exam from './pages/Exam';
+import ExamPlayer from './pages/ExamPlayer';
 import PearsonDashboard from './pages/PearsonDashboard';
 import FindExam from './pages/FindExam';
 import SelectExamOptions from './pages/SelectExamOptions';
@@ -18,6 +19,7 @@ import TestingPolicies from './pages/TestingPolicies';
 import SelectProctorLanguage from './pages/SelectProctorLanguage';
 import FindAppointment from './pages/FindAppointment';
 import ReviewBooking from './pages/ReviewBooking';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 import Careers from './pages/Careers';
 import CareersPlus from './pages/CareersPlus';
@@ -53,6 +55,8 @@ function App() {
               <Route index element={<DashboardHome />} />
               <Route path="certifications" element={<Certifications />} />
               <Route path="exam" element={<Exam />} />
+              <Route path="exam-player" element={<ExamPlayer />} />
+
               <Route path="find-exam" element={<FindExam />} />
               <Route path="select-exam-options" element={<SelectExamOptions />} />
               <Route path="select-exam-language" element={<SelectExamLanguage />} />
@@ -61,6 +65,7 @@ function App() {
               <Route path="select-proctor-language" element={<SelectProctorLanguage />} />
               <Route path="find-appointment" element={<FindAppointment />} />
               <Route path="review-booking" element={<ReviewBooking />} />
+              <Route path="payment-success" element={<PaymentSuccess />} />
               <Route path="pearson" element={<PearsonDashboard />} />
               <Route path="account-intel" element={<AccountIntel />} />
               <Route path="additional-info" element={<AdditionalInfo />} />
@@ -83,6 +88,8 @@ function App() {
 
             {/* Other Dashboard-linked routes outside nested structure if needed */}
             <Route path="/exam" element={<Exam />} />
+            <Route path="/exam-player" element={<ExamPlayer />} />
+
             <Route path="/pearson-dashboard" element={<PearsonDashboard />} />
           </Routes>
         </Router>

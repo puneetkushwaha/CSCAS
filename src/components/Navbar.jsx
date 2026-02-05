@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, UserCircle2, ChevronDown, ChevronRight, Target, Shield, Cloud, Cpu, ClipboardCheck, Wifi, Zap, Database, Monitor, Search, Activity, Lock, Laptop, Skull, ShieldCheck, ShieldAlert, Award, Globe } from 'lucide-react';
+import { Menu, X, ShoppingCart, Bell, UserCircle2, ChevronDown, ChevronRight, Target, Shield, Cloud, Cpu, ClipboardCheck, Wifi, Zap, Database, Monitor, Search, Activity, Lock, Laptop, Skull, ShieldCheck, ShieldAlert, Award, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -145,6 +145,56 @@ export default function Navbar() {
                 </span>
               )}
             </button>
+
+            {/* Notification Bell */}
+            <div className="relative group/notif">
+              <button className="text-white/70 hover:text-lh-purple transition-all relative p-2">
+                <Bell size={18} />
+                {(localStorage.getItem('activeExam') || localStorage.getItem('scheduledExams')) && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-lh-purple rounded-full animate-pulse shadow-[0_0_10px_#bc13fe]"></span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              <div className="absolute top-full right-0 mt-2 w-72 bg-[#0a0a0a]/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-4 shadow-2xl opacity-0 translate-y-2 pointer-events-none group-hover/notif:opacity-100 group-hover/notif:translate-y-0 group-hover/notif:pointer-events-auto transition-all z-[60]">
+                <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-lh-purple">Mission_Briefings</span>
+                  <div className="w-1.5 h-1.5 bg-lh-purple rounded-full animate-pulse"></div>
+                </div>
+
+                {(() => {
+                  const exams = JSON.parse(localStorage.getItem('scheduledExams') || '[]');
+                  if (exams.length > 0) {
+                    return (
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                        {exams.map((exam, idx) => (
+                          <div key={idx} className="p-3 bg-lh-purple/5 border border-lh-purple/10 rounded-xl hover:bg-lh-purple/10 transition-colors cursor-pointer group/item">
+                            <div className="flex items-center gap-3 mb-2">
+                              <Shield size={14} className="text-lh-purple" />
+                              <span className="text-[10px] font-black text-white uppercase">{exam.examName}</span>
+                            </div>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
+                              Scheduled for {new Date(exam.date).toLocaleDateString()}.
+                            </p>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => { navigate('/dashboard/pearson'); }}
+                          className="w-full py-2 bg-lh-purple/20 border border-lh-purple/30 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-lh-purple transition-all mt-2"
+                        >
+                          VIEW_ALL_MISSIONS
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest text-center py-4">
+                      No active mission objectives detected.
+                    </p>
+                  );
+                })()}
+              </div>
+            </div>
 
             {user ? (
               <div className="hidden sm:block relative" onMouseEnter={() => setShowProfileMenu(true)} onMouseLeave={() => setShowProfileMenu(false)}>

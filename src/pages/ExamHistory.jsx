@@ -13,6 +13,21 @@ const PrecisionPanel = ({ children, className = "" }) => (
 
 const ExamHistory = () => {
     const navigate = useNavigate();
+    const [history, setHistory] = React.useState([]);
+
+    React.useEffect(() => {
+        const savedHistory = JSON.parse(localStorage.getItem('examHistory') || '[]');
+        if (savedHistory.length > 0) {
+            setHistory(savedHistory);
+        } else {
+            // Default static history for visual guidance
+            setHistory([
+                { exam: 'Cybersecurity Architect (CSCA+)', date: '2025_02_15', status: 'Completed', score: 'PASS' },
+                { exam: 'Network Guardian Protocol', date: '2024_11_10', status: 'Completed', score: 'PASS' },
+                { exam: 'Cloud Defense Systems', date: '2024_08_22', status: 'Archive_Verified', score: 'N/A' }
+            ]);
+        }
+    }, []);
 
     return (
         <div className="space-y-12 pb-16 relative">
@@ -37,21 +52,11 @@ const ExamHistory = () => {
                             EXAM MISSION <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>HISTORY</span>
                         </h1>
                     </div>
-                    <div className="flex gap-4">
-                        <div className="flex items-center gap-3 px-6 py-4 bg-white/[0.03] border border-white/10 rounded-2xl">
-                            <Filter size={14} className="text-lh-purple" />
-                            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Filter_Registry</span>
-                        </div>
-                    </div>
                 </div>
 
                 <PrecisionPanel className="p-8">
                     <div className="space-y-2">
-                        {[
-                            { exam: 'Cybersecurity Architect (CSCA+)', date: '2025_02_15', status: 'Completed', score: 'PASS' },
-                            { exam: 'Network Guardian Protocol', date: '2024_11_10', status: 'Completed', score: 'PASS' },
-                            { exam: 'Cloud Defense Systems', date: '2024_08_22', status: 'Archive_Verified', score: 'N/A' }
-                        ].map((item, i) => (
+                        {history.map((item, i) => (
                             <div key={i} className="group/row flex flex-col md:flex-row md:items-center justify-between p-8 rounded-[2rem] hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all">
                                 <div className="flex items-center gap-8 mb-4 md:mb-0">
                                     <div className="w-14 h-14 rounded-2xl bg-lh-purple/10 flex items-center justify-center text-lh-purple group-hover/row:scale-110 transition-transform">
@@ -67,8 +72,8 @@ const ExamHistory = () => {
                                         <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Node_Status</p>
                                         <p className="text-[11px] text-white font-black uppercase tracking-widest italic">{item.status}</p>
                                     </div>
-                                    <div className="w-20 text-center p-3 bg-lh-purple/20 rounded-xl border border-lh-purple/30">
-                                        <span className="text-[12px] font-black text-lh-purple italic">{item.score}</span>
+                                    <div className={`w-20 text-center p-3 rounded-xl border ${item.score === 'PASS' ? 'bg-green-500/10 border-green-500/30' : 'bg-lh-purple/20 border-lh-purple/30'}`}>
+                                        <span className={`text-[12px] font-black italic ${item.score === 'PASS' ? 'text-green-500' : 'text-lh-purple'}`}>{item.score}</span>
                                     </div>
                                 </div>
                             </div>

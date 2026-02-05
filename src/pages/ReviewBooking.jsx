@@ -70,18 +70,18 @@ const ReviewBooking = () => {
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors italic"
+                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors"
                     >
                         <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                         back
                     </button>
-                    <div className="flex items-center gap-2 text-[8px] font-black text-lh-purple uppercase tracking-widest italic animate-pulse">
+                    <div className="flex items-center gap-2 text-[8px] font-black text-lh-purple uppercase tracking-widest animate-pulse">
                         <CheckCircle2 size={12} /> Secure_Cart_Context
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Review <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>Booking</span></h2>
+                    <h2 className="text-4xl font-black uppercase tracking-tighter">Review <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>Booking</span></h2>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -102,7 +102,7 @@ const ReviewBooking = () => {
                                                 <Shield size={24} className="text-lh-purple" />
                                             </div>
                                             <div className="space-y-1">
-                                                <h3 className="text-xl font-black text-white italic uppercase">{examName}</h3>
+                                                <h3 className="text-xl font-black text-white uppercase">{examName}</h3>
                                                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Type: Professional_Certification</p>
                                             </div>
                                         </div>
@@ -112,8 +112,8 @@ const ReviewBooking = () => {
                                                 <div className="flex items-center gap-2 text-[8px] font-black text-lh-purple uppercase tracking-widest">
                                                     <Calendar size={12} /> Scheduling
                                                 </div>
-                                                <p className="text-[10px] font-black text-white uppercase italic">{formatDate(appointmentDate)}</p>
-                                                <div className="flex items-center gap-2 text-[9px] font-bold text-gray-500 mt-1 uppercase italic">
+                                                <p className="text-[10px] font-black text-white uppercase">{formatDate(appointmentDate)}</p>
+                                                <div className="flex items-center gap-2 text-[9px] font-bold text-gray-500 mt-1 uppercase">
                                                     <Clock size={10} /> {appointmentTime} ({confirmedTimeZone})
                                                 </div>
                                             </div>
@@ -121,14 +121,14 @@ const ReviewBooking = () => {
                                                 <div className="flex items-center gap-2 text-[8px] font-black text-lh-purple uppercase tracking-widest">
                                                     <Globe size={12} /> Parameters
                                                 </div>
-                                                <p className="text-[10px] font-black text-white uppercase italic">Language: {selectedLanguage}</p>
-                                                <p className="text-[9px] font-bold text-gray-500 uppercase italic">Duration: {length}</p>
+                                                <p className="text-[10px] font-black text-white uppercase">Language: {selectedLanguage}</p>
+                                                <p className="text-[9px] font-bold text-gray-500 uppercase">Duration: {length}</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="col-span-6 md:col-span-2 text-right">
-                                        <span className="text-2xl font-black text-white tracking-tighter italic">{formatCurrency(subtotal)}</span>
+                                        <span className="text-2xl font-black text-white tracking-tighter">{formatCurrency(subtotal)}</span>
                                         <p className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1">Base_Fee</p>
                                     </div>
 
@@ -146,7 +146,7 @@ const ReviewBooking = () => {
 
                         <div className="p-5 bg-lh-purple/5 border border-lh-purple/10 rounded-2xl flex items-center gap-4">
                             <Info size={18} className="text-lh-purple shrink-0" />
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed italic">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
                                 Final confirmation of operational window. proceed to credit authorization to finalize registration data.
                             </p>
                         </div>
@@ -160,31 +160,31 @@ const ReviewBooking = () => {
                             <div className="space-y-4 mb-8">
                                 <div className="flex justify-between items-center">
                                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Subtotal</span>
-                                    <span className="text-sm font-black text-white italic">{formatCurrency(subtotal)}</span>
+                                    <span className="text-sm font-black text-white">{formatCurrency(subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tax (v18%)</span>
-                                    <span className="text-sm font-black text-white italic">{formatCurrency(taxAmount)}</span>
+                                    <span className="text-sm font-black text-white">{formatCurrency(taxAmount)}</span>
                                 </div>
                                 <div className="h-px bg-white/5 my-4"></div>
                                 <div className="flex justify-between items-center group">
                                     <span className="text-[12px] font-black text-white uppercase tracking-tighter group-hover:text-lh-purple transition-colors">Total_Due</span>
-                                    <span className="text-2xl font-black text-lh-purple tracking-tighter italic glow-lh-purple">{formatCurrency(totalDue)}</span>
+                                    <span className="text-2xl font-black text-lh-purple tracking-tighter glow-lh-purple">{formatCurrency(totalDue)}</span>
                                 </div>
                             </div>
 
                             <button
-                                onClick={() => navigate('/payment-billing', { state: { ...location.state, subtotal, taxAmount, totalDue } })}
+                                onClick={() => navigate('/dashboard/payment-success', { state: location.state })}
                                 className="w-full py-4 bg-lh-purple text-white rounded-xl text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-lh-purple/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
                             >
                                 AUTHORIZE_FUNDS <ArrowRight size={14} className="animate-bounce-x" />
                             </button>
 
                             <div className="mt-8 space-y-3 p-4 bg-white/[0.02] rounded-xl border border-white/5">
-                                <div className="flex items-center gap-3 text-[8px] font-black text-gray-400 uppercase tracking-widest italic">
+                                <div className="flex items-center gap-3 text-[8px] font-black text-gray-400 uppercase tracking-widest">
                                     <CreditCard size={12} className="text-lh-purple" /> Promotion Codes
                                 </div>
-                                <p className="text-[7px] text-gray-600 font-bold uppercase tracking-widest leading-tight italic">
+                                <p className="text-[7px] text-gray-600 font-bold uppercase tracking-widest leading-tight">
                                     Codes can be applied during the primary billing verification phase.
                                 </p>
                             </div>

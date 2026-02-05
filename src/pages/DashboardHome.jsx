@@ -171,7 +171,7 @@ const DashboardHome = () => {
 
                             <nav className="space-y-4">
                                 {[
-                                    { label: 'Schedule and Manage Exams', path: '/dashboard/exam' },
+                                    { label: 'Schedule and Manage Exams', path: '/dashboard/pearson' },
                                     { label: 'View Testing Options', path: '/dashboard/certifications' },
                                     { label: 'Test Accommodations', path: '/dashboard/certifications' }
                                 ].map((link, i) => (

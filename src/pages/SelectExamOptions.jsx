@@ -53,18 +53,18 @@ const SelectExamOptions = () => {
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors italic"
+                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors"
                     >
                         <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                         back to catalog
                     </button>
-                    <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-lg text-[8px] font-black text-green-500 uppercase tracking-widest italic animate-pulse">
+                    <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-lg text-[8px] font-black text-green-500 uppercase tracking-widest animate-pulse">
                         UPLINK_STABLE
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Select exam <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>options</span></h2>
+                    <h2 className="text-4xl font-black uppercase tracking-tighter">Select exam <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>options</span></h2>
                 </div>
 
                 <PrecisionPanel className="p-8 border-white/5 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
@@ -73,15 +73,15 @@ const SelectExamOptions = () => {
                             <Shield size={20} className="text-lh-purple" />
                         </div>
                         <div>
-                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1 italic">Active_Registration_Slot:</p>
-                            <h4 className="text-xl font-black uppercase tracking-tight text-white italic">{examName}</h4>
+                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1">Active_Registration_Slot:</p>
+                            <h4 className="text-xl font-black uppercase tracking-tight text-white">{examName}</h4>
                         </div>
                     </div>
 
                     <div className="space-y-8">
                         <div className="space-y-3">
-                            <h5 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-300 italic">How do you want to take your exam?</h5>
-                            <p className="text-[10px] text-gray-500 font-bold leading-relaxed italic uppercase tracking-widest border-l border-white/10 pl-4 opacity-70">
+                            <h5 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-300">How do you want to take your exam?</h5>
+                            <p className="text-[10px] text-gray-500 font-bold leading-relaxed uppercase tracking-widest border-l border-white/10 pl-4 opacity-70">
                                 Select an operational mode for this session.
                             </p>
                         </div>
@@ -100,7 +100,7 @@ const SelectExamOptions = () => {
                                     </div>
                                     <div className="text-left">
                                         <span className={`text-[11px] font-black uppercase tracking-widest block ${selectedOption === 'online' ? 'text-white' : 'text-gray-400 group-hover/opt:text-white'}`}>Online with OnVUE</span>
-                                        <span className={`text-[8px] font-bold uppercase tracking-widest opacity-60 italic ${selectedOption === 'online' ? 'text-white' : 'text-gray-600'}`}>Secure Remote Proctoring</span>
+                                        <span className={`text-[8px] font-bold uppercase tracking-widest opacity-60 ${selectedOption === 'online' ? 'text-white' : 'text-gray-600'}`}>Secure Remote Proctoring</span>
                                     </div>
                                 </div>
                                 <div className={`w-2 h-2 rounded-full transition-all ${selectedOption === 'online' ? 'bg-white animate-pulse shadow-[0_0_10px_white]' : 'bg-white/10'}`}></div>
@@ -113,7 +113,7 @@ const SelectExamOptions = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="p-8 bg-white/[0.02] border border-white/5 rounded-[2rem] space-y-10"
                             >
-                                <h6 className="text-[12px] font-black uppercase italic tracking-widest text-white mb-6 pb-4 border-b border-white/5">
+                                <h6 className="text-[12px] font-black uppercase tracking-widest text-white mb-6 pb-4 border-b border-white/5">
                                     Prepare to take your exam with <span className="text-lh-purple">OnVUE</span>
                                 </h6>
 
@@ -130,8 +130,8 @@ const SelectExamOptions = () => {
                                                 <item.icon size={20} className="text-lh-purple" />
                                             </div>
                                             <div className="space-y-2">
-                                                <h7 className="text-[9px] font-black uppercase tracking-widest text-white">{item.title}</h7>
-                                                <p className="text-[8px] text-gray-500 font-bold leading-relaxed uppercase tracking-widest italic opacity-70">
+                                                <h6 className="text-[9px] font-black uppercase tracking-widest text-white">{item.title}</h6>
+                                                <p className="text-[8px] text-gray-500 font-bold leading-relaxed uppercase tracking-widest opacity-70">
                                                     {item.detail}
                                                 </p>
                                             </div>

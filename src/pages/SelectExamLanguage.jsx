@@ -26,7 +26,7 @@ const GlobalPageLoader = () => (
         </div>
         <div className="flex flex-col items-center gap-2">
             <span className="text-[9px] font-black text-white uppercase tracking-[0.4em] animate-pulse">Syncing Language Protocols...</span>
-            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest italic tracking-widest">Adjusting registry nodes</span>
+            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest tracking-widest">Adjusting registry nodes</span>
         </div>
     </div>
 );
@@ -59,18 +59,18 @@ const SelectExamLanguage = () => {
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors italic"
+                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors"
                     >
                         <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                         back to previous step
                     </button>
-                    <div className="px-3 py-1 bg-lh-purple/10 border border-lh-purple/20 rounded-lg text-[8px] font-black text-lh-purple uppercase tracking-widest italic animate-pulse">
+                    <div className="px-3 py-1 bg-lh-purple/10 border border-lh-purple/20 rounded-lg text-[8px] font-black text-lh-purple uppercase tracking-widest animate-pulse">
                         UPLINK_STABLE
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Select exam <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>language</span></h2>
+                    <h2 className="text-4xl font-black uppercase tracking-tighter">Select exam <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>language</span></h2>
                 </div>
 
                 <PrecisionPanel className="p-8 border-white/5 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
@@ -79,15 +79,15 @@ const SelectExamLanguage = () => {
                             <Shield size={20} className="text-lh-purple" />
                         </div>
                         <div>
-                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1 italic">Registry_Active_Node:</p>
-                            <h4 className="text-xl font-black uppercase tracking-tight text-white italic">{examName}</h4>
+                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1">Registry_Active_Node:</p>
+                            <h4 className="text-xl font-black uppercase tracking-tight text-white">{examName}</h4>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         <div className="space-y-3">
-                            <h5 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-300 italic">Preferred operational language?</h5>
-                            <p className="text-[10px] text-gray-500 font-bold leading-relaxed italic uppercase tracking-widest border-l border-white/10 pl-4 opacity-70">
+                            <h5 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-300">Preferred operational language?</h5>
+                            <p className="text-[10px] text-gray-500 font-bold leading-relaxed uppercase tracking-widest border-l border-white/10 pl-4 opacity-70">
                                 Language chosen here is for exam content delivery.
                             </p>
                         </div>
