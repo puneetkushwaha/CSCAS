@@ -32,7 +32,7 @@ const Login = () => {
 
     useEffect(() => {
         if (user) {
-            navigate('/home');
+            navigate('/');
         }
     }, [user, navigate]);
 
@@ -72,7 +72,7 @@ const Login = () => {
             const res = await api.post('/auth/login', payload);
 
             login(res.data.user, res.data.token);
-            navigate('/home');
+            navigate('/');
         } catch (error) {
             console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
@@ -98,7 +98,7 @@ const Login = () => {
                 });
 
                 login(res.data.user, res.data.token);
-                navigate('/home');
+                navigate('/');
 
             } catch (error) {
                 console.error("Google Login Error:", error);
