@@ -32,7 +32,7 @@ const Login = () => {
 
     useEffect(() => {
         if (user) {
-            navigate('/dashboard');
+            navigate('/home');
         }
     }, [user, navigate]);
 
@@ -72,8 +72,7 @@ const Login = () => {
             const res = await api.post('/auth/login', payload);
 
             login(res.data.user, res.data.token);
-            alert("Success! Now redirecting to NEW DASHBOARD...");
-            navigate('/dashboard');
+            navigate('/home');
         } catch (error) {
             console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
