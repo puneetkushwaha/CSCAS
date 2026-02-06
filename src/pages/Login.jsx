@@ -28,14 +28,11 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
-    const [showOtpModal, setShowOtpModal] = useState(false);
-    const [otp, setOtp] = useState('');
-    const [otpEmail, setOtpEmail] = useState('');
     const { user } = useAuth();
 
     useEffect(() => {
         if (user) {
-            navigate('/');
+            navigate('/dashboard');
         }
     }, [user, navigate]);
 
@@ -61,82 +58,26 @@ const Login = () => {
         e.preventDefault();
         setIsLoading(true);
         if (!identifier || !password) {
-            console.error("All fields are required");
+            alert("All fields are required");
             setIsLoading(false);
             return;
         }
 
-
-        // Try with identifier field (some backends expect this)
-        let payload = {
+        const payload = {
             identifier: identifier.trim(),
             password: password,
         };
 
-        console.log("📤 Sending login payload:", payload);
-
         try {
             const res = await api.post('/auth/login', payload);
 
-            console.log("📧 Full Response:", res);
-            console.log("📧 Response Data:", res.data);
-            console.log("📧 Response Data Keys:", Object.keys(res.data));
-
-            // Check if OTP is required
-            if (res.data.message && res.data.message.toLowerCase().includes('otp')) {
-                console.log("🔐 OTP verification required");
-                setOtpEmail(identifier.trim());
-                setShowOtpModal(true);
-                setIsLoading(false);
-                return;
-            }
-
-            console.log("📧 User data:", res.data.user);
-            console.log("📧 Token:", res.data.token);
-
-            // Check if data is nested or has different structure
-            const userData = res.data.user || res.data.data?.user;
-            const token = res.data.token || res.data.data?.token || res.data.accessToken || res.data.authToken;
-
-            console.log("✅ Extracted User:", userData);
-            console.log("✅ Extracted Token:", token);
-
-            if (userData && token) {
-                login(userData, token);
-                setTimeout(() => {
-                    navigate('/');
-                }, 100);
-            } else {
-                console.error("❌ Login failed - no user or token in response");
-            }
+            login(res.data.user, res.data.token);
+            alert("Success! Now redirecting to NEW DASHBOARD...");
+            navigate('/dashboard');
         } catch (error) {
-            console.error("Login error:", error);
-
-            // If identifier fails with 401, try with email field
-            if (error.response?.status === 401 && payload.identifier) {
-                console.log("🔄 Retrying with 'email' field instead of 'identifier'");
-                try {
-                    const emailPayload = {
-                        email: identifier.trim(),
-                        password: password,
-                    };
-                    const res = await api.post('/auth/login', emailPayload);
-
-                    console.log("📧 Manual Login Response (email field):", res.data);
-                    login(res.data.user, res.data.token);
-
-                    setTimeout(() => {
-                        navigate('/');
-                    }, 100);
-                    setIsLoading(false);
-                    return;
-                } catch (retryError) {
-                    console.error("Retry with email also failed:", retryError);
-                }
-            }
-
+            console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
-            console.error(message);
+            alert(message);
         } finally {
             setIsLoading(false);
         }
@@ -157,63 +98,17 @@ const Login = () => {
                     uid: user.uid
                 });
 
-                console.log("🔵 Google Login Response:", res.data);
-                console.log("🔵 User data:", res.data.user);
-                console.log("🔵 Token:", res.data.token);
-
                 login(res.data.user, res.data.token);
-
-                // Delay navigation to ensure auth state is saved
-                setTimeout(() => {
-                    navigate('/');
-                }, 100);
+                alert("Success! Now redirecting to NEW DASHBOARD...");
+                navigate('/dashboard');
 
             } catch (error) {
                 console.error("Google Login Error:", error);
                 const message = error.response?.data?.message || error.message || 'Google Login Failed';
-                console.error("Google login failed:", message);
+                alert(message);
             } finally {
                 setIsLoading(false);
             }
-        }
-    };
-
-    const verifyOtp = async (e) => {
-        if (e) e.preventDefault();
-
-        if (!otp || otp.length !== 6) {
-            console.error("Please enter a valid 6-digit OTP");
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const res = await api.post('/auth/verify-otp', {
-                email: otpEmail,
-                otp: otp
-            });
-
-            console.log("🔐 OTP Verification Response:", res.data);
-
-            const userData = res.data.user || res.data.data?.user;
-            const token = res.data.token || res.data.data?.token || res.data.accessToken;
-
-            if (userData && token) {
-                login(userData, token);
-                setShowOtpModal(false);
-                setOtp('');
-                setTimeout(() => {
-                    navigate('/');
-                }, 100);
-            } else {
-                console.error("Invalid OTP response structure");
-            }
-        } catch (error) {
-            console.error("OTP Verification Error:", error);
-            const message = error.response?.data?.message || 'Invalid OTP';
-            console.error(message);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -389,75 +284,6 @@ const Login = () => {
                     </div>
                 </motion.div>
             </div>
-
-            {/* OTP Verification Modal */}
-            <AnimatePresence>
-                {showOtpModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center px-6"
-                        onClick={() => setShowOtpModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="bg-[#121212]/95 backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 md:p-12 max-w-md w-full relative overflow-hidden"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-br from-lh-purple/[0.05] via-transparent to-lh-purple/[0.02]"></div>
-
-                            <div className="relative z-10 space-y-6">
-                                <div className="text-center space-y-2">
-                                    <Shield className="text-lh-purple mx-auto" size={40} />
-                                    <h2 className="text-2xl md:text-3xl font-[900] uppercase tracking-tighter">
-                                        Verify <span className="text-lh-purple">OTP</span>
-                                    </h2>
-                                    <p className="text-gray-400 font-bold text-xs tracking-wide uppercase">
-                                        Enter the 6-digit code sent to<br />
-                                        <span className="text-lh-purple">{otpEmail}</span>
-                                    </p>
-                                </div>
-
-                                <form onSubmit={verifyOtp} className="space-y-6">
-                                    <div className="relative">
-                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple" size={18} />
-                                        <input
-                                            type="text"
-                                            required
-                                            maxLength={6}
-                                            placeholder="ENTER 6-DIGIT OTP"
-                                            value={otp}
-                                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-[11px] font-black tracking-[0.3em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all placeholder:text-gray-700 text-center"
-                                            autoFocus
-                                        />
-                                    </div>
-
-                                    <div className="flex gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => { setShowOtpModal(false); setOtp(''); }}
-                                            className="flex-1 bg-white/[0.03] border border-white/10 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-white/[0.08] transition-all"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={isLoading || otp.length !== 6}
-                                            className="flex-1 bg-lh-purple text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-lh-purple/80 flex items-center justify-center gap-2"
-                                        >
-                                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };
