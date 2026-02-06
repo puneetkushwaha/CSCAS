@@ -1,229 +1,465 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Eye, EyeOff, Mail, AlertTriangle, Loader2, Phone } from 'lucide-react';
-import RedGeometricBackground from '../components/RedGeometricBackground';
+import { Mail, Lock, ArrowLeft, Shield, Eye, EyeOff, AlertTriangle, Loader2 } from 'lucide-react';
+import ngdPic from '../assets/images/ngd-pic.png';
+import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../firebase';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+import api from '../utils/api';
 
-// Helper for Apple Icon
-export default function Login() {
+const Login = () => {
     const { login } = useAuth();
-    const [showPassword, setShowPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const [identifier, setIdentifier] = useState(''); // Combined email or phone
-    const [formData, setFormData] = useState({
-        password: ''
-    });
+
+    // Parallax logic
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+    const springConfig = { damping: 25, stiffness: 150 };
+    const springX = useSpring(mouseX, springConfig);
+    const springY = useSpring(mouseY, springConfig);
+    const charX = useTransform(springX, [-300, 300], [-15, 15]);
+    const charY = useTransform(springY, [-300, 300], [-15, 15]);
+
+    const [ripples, setRipples] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [identifier, setIdentifier] = useState('');
+    const [password, setPassword] = useState('');
+    const [showOtpModal, setShowOtpModal] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [otpEmail, setOtpEmail] = useState('');
+    const { user } = useAuth();
+
+    useEffect(() => {
+        if (user) {
+            navigate('/');
+        }
+    }, [user, navigate]);
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            mouseX.set(e.clientX - window.innerWidth / 2);
+            mouseY.set(e.clientY - window.innerHeight / 2);
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, [mouseX, mouseY]);
+
+    const handleCardClick = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const id = Date.now();
+        setRipples(prev => [...prev, { x, y, id }]);
+        setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 1000);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        if (!identifier || !formData.password) {
-            alert("All fields are required");
+        if (!identifier || !password) {
+            console.error("All fields are required");
             setIsLoading(false);
             return;
         }
 
-        // ✅ BACKEND EXPECTS: identifier + password
-        const payload = {
+
+        // Try with identifier field (some backends expect this)
+        let payload = {
             identifier: identifier.trim(),
-            password: formData.password,
+            password: password,
         };
 
+        console.log("📤 Sending login payload:", payload);
+
         try {
-            const res = await fetch(`${BASE_URL}/api/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
+            const res = await api.post('/auth/login', payload);
 
-            const data = await res.json();
+            console.log("📧 Full Response:", res);
+            console.log("📧 Response Data:", res.data);
+            console.log("📧 Response Data Keys:", Object.keys(res.data));
 
-            if (!res.ok) {
-                alert(data.message || 'Invalid credentials');
+            // Check if OTP is required
+            if (res.data.message && res.data.message.toLowerCase().includes('otp')) {
+                console.log("🔐 OTP verification required");
+                setOtpEmail(identifier.trim());
+                setShowOtpModal(true);
+                setIsLoading(false);
                 return;
             }
 
-            // ✅ SAVE JWT + USER
-            login(data.user, data.token);
-            navigate('/');
+            console.log("📧 User data:", res.data.user);
+            console.log("📧 Token:", res.data.token);
 
+            // Check if data is nested or has different structure
+            const userData = res.data.user || res.data.data?.user;
+            const token = res.data.token || res.data.data?.token || res.data.accessToken || res.data.authToken;
+
+            console.log("✅ Extracted User:", userData);
+            console.log("✅ Extracted Token:", token);
+
+            if (userData && token) {
+                login(userData, token);
+                setTimeout(() => {
+                    navigate('/');
+                }, 100);
+            } else {
+                console.error("❌ Login failed - no user or token in response");
+            }
         } catch (error) {
-            console.error(error);
-            alert('Server error');
+            console.error("Login error:", error);
+
+            // If identifier fails with 401, try with email field
+            if (error.response?.status === 401 && payload.identifier) {
+                console.log("🔄 Retrying with 'email' field instead of 'identifier'");
+                try {
+                    const emailPayload = {
+                        email: identifier.trim(),
+                        password: password,
+                    };
+                    const res = await api.post('/auth/login', emailPayload);
+
+                    console.log("📧 Manual Login Response (email field):", res.data);
+                    login(res.data.user, res.data.token);
+
+                    setTimeout(() => {
+                        navigate('/');
+                    }, 100);
+                    setIsLoading(false);
+                    return;
+                } catch (retryError) {
+                    console.error("Retry with email also failed:", retryError);
+                }
+            }
+
+            const message = error.response?.data?.message || 'Invalid credentials';
+            console.error(message);
         } finally {
             setIsLoading(false);
         }
     };
 
     const socialLogin = async (provider) => {
-        setIsLoading(true);
-        try {
-            // Warm up the server before redirecting (important for Render free tier)
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        if (provider === 'google') {
+            setIsLoading(true);
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
 
-            await fetch(BASE_URL, { signal: controller.signal, mode: 'no-cors' }).catch(() => { });
-            clearTimeout(timeoutId);
+                // Send to backend
+                const res = await api.post('/auth/google-login', {
+                    email: user.email,
+                    name: user.displayName,
+                    avatar: user.photoURL,
+                    uid: user.uid
+                });
 
-            window.location.href = `${BASE_URL}/api/auth/${provider}`;
-        } catch (error) {
-            window.location.href = `${BASE_URL}/api/auth/${provider}`; // Fallback to direct redirect
+                console.log("🔵 Google Login Response:", res.data);
+                console.log("🔵 User data:", res.data.user);
+                console.log("🔵 Token:", res.data.token);
+
+                login(res.data.user, res.data.token);
+
+                // Delay navigation to ensure auth state is saved
+                setTimeout(() => {
+                    navigate('/');
+                }, 100);
+
+            } catch (error) {
+                console.error("Google Login Error:", error);
+                const message = error.response?.data?.message || error.message || 'Google Login Failed';
+                console.error("Google login failed:", message);
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
+    const verifyOtp = async (e) => {
+        if (e) e.preventDefault();
 
+        if (!otp || otp.length !== 6) {
+            console.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const res = await api.post('/auth/verify-otp', {
+                email: otpEmail,
+                otp: otp
+            });
+
+            console.log("🔐 OTP Verification Response:", res.data);
+
+            const userData = res.data.user || res.data.data?.user;
+            const token = res.data.token || res.data.data?.token || res.data.accessToken;
+
+            if (userData && token) {
+                login(userData, token);
+                setShowOtpModal(false);
+                setOtp('');
+                setTimeout(() => {
+                    navigate('/');
+                }, 100);
+            } else {
+                console.error("Invalid OTP response structure");
+            }
+        } catch (error) {
+            console.error("OTP Verification Error:", error);
+            const message = error.response?.data?.message || 'Invalid OTP';
+            console.error(message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+    };
 
     return (
-        // Fixed Viewport Wrapper
-        <div className="h-screen w-screen relative font-['Inter'] overflow-hidden flex flex-col">
+        <div className="min-h-screen w-full bg-lh-dark text-white font-plus-jakarta flex flex-col">
+            <Navbar />
 
-            {/* Background Layer - Preserving the Aggressive Mountain */}
-            <RedGeometricBackground
-                height={30}
-                jaggednessScale={2.5}
-                opacity={0.4}
-                planeSize={[60, 40]}
-                cameraPos={[0, 0, 15]}
-                ashCount={200}
-                showPoints={false}
-                wireframeOpacity={0.2}
-            />
+            <div className="flex-1 flex items-center justify-center py-20 px-6">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    onClick={handleCardClick}
+                    className="max-w-[1000px] w-full bg-[#121212]/60 backdrop-blur-3xl border border-white/5 rounded-[32px] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] grid lg:grid-cols-12 relative group cursor-crosshair"
+                >
+                    <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
+                        <AnimatePresence>
+                            {ripples.map(ripple => (
+                                <motion.div
+                                    key={ripple.id}
+                                    initial={{ opacity: 0.6, scale: 0 }}
+                                    animate={{ opacity: 0, scale: 4 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
+                                    style={{
+                                        position: 'absolute',
+                                        left: ripple.x, top: ripple.y,
+                                        width: '100px', height: '100px',
+                                        marginLeft: '-50px', marginTop: '-50px',
+                                        borderRadius: '50%',
+                                        background: 'radial-gradient(circle, rgba(188,19,254,0.4) 0%, rgba(188,19,254,0) 70%)',
+                                        boxShadow: '0 0 20px rgba(188,19,254,0.2)'
+                                    }}
+                                />
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-lh-purple/[0.05] via-transparent to-lh-purple/[0.02] pointer-events-none"></div>
 
-            {/* Main Scrollable Area */}
-            <div className="relative z-10 w-full h-full overflow-y-auto overflow-x-hidden p-6">
-
-                <div className="min-h-full flex flex-col items-center justify-center py-10">
-
-                    {/* Logo / Header */}
-                    <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
-                        <div className="inline-flex items-center gap-3 mb-2">
-                            <Shield className="w-10 h-10 text-red-600 fill-red-600/20" />
-                            <span className="text-3xl font-black text-white tracking-tight uppercase">CSCA <span className="text-red-600">Secure</span></span>
-                        </div>
+                    <div className="lg:col-span-5 hidden lg:flex items-center justify-center bg-black/20 border-r border-white/5 relative overflow-hidden p-8">
+                        <div className="absolute inset-0 bg-lh-purple/10 blur-[100px] rounded-full scale-75 animate-pulse"></div>
+                        <motion.div style={{ x: charX, y: charY }} className="relative z-10 w-full flex justify-center">
+                            <motion.img
+                                src={ngdPic}
+                                alt="Cyber Character"
+                                className="w-full max-w-[280px] h-auto drop-shadow-[0_0_30px_rgba(188,19,254,0.3)]"
+                                animate={{ y: [0, -10, 0] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            />
+                        </motion.div>
                     </div>
 
-                    {/* Card */}
-                    <div className="w-full max-w-xl bg-black/60 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_0_80px_-20px_rgba(220,38,38,0.4)] overflow-hidden animate-in zoom-in-95 duration-500">
-
-                        {/* Red Accent Line */}
-                        <div className="h-1 w-full bg-gradient-to-r from-red-900 via-red-600 to-red-900"></div>
-
-                        <div className="p-8 md:p-10">
-
-                            {/* Heading */}
-                            <h1 className="text-2xl font-black text-white mb-6 uppercase tracking-wider text-center">Log in</h1>
-
-                            {/* Important Alert */}
-                            <div className="mb-6 space-y-4">
-                                <p className="text-sm text-gray-300 font-medium leading-relaxed text-center">
-                                    We are unifying your CSCA accounts under a single login.
+                    <div className="lg:col-span-7 p-8 md:p-12">
+                        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8 relative z-10">
+                            <motion.div variants={itemVariants} className="space-y-4">
+                                <Link to="/" className="inline-flex items-center gap-2 text-lh-purple text-[10px] font-black uppercase tracking-widest hover:text-white transition-all group/back">
+                                    <ArrowLeft size={14} className="group-hover/back:-translate-x-1 transition-transform" /> Back to Home
+                                </Link>
+                                <div className="flex items-center gap-3">
+                                    <Shield className="text-lh-purple" size={32} />
+                                    <h1 className="text-3xl md:text-5xl font-[900] uppercase tracking-tighter">
+                                        User <span className="text-lh-purple">Login</span>
+                                    </h1>
+                                </div>
+                                <p className="text-gray-400 font-bold text-xs tracking-wide border-l-2 border-lh-purple pl-4 uppercase">
+                                    Enter your details to access your account.
                                 </p>
+                            </motion.div>
 
-                                <div className="bg-red-900/10 border border-red-900/30 p-4 rounded-lg">
-                                    <div className="flex gap-3">
-                                        <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                                        <p className="text-xs text-gray-400 leading-relaxed">
-                                            If you recently received an email with a temporary password, it is part of our new site launch. Ensure the sender is Verified.
-                                        </p>
-                                    </div>
+                            <div className="bg-red-900/10 border border-red-900/30 p-4 rounded-lg">
+                                <div className="flex gap-3">
+                                    <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                    <p className="text-[10px] text-gray-400 leading-relaxed font-bold uppercase tracking-wider">
+                                        If you recently received an email with a temporary password, it is part of our new site launch. Ensure the sender is Verified.
+                                    </p>
                                 </div>
                             </div>
 
-
-                            {/* Main Form */}
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <div className="space-y-1.5 animate-in fade-in duration-300">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Email or Mobile Number</label>
-                                    <div className="relative group">
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="space-y-4">
+                                    <motion.div variants={itemVariants} className="relative group/input">
+                                        <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
                                         <input
                                             type="text"
+                                            required
+                                            placeholder="EMAIL OR MOBILE NUMBER"
                                             value={identifier}
                                             onChange={(e) => setIdentifier(e.target.value)}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 focus:bg-black transition-all placeholder:text-gray-700 font-bold"
-                                            placeholder="Phone number or email"
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-[11px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all placeholder:text-gray-700"
                                         />
-                                        <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-red-500 transition-colors" />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <div className="flex justify-between items-center pl-1">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Password</label>
-                                    </div>
-                                    <div className="relative group">
+                                    </motion.div>
+                                    <motion.div variants={itemVariants} className="relative group/input">
+                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
                                         <input
                                             type={showPassword ? "text" : "password"}
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 focus:bg-black transition-all placeholder:text-gray-700 pr-12 font-bold"
-                                            placeholder="••••••••"
+                                            required
+                                            placeholder="PASSWORD"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-5 pl-14 pr-12 text-[11px] font-black tracking-[0.2em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all placeholder:text-gray-700"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors"
+                                            className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors"
                                         >
-                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                         </button>
-                                    </div>
-                                    <div className="flex justify-end pt-1">
-                                        <Link to="/forgot-password" className="text-[10px] font-bold text-red-500 hover:text-white transition-colors uppercase tracking-wider">Reset password</Link>
-                                    </div>
+                                    </motion.div>
                                 </div>
 
-                                <button
-                                    type="submit"
+                                <motion.div variants={itemVariants} className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                                    <label className="flex items-center gap-2 cursor-pointer group/check text-gray-400 hover:text-white transition-colors">
+                                        <input type="checkbox" className="hidden peer" />
+                                        <div className="w-5 h-5 border-2 border-white/10 rounded-md flex items-center justify-center peer-checked:bg-lh-purple peer-checked:border-lh-purple transition-all group-hover/check:border-lh-purple/40">
+                                            <div className="w-1.5 h-1.5 bg-white rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                                        </div>
+                                        <span>Maintain Session</span>
+                                    </label>
+                                    <Link to="/forgot-password" title="Recover Key" className="text-lh-purple hover:text-white hover:underline transition-all">FORGOT PASSWORD</Link>
+                                </motion.div>
+
+                                <motion.button
+                                    variants={itemVariants}
                                     disabled={isLoading}
-                                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-lg uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-red-900/40 hover:shadow-red-600/20 hover:-translate-y-0.5"
+                                    whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(188, 19, 254, 0.4)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="w-full bg-lh-purple text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all relative overflow-hidden group/btn flex items-center justify-center gap-2"
                                 >
-                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Log in"}
-                                </button>
+                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span className="relative z-10">Sign In</span>}
+                                    <div className="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity"></div>
+                                </motion.button>
                             </form>
 
-                            <div className="relative my-8">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-white/5"></div>
-                                </div>
-                            </div>
+                            <motion.div variants={itemVariants} className="relative flex items-center gap-4">
+                                <div className="flex-1 h-[1px] bg-white/5"></div>
+                                <span className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">Or continue with</span>
+                                <div className="flex-1 h-[1px] bg-white/5"></div>
+                            </motion.div>
 
-                            <div className="flex justify-center">
-                                <button
-                                    className="w-full h-12 flex items-center justify-center gap-3 border border-white/10 rounded-lg hover:bg-white/5 hover:border-white/30 transition-all text-white font-bold group"
+                            <div className="space-y-4 text-center">
+                                <motion.button
+                                    variants={itemVariants}
                                     onClick={() => socialLogin("google")}
+                                    className="w-full flex items-center justify-center gap-3 bg-white/[0.03] border border-white/5 hover:bg-white/[0.08] hover:border-white/10 py-4 rounded-xl transition-all group/social"
                                 >
-                                    <span className="text-xs uppercase tracking-widest">Continue with</span>
-                                    <svg className="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="white">
-                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31l3.57 2.77c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1c-1.9 0-3.53.8-4.64 2.06l3.63 2.82c.59-.14 1.22-.14 1.82-.14z" fill="#EA4335" />
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                                            <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
+                                            <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" />
+                                            <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.769 -21.864 51.959 -21.864 51.129 C -21.864 50.299 -21.734 49.489 -21.484 48.729 L -21.484 45.639 L -25.464 45.639 C -26.274 47.249 -26.734 49.069 -26.734 51.129 C -26.734 53.189 -26.274 55.009 -25.464 56.619 L -21.484 53.529 Z" />
+                                            <path fill="#EA4335" d="M -14.754 43.749 C -12.984 43.749 -11.404 44.359 -10.154 45.549 L -6.744 42.139 C -8.804 40.219 -11.514 39.009 -14.754 39.009 C -19.444 39.009 -23.494 41.709 -25.464 45.639 L -21.484 48.729 C -20.534 45.879 -17.884 43.749 -14.754 43.749 Z" />
+                                        </g>
                                     </svg>
-                                </button>
+                                    <span className="text-[10px] font-black uppercase tracking-widest leading-none pt-1">Continue with Google</span>
+                                </motion.button>
                             </div>
 
-                            <div className="pt-6 text-center">
-                                <p className="text-sm text-gray-400">
-                                    Don't have an account? <Link to="/register" className="text-red-500 font-bold hover:text-white transition-colors pl-1">Create one</Link>
-                                </p>
-                            </div>
-
-                        </div>
+                            <motion.p variants={itemVariants} className="text-center text-[11px] font-bold text-gray-500 uppercase tracking-widest pt-2">
+                                Don't have an account? <Link to="/signup" className="text-lh-purple hover:text-white transition-colors underline underline-offset-4">Sign Up</Link>
+                            </motion.p>
+                        </motion.div>
                     </div>
-
-                    {/* Footer Links */}
-                    <div className="mt-12 flex flex-wrap justify-center gap-6 opacity-60 hover:opacity-100 transition-opacity">
-                        <Link to="/partners" className="text-gray-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">Partners</Link>
-                        <Link to="/legal" className="text-gray-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">Legal</Link>
-                        <Link to="/contact" className="text-gray-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">Contact</Link>
-                        <Link to="/privacy" className="text-gray-500 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">Privacy</Link>
-                    </div>
-                </div>
+                </motion.div>
             </div>
+
+            {/* OTP Verification Modal */}
+            <AnimatePresence>
+                {showOtpModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center px-6"
+                        onClick={() => setShowOtpModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-[#121212]/95 backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 md:p-12 max-w-md w-full relative overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-lh-purple/[0.05] via-transparent to-lh-purple/[0.02]"></div>
+
+                            <div className="relative z-10 space-y-6">
+                                <div className="text-center space-y-2">
+                                    <Shield className="text-lh-purple mx-auto" size={40} />
+                                    <h2 className="text-2xl md:text-3xl font-[900] uppercase tracking-tighter">
+                                        Verify <span className="text-lh-purple">OTP</span>
+                                    </h2>
+                                    <p className="text-gray-400 font-bold text-xs tracking-wide uppercase">
+                                        Enter the 6-digit code sent to<br />
+                                        <span className="text-lh-purple">{otpEmail}</span>
+                                    </p>
+                                </div>
+
+                                <form onSubmit={verifyOtp} className="space-y-6">
+                                    <div className="relative">
+                                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-lh-purple" size={18} />
+                                        <input
+                                            type="text"
+                                            required
+                                            maxLength={6}
+                                            placeholder="ENTER 6-DIGIT OTP"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                                            className="w-full bg-black/60 border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-[11px] font-black tracking-[0.3em] outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all placeholder:text-gray-700 text-center"
+                                            autoFocus
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setShowOtpModal(false); setOtp(''); }}
+                                            className="flex-1 bg-white/[0.03] border border-white/10 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-white/[0.08] transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isLoading || otp.length !== 6}
+                                            className="flex-1 bg-lh-purple text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-lh-purple/80 flex items-center justify-center gap-2"
+                                        >
+                                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
-}
+};
+
+export default Login;
