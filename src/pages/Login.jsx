@@ -99,8 +99,7 @@ const Login = () => {
                 });
 
                 login(res.data.user, res.data.token);
-                alert("Success! Now redirecting to NEW DASHBOARD...");
-                navigate('/dashboard');
+                navigate('/hone');
 
             } catch (error) {
                 console.error("Google Login Error:", error);
