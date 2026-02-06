@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+import Navbar from '../components/Navbar';
+import api from '../utils/api';
 
 import {
     Eye,
@@ -13,11 +14,11 @@ import {
     Save,
     Loader2,
     Camera,
+    ArrowLeft,
 } from 'lucide-react';
-import RedGeometricBackground from '../components/RedGeometricBackground';
 
 const Profile = () => {
-    const { user, token, updateUser } = useAuth(); // ✅ updateUser add kiya
+    const { user, token, updateUser } = useAuth();
     const fileInputRef = useRef(null);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +31,6 @@ const Profile = () => {
         role: user?.role || 'student',
     });
 
-    // ✅ FIX: user update hone ke baad profile state ko sync karo
     useEffect(() => {
         if (user) {
             setProfile({
@@ -50,33 +50,18 @@ const Profile = () => {
 
     const [showOldPassword, setShowOldPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    // 🔹 UPDATE PROFILE
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
         try {
-            const res = await fetch(`${BASE_URL}/users/update`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    firstName: profile.firstName,
-                    lastName: profile.lastName,
-                }),
+            const res = await api.put('/users/update', {
+                firstName: profile.firstName,
+                lastName: profile.lastName,
             });
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                alert(data.message || 'Unauthorized');
-                return;
-            }
-
-            // ✅ Context ko update karo taaki UI immediately update ho jaye
             updateUser({
                 firstName: profile.firstName,
                 lastName: profile.lastName,
@@ -85,13 +70,12 @@ const Profile = () => {
             alert('Profile updated successfully');
         } catch (err) {
             console.error(err);
-            alert('Server error');
+            alert(err.response?.data?.message || 'Server error');
         } finally {
             setIsLoading(false);
         }
     };
 
-    // 🔹 CHANGE PASSWORD
     const handlePasswordChange = async (e) => {
         e.preventDefault();
 
@@ -103,36 +87,21 @@ const Profile = () => {
         setIsPasswordLoading(true);
 
         try {
-            const res = await fetch(`${BASE_URL}/users/change-password`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    oldPassword: passwords.oldPassword,
-                    newPassword: passwords.newPassword,
-                }),
+            const res = await api.put('/users/change-password', {
+                oldPassword: passwords.oldPassword,
+                newPassword: passwords.newPassword,
             });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                alert(data.message || 'Password update failed');
-                return;
-            }
 
             alert('Password updated successfully');
             setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
         } catch (err) {
             console.error(err);
-            alert('Server error');
+            alert(err.response?.data?.message || 'Password update failed');
         } finally {
             setIsPasswordLoading(false);
         }
     };
 
-    // 🔹 IMAGE UPLOAD
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -141,241 +110,298 @@ const Profile = () => {
         formData.append('image', file);
 
         try {
-            const res = await fetch(`${BASE_URL}/users/upload-image`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: formData,
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                alert(data.message || 'Upload failed');
-                return;
-            }
-
+            const res = await api.post('/users/upload-image', formData);
             alert('Profile image uploaded');
+            // Refresh user data if needed
         } catch (err) {
             console.error(err);
-            alert('Server error');
+            alert(err.response?.data?.message || 'Upload failed');
         }
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } }
+    };
+
     return (
-        <div className="min-h-screen bg-black text-white relative font-['Inter']">
-            <RedGeometricBackground
-                height={30}
-                jaggednessScale={2}
-                opacity={0.3}
-                planeSize={[60, 40]}
-                cameraPos={[0, 0, 15]}
-                ashCount={150}
-            />
+        <div className="min-h-screen w-full bg-lh-dark text-white font-plus-jakarta flex flex-col">
+            <Navbar />
 
-            <div className="relative z-10 max-w-4xl mx-auto pt-32 pb-20 px-6">
-                <div className="flex flex-col md:flex-row gap-8 items-start">
-
-                    {/* Left Side - Avatar & Quick Info */}
-                    <div className="w-full md:w-1/3 space-y-6">
-                        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl text-center relative overflow-hidden group">
-                            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-red-900 via-red-600 to-red-900"></div>
-
-                            <div className="relative inline-block mb-4">
-                                <div className="w-24 h-24 rounded-full bg-red-600/20 border-2 border-red-600/50 flex items-center justify-center mx-auto overflow-hidden">
-                                    {user?.profileImage ? (
-                                        <img src={`${BASE_URL}${user.profileImage}`} alt="" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <User className="w-12 h-12 text-red-500" />
-                                    )}
+            <div className="flex-1 py-20 px-6">
+                <div className="max-w-5xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="space-y-8"
+                    >
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <Shield className="text-lh-purple" size={40} />
+                                <div>
+                                    <h1 className="text-4xl md:text-5xl font-[900] uppercase tracking-tighter">
+                                        User <span className="text-lh-purple">Profile</span>
+                                    </h1>
+                                    <p className="text-gray-400 font-bold text-xs tracking-wide uppercase mt-2">
+                                        Manage your account settings
+                                    </p>
                                 </div>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleImageUpload}
-                                    className="hidden"
-                                    accept="image/*"
-                                />
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="absolute bottom-0 right-0 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center border-2 border-black hover:scale-110 transition-transform"
+                            </div>
+                        </div>
+
+                        <div className="grid lg:grid-cols-12 gap-8">
+                            {/* Left Sidebar - Avatar & Info */}
+                            <div className="lg:col-span-4 space-y-6">
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="bg-[#121212]/60 backdrop-blur-3xl border border-white/5 rounded-[32px] p-8 relative overflow-hidden"
                                 >
-                                    <Camera className="w-4 h-4 text-white" />
-                                </button>
-                            </div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-lh-purple/[0.05] via-transparent to-lh-purple/[0.02] pointer-events-none"></div>
 
-                            <h2 className="text-xl font-black uppercase tracking-tight text-white mb-1">
-                                {profile.firstName} {profile.lastName}
-                            </h2>
-                            <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-4">{profile.role}</p>
-
-                            <div className="pt-4 border-t border-white/5 flex flex-col gap-2">
-                                <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase">
-                                    <Mail className="w-3 h-3 text-red-500" />
-                                    {profile.email}
-                                </div>
-                                <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase">
-                                    <Shield className="w-3 h-3 text-red-500" />
-                                    Verified Operative
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-red-600/5 border border-red-600/20 rounded-2xl p-6">
-                            <h3 className="text-xs font-black uppercase text-red-500 mb-2 tracking-widest">Academy Rank</h3>
-                            <div className="flex items-center justify-between">
-                                <span className="text-2xl font-black text-white">#1,248</span>
-                                <span className="text-[10px] font-bold bg-white/5 px-2 py-1 rounded border border-white/10 text-gray-400">TOP 5%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Side - Forms */}
-                    <div className="w-full md:w-2/3 space-y-6">
-                        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-10 backdrop-blur-xl relative overflow-hidden">
-                            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-red-900 via-red-600 to-red-900"></div>
-
-                            <h1 className="text-2xl font-black text-white mb-8 uppercase tracking-wider flex items-center gap-3">
-                                <div className="p-2 bg-red-600 rounded-lg">
-                                    <User className="w-5 h-5 text-white" />
-                                </div>
-                                Profile Settings
-                            </h1>
-
-                            <form onSubmit={handleUpdateProfile} className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">First Name</label>
-                                        <input
-                                            type="text"
-                                            value={profile.firstName}
-                                            onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 focus:bg-black transition-all font-bold"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Last Name</label>
-                                        <input
-                                            type="text"
-                                            value={profile.lastName}
-                                            onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 focus:bg-black transition-all font-bold"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Email Address (Registry)</label>
-                                    <input
-                                        type="email"
-                                        value={profile.email}
-                                        readOnly
-                                        className="w-full bg-white/[0.01] border border-white/5 rounded-lg px-4 py-3 text-gray-500 text-sm focus:outline-none cursor-not-allowed font-medium"
-                                    />
-                                </div>
-
-                                <div className="pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className="bg-red-600 hover:bg-red-700 text-white font-black py-4 px-8 rounded-xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 shadow-lg shadow-red-900/40 hover:-translate-y-1 disabled:opacity-50 disabled:translate-y-0"
-                                    >
-                                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Update Registry</>}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        {/* Password Change Card */}
-                        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl relative overflow-hidden">
-                            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-red-900 via-red-600 to-red-900"></div>
-
-                            <h2 className="text-xl font-black text-white mb-8 uppercase tracking-wider flex items-center gap-3">
-                                <div className="p-2 bg-red-600 rounded-lg">
-                                    <Lock className="w-5 h-5 text-white" />
-                                </div>
-                                Access Control
-                            </h2>
-
-                            <form onSubmit={handlePasswordChange} className="space-y-6">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Current Password</label>
-                                    <div className="relative group">
-                                        <input
-                                            type={showOldPassword ? "text" : "password"}
-                                            value={passwords.oldPassword}
-                                            onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
-                                            required
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 focus:bg-black transition-all font-bold pr-12"
-                                            placeholder="••••••••"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowOldPassword(!showOldPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
-                                        >
-                                            {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">New Hash</label>
-                                        <div className="relative group">
+                                    <div className="relative z-10 text-center space-y-4">
+                                        <div className="relative inline-block">
+                                            <div className="w-32 h-32 rounded-full bg-lh-purple/20 border-4 border-lh-purple/50 flex items-center justify-center mx-auto overflow-hidden shadow-[0_0_30px_rgba(188,19,254,0.3)]">
+                                                {user?.profileImage ? (
+                                                    <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="w-16 h-16 text-lh-purple" />
+                                                )}
+                                            </div>
                                             <input
-                                                type={showNewPassword ? "text" : "password"}
-                                                value={passwords.newPassword}
-                                                onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
-                                                required
-                                                className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 focus:bg-black transition-all font-bold pr-12"
-                                                placeholder="••••••••"
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                                accept="image/*"
                                             />
                                             <button
-                                                type="button"
-                                                onClick={() => setShowNewPassword(!showNewPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="absolute bottom-1 right-1 w-10 h-10 bg-lh-purple rounded-full flex items-center justify-center border-4 border-lh-dark hover:scale-110 transition-transform shadow-[0_0_20px_rgba(188,19,254,0.5)]"
                                             >
-                                                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                <Camera className="w-5 h-5 text-white" />
                                             </button>
                                         </div>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Confirm Hash</label>
-                                        <input
-                                            type="password"
-                                            value={passwords.confirmPassword}
-                                            onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                                            required
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-red-500 focus:bg-black transition-all font-bold"
-                                            placeholder="••••••••"
-                                        />
-                                    </div>
-                                </div>
 
-                                <div className="pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={isPasswordLoading}
-                                        className="border-2 border-red-600 hover:bg-red-600 text-red-500 hover:text-white font-black py-4 px-8 rounded-xl uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-50"
-                                    >
-                                        {isPasswordLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Update Credentials"}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-black uppercase tracking-tight text-white">
+                                                {profile.firstName} {profile.lastName}
+                                            </h2>
+                                            <p className="text-[10px] font-bold text-lh-purple uppercase tracking-widest mt-1">
+                                                {profile.role}
+                                            </p>
+                                        </div>
 
-                        {/* Security Notice */}
-                        <div className="bg-red-900/5 border border-red-900/20 rounded-3xl p-8 backdrop-blur-xl">
-                            <h3 className="text-sm font-black uppercase text-red-500 mb-4 tracking-widest flex items-center gap-2">
-                                <Shield className="w-4 h-4" /> Account Protection
-                            </h3>
-                            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                                <p className="text-xs text-gray-400 font-medium leading-relaxed">Your account is currently protected by CSCA Multi-Layer Security. Ensure your session is terminated when accessing from untrusted terminals.</p>
-                                <button className="whitespace-nowrap px-8 py-3 border-2 border-red-900/50 rounded-xl text-[10px] font-black uppercase text-red-500 hover:bg-red-900/10 transition-all tracking-[0.2em]">Deactivate Node</button>
+                                        <div className="pt-4 border-t border-white/5 space-y-3">
+                                            <div className="flex items-center gap-3 text-[10px] text-gray-400 font-bold uppercase">
+                                                <Mail className="w-4 h-4 text-lh-purple" />
+                                                {profile.email}
+                                            </div>
+                                            <div className="flex items-center gap-3 text-[10px] text-gray-400 font-bold uppercase">
+                                                <Shield className="w-4 h-4 text-lh-purple" />
+                                                Verified Account
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </div>
+
+                            {/* Right Side - Forms */}
+                            <div className="lg:col-span-8 space-y-6">
+                                {/* Profile Update Form */}
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="bg-[#121212]/60 backdrop-blur-3xl border border-white/5 rounded-[32px] p-8 md:p-10 relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-br from-lh-purple/[0.05] via-transparent to-lh-purple/[0.02] pointer-events-none"></div>
+
+                                    <div className="relative z-10 space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <User className="text-lh-purple" size={28} />
+                                            <h2 className="text-2xl md:text-3xl font-[900] uppercase tracking-tighter">
+                                                Profile <span className="text-lh-purple">Settings</span>
+                                            </h2>
+                                        </div>
+
+                                        <form onSubmit={handleUpdateProfile} className="space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <motion.div variants={itemVariants} className="relative group/input">
+                                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">
+                                                        First Name
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={profile.firstName}
+                                                        onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-5 text-[11px] font-black tracking-wide outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all"
+                                                    />
+                                                </motion.div>
+                                                <motion.div variants={itemVariants} className="relative group/input">
+                                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">
+                                                        Last Name
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={profile.lastName}
+                                                        onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 px-5 text-[11px] font-black tracking-wide outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all"
+                                                    />
+                                                </motion.div>
+                                            </div>
+
+                                            <motion.div variants={itemVariants} className="relative group/input">
+                                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">
+                                                    Email Address (Read Only)
+                                                </label>
+                                                <input
+                                                    type="email"
+                                                    value={profile.email}
+                                                    readOnly
+                                                    className="w-full bg-black/40 border border-white/5 rounded-2xl py-4 px-5 text-[11px] font-black tracking-wide outline-none cursor-not-allowed text-gray-600"
+                                                />
+                                            </motion.div>
+
+                                            <motion.button
+                                                variants={itemVariants}
+                                                type="submit"
+                                                disabled={isLoading}
+                                                whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(188, 19, 254, 0.4)" }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className="w-full bg-lh-purple text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all relative overflow-hidden group/btn flex items-center justify-center gap-2"
+                                            >
+                                                {isLoading ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <Save className="w-5 h-5" />
+                                                        <span>Update Profile</span>
+                                                    </>
+                                                )}
+                                                <div className="absolute inset-0 bg-white opacity-0 group-hover/btn:opacity-10 transition-opacity"></div>
+                                            </motion.button>
+                                        </form>
+                                    </div>
+                                </motion.div>
+
+                                {/* Password Change Form */}
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="bg-[#121212]/60 backdrop-blur-3xl border border-white/5 rounded-[32px] p-8 md:p-10 relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-br from-lh-purple/[0.05] via-transparent to-lh-purple/[0.02] pointer-events-none"></div>
+
+                                    <div className="relative z-10 space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <Lock className="text-lh-purple" size={28} />
+                                            <h2 className="text-2xl md:text-3xl font-[900] uppercase tracking-tighter">
+                                                Change <span className="text-lh-purple">Password</span>
+                                            </h2>
+                                        </div>
+
+                                        <form onSubmit={handlePasswordChange} className="space-y-6">
+                                            <motion.div variants={itemVariants} className="relative group/input">
+                                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">
+                                                    Current Password
+                                                </label>
+                                                <Lock className="absolute left-5 bottom-5 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
+                                                <input
+                                                    type={showOldPassword ? "text" : "password"}
+                                                    value={passwords.oldPassword}
+                                                    onChange={(e) => setPasswords({ ...passwords, oldPassword: e.target.value })}
+                                                    required
+                                                    placeholder="••••••••"
+                                                    className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-[11px] font-black tracking-wide outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all placeholder:text-gray-700"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowOldPassword(!showOldPassword)}
+                                                    className="absolute right-5 bottom-5 text-gray-600 hover:text-white transition-colors"
+                                                >
+                                                    {showOldPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </motion.div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <motion.div variants={itemVariants} className="relative group/input">
+                                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">
+                                                        New Password
+                                                    </label>
+                                                    <Lock className="absolute left-5 bottom-5 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
+                                                    <input
+                                                        type={showNewPassword ? "text" : "password"}
+                                                        value={passwords.newPassword}
+                                                        onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })}
+                                                        required
+                                                        placeholder="••••••••"
+                                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-[11px] font-black tracking-wide outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all placeholder:text-gray-700"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                                        className="absolute right-5 bottom-5 text-gray-600 hover:text-white transition-colors"
+                                                    >
+                                                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </motion.div>
+
+                                                <motion.div variants={itemVariants} className="relative group/input">
+                                                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">
+                                                        Confirm Password
+                                                    </label>
+                                                    <Lock className="absolute left-5 bottom-5 text-lh-purple group-focus-within/input:scale-110 transition-transform" size={18} />
+                                                    <input
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        value={passwords.confirmPassword}
+                                                        onChange={(e) => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                                                        required
+                                                        placeholder="••••••••"
+                                                        className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-[11px] font-black tracking-wide outline-none focus:border-lh-purple/50 focus:bg-lh-purple/[0.03] transition-all placeholder:text-gray-700"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-5 bottom-5 text-gray-600 hover:text-white transition-colors"
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                    </button>
+                                                </motion.div>
+                                            </div>
+
+                                            <motion.button
+                                                variants={itemVariants}
+                                                type="submit"
+                                                disabled={isPasswordLoading}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className="w-full border-2 border-lh-purple text-lh-purple hover:bg-lh-purple hover:text-white py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2"
+                                            >
+                                                {isPasswordLoading ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <Lock className="w-5 h-5" />
+                                                        <span>Update Password</span>
+                                                    </>
+                                                )}
+                                            </motion.button>
+                                        </form>
+                                    </div>
+                                </motion.div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>
