@@ -99,7 +99,7 @@ const Login = () => {
                 });
 
                 login(res.data.user, res.data.token);
-                navigate('/hone');
+                navigate('/home');
 
             } catch (error) {
                 console.error("Google Login Error:", error);
