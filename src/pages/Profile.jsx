@@ -15,6 +15,7 @@ import {
     Loader2,
     Camera,
     ArrowLeft,
+    Trash2,
 } from 'lucide-react';
 
 const Profile = () => {
@@ -107,15 +108,44 @@ const Profile = () => {
         if (!file) return;
 
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('file', file); // changed from 'image' to 'file' to match backend
 
         try {
-            const res = await api.post('/users/upload-image', formData);
-            alert('Profile image uploaded');
-            // Refresh user data if needed
+            // 1. Upload to Cloudinary via backend
+            const uploadRes = await api.post('/upload', formData); // changed endpoint
+            const imageUrl = uploadRes.data.url;
+
+            // 2. Update user profile with new image URL
+            await api.put('/users/update', {
+                avatar: imageUrl, // changed to avatar
+            });
+
+            // 3. Update local context
+            updateUser({
+                avatar: imageUrl,
+            });
+
+            alert('Profile image uploaded successfully');
         } catch (err) {
             console.error(err);
             alert(err.response?.data?.message || 'Upload failed');
+        }
+    };
+
+    const handleImageDelete = async () => {
+        if (!window.confirm("Are you sure you want to remove your profile picture?")) return;
+
+        try {
+            await api.delete('/users/avatar');
+
+            updateUser({
+                avatar: null,
+            });
+
+            alert('Profile image removed');
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.message || 'Failed to remove image');
         }
     };
 
@@ -170,8 +200,8 @@ const Profile = () => {
                                     <div className="relative z-10 text-center space-y-4">
                                         <div className="relative inline-block">
                                             <div className="w-32 h-32 rounded-full bg-lh-purple/20 border-4 border-lh-purple/50 flex items-center justify-center mx-auto overflow-hidden shadow-[0_0_30px_rgba(188,19,254,0.3)]">
-                                                {user?.profileImage ? (
-                                                    <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
+                                                {user?.avatar ? (
+                                                    <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                                                 ) : (
                                                     <User className="w-16 h-16 text-lh-purple" />
                                                 )}
@@ -189,6 +219,19 @@ const Profile = () => {
                                             >
                                                 <Camera className="w-5 h-5 text-white" />
                                             </button>
+                                        </div>
+
+                                        {/* Image Controls */}
+                                        <div className="flex items-center justify-center gap-2 -mt-2">
+                                            {user?.avatar && (
+                                                <button
+                                                    onClick={handleImageDelete}
+                                                    className="w-8 h-8 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors text-red-500"
+                                                    title="Remove Image"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
                                         </div>
 
                                         <div>

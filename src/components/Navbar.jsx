@@ -199,12 +199,12 @@ export default function Navbar() {
             {!isLoading && user ? (
               <div className="hidden sm:block relative" onMouseEnter={() => setShowProfileMenu(true)} onMouseLeave={() => setShowProfileMenu(false)}>
                 <button className="flex items-center gap-2 bg-white/[0.05] border border-white/10 sm:px-4 px-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-lh-purple/20 transition-all">
-                  {user.profileImage ? (
-                    <img src={user.profileImage} alt={user.displayName} className="w-5 h-5 rounded-full object-cover" />
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.displayName} className="w-5 h-5 rounded-full object-cover" />
                   ) : (
                     <UserCircle2 size={18} className="text-lh-purple" />
                   )}
-                  <span className="hidden sm:inline-block max-w-[80px] truncate ml-1">{user.displayName || user.email.split('@')[0]}</span>
+                  <span className="hidden sm:inline-block max-w-[80px] truncate ml-1">{user.firstName || user.displayName || user.email.split('@')[0]}</span>
                   <ChevronDown size={12} className={`transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
                 </button>
 
