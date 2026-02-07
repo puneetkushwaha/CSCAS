@@ -94,7 +94,7 @@ const PartnersEcosystem = () => {
 
                         <h1 className="text-4xl md:text-5xl lg:text-7xl font-[1000] leading-[1] tracking-tighter uppercase max-w-4xl">
                             Partner With <br />
-                            <span className="text-lh-purple italic">CSCA</span>
+                            <span className="text-lh-purple">CSCA</span>
                         </h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">
@@ -133,7 +133,74 @@ const PartnersEcosystem = () => {
                         <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase">Partner <span className="text-white/20">Types</span></h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[280px]">
+                    {/* Mobile: Simple single column layout */}
+                    <div className="grid md:hidden grid-cols-1 gap-6">
+                        {partnerTypes.map((type, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                viewport={{ once: true }}
+                            >
+                                {type.title === "Academic Partner" ? (
+                                    <Link
+                                        to="/academic"
+                                        className={`group relative w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden flex flex-col p-10 transition-all duration-500 hover:border-lh-purple/50 hover:bg-white/[0.05] hover:shadow-[0_20px_60px_rgba(188,19,254,0.1)] cursor-pointer`}
+                                    >
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
+
+                                        <div className="relative z-10 flex flex-col justify-between">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="p-4 bg-white/5 rounded-2xl text-white group-hover:text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
+                                                    {type.icon}
+                                                </div>
+                                                <ArrowRight size={20} className="text-lh-purple opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-black uppercase tracking-tight leading-tight text-white group-hover:text-lh-purple transition-colors">
+                                                    {type.title}
+                                                </h3>
+                                                <p className="text-gray-400 text-base leading-relaxed font-medium group-hover:text-gray-300 transition-colors">
+                                                    {type.desc}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-700 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                                    </Link>
+                                ) : (
+                                    <div
+                                        className={`group relative w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden flex flex-col p-10 transition-all duration-500 hover:border-lh-purple/50 hover:bg-white/[0.05] hover:shadow-[0_20px_60px_rgba(188,19,254,0.1)] cursor-default`}
+                                    >
+                                        <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
+
+                                        <div className="relative z-10 flex flex-col justify-between">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <div className="p-4 bg-white/5 rounded-2xl text-white group-hover:text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
+                                                    {type.icon}
+                                                </div>
+                                                <ArrowRight size={20} className="text-lh-purple opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <h3 className="text-2xl font-black uppercase tracking-tight leading-tight text-white group-hover:text-lh-purple transition-colors">
+                                                    {type.title}
+                                                </h3>
+                                                <p className="text-gray-400 text-base leading-relaxed font-medium group-hover:text-gray-300 transition-colors">
+                                                    {type.desc}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-700 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                                    </div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Desktop: Bento grid layout */}
+                    <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[280px]">
                         {partnerTypes.map((type, idx) => (
                             <motion.div
                                 key={idx}
@@ -241,22 +308,28 @@ const PartnersEcosystem = () => {
             </section>
 
             {/* --- Section 4: Final CTA --- */}
-            <section className="py-32 md:py-48 px-6 relative z-10">
+            <section className="py-16 md:py-24 px-6 relative z-10">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    className="max-w-[1300px] mx-auto rounded-[60px] p-20 bg-gradient-to-br from-lh-purple/20 via-transparent to-transparent border border-white/10 text-center space-y-10 relative overflow-hidden"
+                    className="max-w-[1300px] mx-auto rounded-[60px] p-10 md:p-16 lg:p-20 bg-gradient-to-br from-lh-purple/20 via-transparent to-transparent border border-white/10 relative overflow-hidden flex flex-col min-h-[400px] md:min-h-[500px]"
                 >
                     <div className="absolute inset-0 bg-lh-purple/5 blur-[120px] scale-150 animate-pulse" />
-                    <div className="relative z-10 space-y-4">
-                        <h2 className="text-4xl md:text-7xl font-[1000] tracking-tighter uppercase">Forge an <br /> <span className="text-lh-purple italic">Alliance</span></h2>
-                        <p className="text-gray-400 text-lg md:text-xl font-medium max-w-2xl mx-auto italic">
+
+                    {/* Text Content - Spread across card */}
+                    <div className="relative z-10 flex-grow flex flex-col justify-center text-center space-y-6 mb-10">
+                        <h2 className="text-4xl md:text-6xl lg:text-7xl font-[1000] tracking-tighter uppercase leading-tight">
+                            Forge an <br /> <span className="text-lh-purple">Alliance</span>
+                        </h2>
+                        <p className="text-gray-400 text-base md:text-lg lg:text-xl font-medium max-w-3xl mx-auto leading-relaxed">
                             "The cybersecurity landscape changes every minute. We empower our partners to lead that change."
                         </p>
                     </div>
-                    <div className="relative z-10 pt-8">
-                        <button className="px-16 py-6 bg-white text-black rounded-[25px] font-black text-xs uppercase tracking-[0.4em] shadow-[0_0_60px_rgba(255,255,255,0.2)] hover:bg-lh-purple hover:text-white transition-all transform hover:scale-105 active:scale-95 duration-500">
+
+                    {/* Full-width button at bottom */}
+                    <div className="relative z-10 w-full">
+                        <button className="w-full py-5 md:py-6 bg-white text-black rounded-2xl md:rounded-[25px] font-black text-xs md:text-sm uppercase tracking-[0.3em] md:tracking-[0.4em] shadow-[0_0_60px_rgba(255,255,255,0.2)] hover:bg-lh-purple hover:text-white transition-all transform hover:scale-[1.02] active:scale-95 duration-500">
                             Get Started Now
                         </button>
                     </div>

@@ -32,7 +32,7 @@ const PartnerSection = () => {
 
                     <div className="bg-[#121212]/50 p-8 md:p-12 rounded-[40px] md:rounded-[60px] border border-white/5 relative overflow-hidden group shadow-2xl">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-lh-purple/10 blur-[100px] group-hover:bg-lh-purple/20 transition-all"></div>
-                        <h3 className="text-2xl md:text-3xl font-black text-white uppercase mb-8 md:mb-10 italic">Partner Benefits</h3>
+                        <h3 className="text-2xl md:text-3xl font-black text-white uppercase mb-8 md:mb-10">Partner Benefits</h3>
                         <div className="space-y-4 md:space-y-6">
                             {benefits.map((benefit, i) => (
                                 <div key={i} className="flex items-center gap-4 text-gray-300 font-bold text-sm tracking-wide text-left">

@@ -25,7 +25,7 @@ const GlobalPageLoader = () => (
         </div>
         <div className="flex flex-col items-center gap-2">
             <span className="text-[9px] font-black text-white uppercase tracking-[0.4em] animate-pulse">Verifying Registry Data...</span>
-            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest italic tracking-widest">Syncing candidate protocols</span>
+            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest tracking-widest">Syncing candidate protocols</span>
         </div>
     </div>
 );
@@ -61,18 +61,18 @@ const ProvideAdditionalInfo = () => {
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors italic"
+                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors"
                     >
                         <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                         back to previous step
                     </button>
-                    <div className="px-3 py-1 bg-lh-purple/10 border border-lh-purple/20 rounded-lg text-[8px] font-black text-lh-purple uppercase tracking-widest italic animate-pulse">
+                    <div className="px-3 py-1 bg-lh-purple/10 border border-lh-purple/20 rounded-lg text-[8px] font-black text-lh-purple uppercase tracking-widest animate-pulse">
                         UPLINK_STABLE
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Provide additional <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>information</span></h2>
+                    <h2 className="text-4xl font-black uppercase tracking-tighter">Provide additional <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>information</span></h2>
                 </div>
 
                 <PrecisionPanel className="p-8 border-white/5 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
@@ -81,8 +81,8 @@ const ProvideAdditionalInfo = () => {
                             <Shield size={20} className="text-lh-purple" />
                         </div>
                         <div>
-                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1 italic">Registry_Active_Node:</p>
-                            <h4 className="text-xl font-black uppercase tracking-tight text-white italic">{examName}</h4>
+                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1">Registry_Active_Node:</p>
+                            <h4 className="text-xl font-black uppercase tracking-tight text-white">{examName}</h4>
                         </div>
                     </div>
 
@@ -95,7 +95,7 @@ const ProvideAdditionalInfo = () => {
 
                         <div className="space-y-8">
                             <div className="space-y-5">
-                                <label className="text-[11px] font-black uppercase tracking-widest text-white flex items-start gap-2 leading-relaxed max-w-2xl italic">
+                                <label className="text-[11px] font-black uppercase tracking-widest text-white flex items-start gap-2 leading-relaxed max-w-2xl">
                                     <span className="text-lh-purple">*</span>
                                     <span>Are you temporarily in another country and plan to take a CSCA exam outside the country of your current residence or citizenship?</span>
                                 </label>
@@ -136,7 +136,7 @@ const ProvideAdditionalInfo = () => {
                                             <Info size={12} /> Response_Required
                                         </p>
                                     </div>
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-white flex items-start gap-2 italic">
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-white flex items-start gap-2">
                                         <span className="text-lh-purple">*</span>
                                         <span>Have you received authorization from CSCA to test out of country?</span>
                                     </label>

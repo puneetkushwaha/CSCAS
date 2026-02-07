@@ -55,18 +55,18 @@ const TestingPolicies = () => {
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors italic"
+                        className="flex items-center gap-2 text-[9px] font-black text-gray-600 hover:text-white uppercase tracking-widest group transition-colors"
                     >
                         <ChevronLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
                         back to previous step
                     </button>
-                    <div className="px-3 py-1 bg-lh-purple/10 border border-lh-purple/20 rounded-lg text-[8px] font-black text-lh-purple uppercase tracking-widest italic animate-pulse">
+                    <div className="px-3 py-1 bg-lh-purple/10 border border-lh-purple/20 rounded-lg text-[8px] font-black text-lh-purple uppercase tracking-widest animate-pulse">
                         UPLINK_STABLE
                     </div>
                 </div>
 
                 <div className="space-y-3">
-                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Testing <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>Policies</span></h2>
+                    <h2 className="text-4xl font-black uppercase tracking-tighter">Testing <span className="text-lh-purple text-transparent" style={{ WebkitTextStroke: '1px #bc13fe' }}>Policies</span></h2>
                 </div>
 
                 <PrecisionPanel className="p-8 border-white/5 shadow-[0_0_60px_rgba(0,0,0,0.6)]">
@@ -75,8 +75,8 @@ const TestingPolicies = () => {
                             <Shield size={20} className="text-lh-purple" />
                         </div>
                         <div>
-                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1 italic">Registry_Active_Node:</p>
-                            <h4 className="text-xl font-black uppercase tracking-tight text-white italic">{examName}</h4>
+                            <p className="text-[9px] font-black text-lh-purple uppercase tracking-widest mb-1">Registry_Active_Node:</p>
+                            <h4 className="text-xl font-black uppercase tracking-tight text-white">{examName}</h4>
                         </div>
                     </div>
 
@@ -85,9 +85,9 @@ const TestingPolicies = () => {
                         <div className="space-y-6">
                             <div className="flex items-center gap-3">
                                 <FileText className="w-5 h-5 text-lh-purple" />
-                                <h3 className="text-lg font-black text-white uppercase italic tracking-widest">Online exam policies</h3>
+                                <h3 className="text-lg font-black text-white uppercase tracking-widest">Online exam policies</h3>
                             </div>
-                            <div className="bg-white/[0.02] rounded-2xl p-6 border border-white/5 text-[11px] font-bold text-gray-400 leading-relaxed space-y-4 italic opacity-80">
+                            <div className="bg-white/[0.02] rounded-2xl p-6 border border-white/5 text-[11px] font-bold text-gray-400 leading-relaxed space-y-4 opacity-80">
                                 <p>To proceed with this session, you must acknowledge the following data processing and behavioral protocols.</p>
                                 <p>By accessing this node, you understand and agree to the video and audio recording of your entire testing session. Data will be transmitted via secure relay to centralized storage nodes.</p>
                                 <h4 className="text-white uppercase tracking-widest">Procedural Integrity</h4>
@@ -109,7 +109,7 @@ const TestingPolicies = () => {
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-colors italic">Acknowledge_Online_Policies</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-colors">Acknowledge_Online_Policies</span>
                                 </div>
                             </label>
                         </div>
@@ -118,9 +118,9 @@ const TestingPolicies = () => {
                         <div className="space-y-6">
                             <div className="flex items-center gap-3 border-t border-white/5 pt-8">
                                 <Shield className="w-5 h-5 text-lh-purple" />
-                                <h3 className="text-lg font-black text-white uppercase italic tracking-widest">CSCA Testing Protocols</h3>
+                                <h3 className="text-lg font-black text-white uppercase tracking-widest">CSCA Testing Protocols</h3>
                             </div>
-                            <div className="bg-white/[0.02] rounded-2xl p-6 border border-white/5 text-[11px] font-bold text-gray-400 leading-relaxed space-y-6 italic opacity-80">
+                            <div className="bg-white/[0.02] rounded-2xl p-6 border border-white/5 text-[11px] font-bold text-gray-400 leading-relaxed space-y-6 opacity-80">
                                 <div className="space-y-2">
                                     <h4 className="text-white uppercase tracking-widest underline decoration-lh-purple/30 underline-offset-4">Admission_Criteria</h4>
                                     <p>Deploy 30 minutes prior to mission clock. Valid government-issued ID required. Late arrival ({'>'}15m) results in mission failure.</p>
@@ -148,7 +148,7 @@ const TestingPolicies = () => {
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-colors italic">Initiate_CSCA_Agreement</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white group-hover:text-lh-purple transition-colors">Initiate_CSCA_Agreement</span>
                                 </div>
                             </label>
                         </div>

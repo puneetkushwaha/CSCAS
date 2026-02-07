@@ -245,36 +245,35 @@ const ExamPlayer = () => {
 
   if (phase === 'waiting') {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 md:p-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(188,19,254,0.05)_0%,transparent_70%)] pointer-events-none"></div>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-2xl w-full bg-[#0a0a0a]/70 backdrop-blur-3xl border border-white/5 rounded-[3rem] p-12 text-center relative z-10"
+          className="max-w-2xl w-full bg-[#0a0a0a]/70 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] md:rounded-[3rem] p-8 md:p-12 text-center relative z-10"
         >
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <Clock size={64} className="text-lh-purple opacity-20" />
+              <Clock size={48} className="text-lh-purple opacity-20 md:w-16 md:h-16" />
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                <Activity size={24} className="text-lh-purple" />
+                <Activity size={20} className="text-lh-purple md:w-6 md:h-6" />
               </motion.div>
             </div>
           </div>
 
-          <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Uplink Pending</h2>
-          <p className="text-lh-purple text-[11px] font-black uppercase tracking-[0.4em] mb-12">Synchronizing with Certification Node</p>
+          <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">Uplink Pending</h2>
+          <p className="text-lh-purple text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] mb-8 md:mb-12">Synchronizing with Certification Node</p>
 
-          <div className="text-7xl font-black text-white tracking-widest bg-white/[0.03] p-12 rounded-[2rem] border border-white/5 shadow-inner mb-8">
+          <div className="text-5xl md:text-7xl font-black text-white tracking-widest bg-white/[0.03] p-8 md:p-12 rounded-[2rem] border border-white/5 shadow-inner mb-8">
             {timeLeft}
           </div>
 
-          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] leading-relaxed max-w-sm mx-auto">
+          <p className="text-gray-500 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] leading-relaxed max-w-sm mx-auto">
             The examination environment is strictly time-gated. Access will be granted automatically once the countdown reaches zero.
-            Please ensure your hardware is ready.
           </p>
         </motion.div>
       </div>
@@ -283,16 +282,16 @@ const ExamPlayer = () => {
 
   if (phase === 'completed') {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 md:p-6 text-center">
         <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mb-8 border border-green-500/20">
           <CheckCircle2 size={40} className="text-green-500 animate-pulse" />
         </div>
-        <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Mission Finalized</h2>
-        <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-12">Results have been transmitted to headquarters</p>
+        <h2 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">Mission Finalized</h2>
+        <p className="text-gray-400 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] mb-8 md:mb-12">Results have been transmitted to headquarters</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl w-full mb-12">
-          <div className="p-8 bg-white/[0.02] border border-white/5 rounded-[2rem] text-left">
-            <h4 className="text-[10px] font-black text-lh-purple uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
+          <div className="p-6 md:p-8 bg-white/[0.02] border border-white/5 rounded-[1.5rem] md:rounded-[2rem] text-left">
+            <h4 className="text-[10px] font-black text-lh-purple uppercase tracking-[0.3em] md:tracking-[0.4em] mb-6 flex items-center gap-2">
               <Activity size={14} /> Final_Telemetry
             </h4>
             <div className="space-y-4">
@@ -310,7 +309,7 @@ const ExamPlayer = () => {
             </div>
           </div>
 
-          <div className="p-8 bg-[#0a0a0a] border border-white/5 rounded-[2rem] text-left relative overflow-hidden">
+          <div className="p-6 md:p-8 bg-[#0a0a0a] border border-white/5 rounded-[1.5rem] md:rounded-[2rem] text-left relative overflow-hidden">
             <div className="relative z-10">
               <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-4">Transmission_Log</h4>
               <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest leading-loose">
@@ -334,48 +333,61 @@ const ExamPlayer = () => {
   }
 
   return (
-    <div className="min-h-screen py-12 px-6">
+    <div className="min-h-screen py-6 md:py-12 px-4 md:px-6">
       <div className="max-w-[1240px] mx-auto grid lg:grid-cols-12 gap-12">
 
         {/* Left: Exam Interface */}
         <div className="lg:col-span-8 space-y-8">
-          <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-white/5">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Shield className="text-lh-purple" size={20} />
-                <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.4em]">Active_Engagement</span>
+          <header className="flex flex-col items-center md:items-end md:flex-row justify-between gap-8 pb-8 border-b border-white/5 text-center md:text-left">
+            <div className="space-y-4 md:space-y-3">
+              <div className="flex items-center justify-center md:justify-start gap-3">
+                <Shield className="text-lh-purple" size={18} />
+                <span className="text-[9px] md:text-[10px] font-black text-lh-purple uppercase tracking-[0.4em]">Active_Engagement</span>
               </div>
-              <h1 className="text-4xl font-black text-white uppercase tracking-tighter">
+              <h1 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-tight max-w-sm md:max-w-none">
                 {activeExam?.examName}
               </h1>
             </div>
-            <div className="flex items-center gap-6 px-8 py-4 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-xl">
-              <div className="text-right">
-                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Time Remaining</p>
-                <p className={`text-3xl font-black tracking-widest ${examTimer < 300 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+            <div className="flex items-center gap-5 px-6 md:px-8 py-4 bg-[#0a0a0a] border border-lh-purple/20 rounded-2xl shadow-[0_0_30px_rgba(188,19,254,0.1)] relative group">
+              <div className="absolute inset-0 bg-lh-purple/5 blur-xl opacity-50"></div>
+              <div className="text-center md:text-right relative z-10">
+                <p className="text-[8px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Time Remaining</p>
+                <p className={`text-2xl md:text-3xl font-black tracking-widest ${examTimer < 300 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
                   {formatExamTime(examTimer)}
                 </p>
               </div>
-              <Clock size={32} className={examTimer < 300 ? 'text-red-500' : 'text-lh-purple'} />
+              <Clock size={28} className={`relative z-10 ${examTimer < 300 ? 'text-red-500' : 'text-lh-purple opacity-50'}`} />
             </div>
           </header>
 
-          <main className="space-y-12">
-            <div className="relative p-10 bg-[#0a0a0a]/50 backdrop-blur-xl border border-white/5 rounded-[3rem] shadow-2xl overflow-hidden">
-              <div className="absolute top-0 right-10 flex gap-1">
+          <main className="space-y-8 md:space-y-12">
+            <div className="relative p-6 md:p-10 bg-[#0a0a0a]/50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl overflow-hidden">
+              {/* Modern Progress Bar */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 flex bg-white/5 overflow-hidden">
                 {[...Array(questions.length)].map((_, i) => (
                   <div
                     key={i}
-                    className={`w-1 h-3 rounded-b-full transition-all duration-500 ${i === currentQuestion ? 'h-6 bg-lh-purple shadow-[0_0_10px_#bc13fe]' :
-                      answers[i] !== undefined ? 'bg-lh-purple/40' : 'bg-white/5'
+                    className={`flex-1 transition-all duration-700 ${i <= currentQuestion ? 'bg-lh-purple shadow-[0_0_15px_#bc13fe]' : 'opacity-0'
                       }`}
                   />
                 ))}
               </div>
 
-              <span className="text-[11px] font-black text-lh-purple uppercase tracking-[0.5em] mb-8 block">
-                Objective_{currentQuestion + 1}_of_10
-              </span>
+              <div className="flex items-center justify-between mb-8">
+                <span className="text-[9px] md:text-[11px] font-black text-lh-purple uppercase tracking-[0.4em] md:tracking-[0.5em]">
+                  Objective_{currentQuestion + 1}_of_{questions.length}
+                </span>
+                <div className="flex gap-1">
+                  {[...Array(questions.length)].map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentQuestion ? 'bg-lh-purple scale-125' :
+                        answers[i] !== undefined ? 'bg-lh-purple/40' : 'bg-white/10'
+                        }`}
+                    />
+                  ))}
+                </div>
+              </div>
 
               <AnimatePresence mode="wait">
                 <motion.div
@@ -385,7 +397,7 @@ const ExamPlayer = () => {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-10"
                 >
-                  <h3 className="text-2xl font-bold text-white leading-relaxed">
+                  <h3 className="text-lg md:text-2xl font-bold text-white leading-relaxed">
                     {questions[currentQuestion].question}
                   </h3>
 
@@ -394,12 +406,12 @@ const ExamPlayer = () => {
                       <button
                         key={idx}
                         onClick={() => handleAnswer(idx)}
-                        className={`w-full p-6 text-left rounded-2xl border transition-all flex items-center justify-between group ${answers[currentQuestion] === idx
+                        className={`w-full p-4 md:p-6 text-left rounded-xl md:rounded-2xl border transition-all flex items-center justify-between group ${answers[currentQuestion] === idx
                           ? 'bg-lh-purple/20 border-lh-purple text-white'
                           : 'bg-white/[0.02] border-white/5 text-gray-400 hover:border-white/20 hover:bg-white/[0.04]'
                           }`}
                       >
-                        <span className="text-[14px] font-bold">{option}</span>
+                        <span className="text-[13px] md:text-[14px] font-bold">{option}</span>
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${answers[currentQuestion] === idx ? 'border-lh-purple bg-lh-purple' : 'border-white/10 group-hover:border-white/30'
                           }`}>
                           {answers[currentQuestion] === idx && <CheckCircle2 size={12} className="text-white" />}
@@ -411,32 +423,38 @@ const ExamPlayer = () => {
               </AnimatePresence>
             </div>
 
-            <div className="flex items-center justify-between pt-8">
+            <div className="flex items-center justify-between pt-10 gap-4">
               <button
                 disabled={currentQuestion === 0}
                 onClick={() => setCurrentQuestion(prev => prev - 1)}
-                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${currentQuestion === 0
-                  ? 'opacity-20 cursor-not-allowed'
-                  : 'hover:bg-white/5 text-gray-400'
-                  }`}
+                className={`flex-1 md:flex-none px-6 md:px-10 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${currentQuestion === 0
+                  ? 'opacity-10 border-transparent cursor-not-allowed'
+                  : 'border-white/5 text-gray-500 hover:bg-white/5 hover:text-white'
+                  } flex items-center justify-center gap-2`}
               >
-                PREVIOUS_NODE
+                <ArrowRight size={16} className="rotate-180" />
+                <span className="hidden sm:inline">PREVIOUS_NODE</span>
+                <span className="sm:hidden text-[9px]">PREV</span>
               </button>
 
               {currentQuestion === questions.length - 1 ? (
                 <button
                   onClick={handleFinalSubmit}
-                  className="px-10 py-4 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+                  className="flex-1 md:flex-none px-6 md:px-12 py-4 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
-                  SUBMIT_PROTOCOL <Shield size={16} />
+                  <span className="hidden sm:inline">SUBMIT_PROTOCOL</span>
+                  <span className="sm:hidden text-[9px]">SUBMIT</span>
+                  <Activity size={16} />
                 </button>
               ) : (
                 <button
                   disabled={answers[currentQuestion] === undefined}
                   onClick={() => setCurrentQuestion(prev => prev + 1)}
-                  className={`px-10 py-4 bg-lh-purple text-white rounded-xl text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 ${answers[currentQuestion] === undefined ? 'opacity-20 cursor-not-allowed' : ''}`}
+                  className={`flex-1 md:flex-none px-6 md:px-12 py-4 bg-lh-purple text-white rounded-xl text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3 ${answers[currentQuestion] === undefined ? 'opacity-20 cursor-not-allowed' : 'animate-pulse'}`}
                 >
-                  NEXT_OBJECTIVE <ArrowRight size={16} />
+                  <span className="hidden sm:inline">NEXT_OBJECTIVE</span>
+                  <span className="sm:hidden text-[9px]">NEXT</span>
+                  <ArrowRight size={16} />
                 </button>
               )}
             </div>

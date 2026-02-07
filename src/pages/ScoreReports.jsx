@@ -30,9 +30,9 @@ const ScoreReports = () => {
                 <div className="mb-12">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-1 bg-lh-purple rounded-full"></div>
-                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] italic">Analytical_Relay</span>
+                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em]">Analytical_Relay</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none">
+                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
                         VIEW SCORE <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>REPORTS</span>
                     </h1>
                 </div>
@@ -50,13 +50,13 @@ const ScoreReports = () => {
                                 </div>
                                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{stat.label}</span>
                             </div>
-                            <p className="text-4xl font-black text-white italic tracking-tighter">{stat.value}</p>
+                            <p className="text-4xl font-black text-white tracking-tighter">{stat.value}</p>
                         </PrecisionPanel>
                     ))}
                 </div>
 
                 <PrecisionPanel className="p-10">
-                    <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-10 italic flex items-center gap-3">
+                    <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-10 flex items-center gap-3">
                         <Download size={18} className="text-lh-purple" /> Downloadable_Intelligence
                     </h3>
 
@@ -68,7 +68,7 @@ const ScoreReports = () => {
                         ].map((report, i) => (
                             <div key={i} className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-3xl hover:border-lh-purple/20 transition-all group/r">
                                 <div>
-                                    <h4 className="text-[13px] font-black text-white uppercase tracking-wider italic">{report.title}</h4>
+                                    <h4 className="text-[13px] font-black text-white uppercase tracking-wider">{report.title}</h4>
                                     <p className="text-[9px] text-lh-purple font-mono uppercase tracking-widest mt-1">{report.date}</p>
                                 </div>
                                 <button className="p-4 bg-white/5 rounded-2xl text-lh-purple hover:bg-lh-purple hover:text-white transition-all shadow-lg animate-pulse hover:animate-none">

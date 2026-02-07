@@ -28,7 +28,7 @@ const CertificateHero = ({ cert }) => {
                     <div className="mb-8">
                         <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none mb-4">
                             {cert.title.split(' – ')[0]}
-                            <span className="block text-lh-purple text-2xl md:text-3xl mt-2 italic font-bold">
+                            <span className="block text-lh-purple text-2xl md:text-3xl mt-2 font-bold">
                                 {cert.title.split(' – ')[1]}
                             </span>
                         </h1>
@@ -45,7 +45,7 @@ const CertificateHero = ({ cert }) => {
 
                     <div className="relative mb-10 group">
                         <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-lh-purple/30 group-hover:bg-lh-purple transition-colors duration-500"></div>
-                        <p className="text-lg text-gray-400 leading-relaxed pl-8 max-w-xl font-medium italic">
+                        <p className="text-lg text-gray-400 leading-relaxed pl-8 max-w-xl font-medium">
                             "{cert.description}"
                         </p>
                     </div>
@@ -96,7 +96,7 @@ const CertificateHero = ({ cert }) => {
             </div>
 
             {/* SECTION 2: ADDITIONAL CONTENT (COMING SOON) */}
-            <div className="max-w-7xl mx-auto px-6 py-24 relative">
+            <div className="w-full px-6 md:px-12 lg:px-20 py-24 relative">
                 <div className="py-32 flex flex-col items-center justify-center text-center border border-dashed border-white/10 rounded-[4rem] bg-white/[0.02] backdrop-blur-3xl relative overflow-hidden group">
 
                     {/* Subtle Background Glow */}
@@ -110,8 +110,8 @@ const CertificateHero = ({ cert }) => {
                         <h3 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">
                             Curriculum <span className="text-lh-purple opacity-40">Development</span>
                         </h3>
-                        <p className="text-gray-400 max-w-lg mx-auto leading-relaxed text-lg font-medium">
-                            We are currently optimizing the high-impact lab environments and technical modules for <span className="text-lh-purple font-bold italic">{cert.title.split(' – ')[0]}</span>.
+                        <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed text-lg font-medium">
+                            We are currently optimizing the high-impact lab environments and technical modules for <span className="text-lh-purple font-bold">{cert.title.split(' – ')[0]}</span>.
                             Launch scheduled for <span className="text-white">June 2026</span>.
                         </p>
                     </div>

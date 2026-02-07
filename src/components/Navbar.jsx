@@ -289,7 +289,10 @@ export default function Navbar() {
                                       to="/certifications"
                                       state={{ certId: cert.id }}
                                       className="text-[12px] font-medium text-white/60 hover:text-white flex items-center justify-between"
-                                      onClick={() => setIsOpen(false)}
+                                      onClick={() => {
+                                        setShowMegaMenu(false);
+                                        setIsOpen(false);
+                                      }}
                                     >
                                       {cert.code} <ChevronRight size={12} className="opacity-30" />
                                     </Link>

@@ -121,7 +121,7 @@ const Resources = () => {
                             className="text-5xl md:text-8xl font-[1000] tracking-tighter uppercase leading-none"
                         >
                             CSCA <br />
-                            <span className="text-lh-purple italic">Resources</span>
+                            <span className="text-lh-purple">Resources</span>
                         </motion.h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">
@@ -149,7 +149,48 @@ const Resources = () => {
             {/* --- Resources Grid --- */}
             <section className="py-24 px-6 relative z-10">
                 <div className="max-w-[1300px] mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[280px]">
+                    {/* Mobile: Simple single column layout */}
+                    <div className="grid md:hidden grid-cols-1 gap-6">
+                        {resourceItems.map((item, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                viewport={{ once: true }}
+                            >
+                                <div
+                                    className={`group relative w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden flex flex-col p-10 transition-all duration-500 hover:border-lh-purple/50 hover:bg-white/[0.05] hover:shadow-[0_20px_60px_rgba(188,19,254,0.1)] cursor-pointer`}
+                                >
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
+
+                                    <div className="relative z-10 flex flex-col justify-between">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="p-4 bg-white/5 rounded-2xl text-white group-hover:text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
+                                                {item.icon}
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-white/5 rounded-full text-white/40 group-hover:text-lh-purple group-hover:bg-lh-purple/10 transition-all">
+                                                {item.tag}
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <h3 className="text-2xl font-black uppercase tracking-tight leading-tight text-white group-hover:text-lh-purple transition-colors">
+                                                {item.title}
+                                            </h3>
+                                            <p className="text-gray-400 text-base leading-relaxed font-medium group-hover:text-gray-300 transition-colors">
+                                                {item.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-700 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Desktop: Bento grid layout */}
+                    <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[280px]">
                         {resourceItems.map((item, idx) => (
                             <motion.div
                                 key={idx}

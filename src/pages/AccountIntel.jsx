@@ -32,9 +32,9 @@ const AccountIntel = () => {
                 <div className="mb-12">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-1 bg-lh-purple rounded-full"></div>
-                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] italic">System_Intel</span>
+                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em]">System_Intel</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none">
+                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
                         MY ACCOUNT <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>INTEL</span>
                     </h1>
                 </div>
@@ -47,7 +47,7 @@ const AccountIntel = () => {
                                     <User size={32} className="text-lh-purple" />
                                 </div>
                                 <div>
-                                    <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic">{user?.firstName} {user?.lastName}</h3>
+                                    <h3 className="text-3xl font-black text-white tracking-tighter uppercase">{user?.firstName} {user?.lastName}</h3>
                                     <p className="text-lh-purple font-mono text-[10px] tracking-widest uppercase mt-2">{user?.email}</p>
                                 </div>
                             </div>
@@ -66,7 +66,7 @@ const AccountIntel = () => {
                                             </div>
                                             <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{item.label}</span>
                                         </div>
-                                        <p className="text-sm font-black text-white uppercase tracking-wider font-mono italic">{item.value}</p>
+                                        <p className="text-sm font-black text-white uppercase tracking-wider font-mono">{item.value}</p>
                                     </div>
                                 ))}
                             </div>
@@ -75,7 +75,7 @@ const AccountIntel = () => {
 
                     <div className="lg:col-span-4">
                         <PrecisionPanel className="p-10 border-white/5 h-full">
-                            <h3 className="text-[10px] font-black text-lh-purple uppercase tracking-[0.4em] mb-8 italic">Registry_Logs</h3>
+                            <h3 className="text-[10px] font-black text-lh-purple uppercase tracking-[0.4em] mb-8">Registry_Logs</h3>
                             <div className="space-y-6">
                                 {[1, 2, 3].map((_, i) => (
                                     <div key={i} className="flex gap-4">
@@ -83,8 +83,8 @@ const AccountIntel = () => {
                                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-lh-purple"></div>
                                         </div>
                                         <div className="pb-6">
-                                            <p className="text-[9px] text-gray-500 font-mono mb-1 italic">TIME_SYNC_{i + 1}_UTC</p>
-                                            <p className="text-[10px] text-white font-black uppercase tracking-wider italic">Session Protocol Initiated</p>
+                                            <p className="text-[9px] text-gray-500 font-mono mb-1">TIME_SYNC_{i + 1}_UTC</p>
+                                            <p className="text-[10px] text-white font-black uppercase tracking-wider">Session Protocol Initiated</p>
                                         </div>
                                     </div>
                                 ))}

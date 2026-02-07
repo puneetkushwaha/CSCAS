@@ -36,7 +36,7 @@ const DashboardHome = () => {
     };
 
     return (
-        <div className="space-y-12 pb-16 relative">
+        <div className="space-y-12 pb-16 relative overflow-x-hidden">
             {/* Ambient Background Glows */}
             <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-lh-purple/10 blur-[150px] rounded-full pointer-events-none animate-pulse"></div>
             <div className="absolute bottom-[20%] left-[-5%] w-[300px] h-[300px] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none"></div>
@@ -44,11 +44,11 @@ const DashboardHome = () => {
             {/* Header / Welcome Row */}
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/5 pb-10">
                 <div className="flex flex-col md:flex-row items-center gap-6">
-                    {/* Mascot Avatar for Welcome */}
+                    {/* Mascot Avatar for Welcome - Hidden on Mobile */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="relative w-20 h-20 shrink-0"
+                        className="hidden md:block relative w-20 h-20 shrink-0"
                     >
                         <div className="absolute inset-0 bg-lh-purple/20 blur-xl rounded-full"></div>
                         <img src={ngdPic} alt="Mascot" className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_15px_rgba(188,19,254,0.4)]" />
@@ -60,7 +60,7 @@ const DashboardHome = () => {
                             animate={{ opacity: 1, x: 0 }}
                             className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none mb-4"
                         >
-                            Welcome, <span className="text-lh-purple italic">{user?.firstName}</span>
+                            Welcome, <span className="text-lh-purple">{user?.firstName}</span>
                         </motion.h1>
                         <div className="flex items-center gap-4 text-gray-500 text-[10px] font-black uppercase tracking-[0.3em]">
                             <span className="flex items-center gap-2">
@@ -76,28 +76,28 @@ const DashboardHome = () => {
                     </div>
                 </div>
                 <div className="text-right hidden md:block ml-auto">
-                    <p className="text-[8px] font-black text-lh-purple uppercase tracking-widest mb-1 italic">Current System Time:</p>
-                    <p className="text-xl font-black italic text-white uppercase tracking-tighter tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                    <p className="text-[8px] font-black text-lh-purple uppercase tracking-widest mb-1">Current System Time:</p>
+                    <p className="text-xl font-black text-white uppercase tracking-tighter tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
                         {formatTime(currentTime)}
                     </p>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 relative z-10">
                 {/* Main Training HUD */}
                 <div className="lg:col-span-8 space-y-8">
-                    <PrecisionPanel className="p-10 border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.6)] relative overflow-hidden">
+                    <PrecisionPanel className="p-6 md:p-10 border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.6)] relative overflow-hidden">
                         {/* Decorative Background Mascot Overlay */}
                         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 opacity-[0.03] pointer-events-none group-hover:opacity-[0.07] transition-opacity duration-700">
                             <img src={ngdPic} alt="" className="w-full h-full object-contain rotate-12" />
                         </div>
 
-                        <div className="flex flex-col md:flex-row justify-between items-start mb-10 gap-8 relative z-10">
-                            <div className="space-y-4">
-                                <h2 className="text-4xl font-black text-white tracking-tight uppercase italic leading-none">
+                        <div className="flex flex-col md:flex-row justify-between items-center md:items-start mb-10 gap-8 relative z-10">
+                            <div className="space-y-4 text-center md:text-left">
+                                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase leading-none">
                                     Certification<span className="text-lh-purple">Hub</span>
                                 </h2>
-                                <p className="text-gray-400 font-bold text-sm leading-relaxed max-w-xl opacity-80">
+                                <p className="text-gray-400 font-bold text-sm leading-relaxed max-w-xl opacity-80 mx-auto md:mx-0">
                                     Explore the full directory of professional technical standards. Each module is engineered for maximum operational efficiency and skill validation.
                                 </p>
                             </div>
@@ -141,12 +141,12 @@ const DashboardHome = () => {
                             <div className="absolute bottom-8 right-8 w-12 h-12 border-b border-r border-white/10 group-hover/hero:border-lh-purple transition-all duration-700"></div>
                         </div>
 
-                        <div className="mt-10 p-8 bg-white/[0.02] rounded-3xl border border-white/5 space-y-4">
+                        <div className="mt-10 p-4 md:p-8 bg-white/[0.02] rounded-3xl border border-white/5 space-y-4">
                             <div className="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                 <Info className="w-5 h-5 text-lh-purple" />
                                 Operational Information Node
                             </div>
-                            <p className="text-[12px] text-gray-500 font-bold leading-relaxed tracking-wide italic opacity-80">
+                            <p className="text-[12px] text-gray-500 font-bold leading-relaxed tracking-wide opacity-80">
                                 Registration keys are generated post-order approval. For bulk enrollments or enterprise deployment, please contact the <button className="text-lh-purple hover:text-white transition-colors underline decoration-lh-purple/30 underline-offset-4">Command Center</button>.
                             </p>
                         </div>
@@ -160,14 +160,14 @@ const DashboardHome = () => {
                             <img src={ngdPic} alt="" className="w-24 h-24 object-contain -rotate-12" />
                         </div>
 
-                        <div className="p-8">
+                        <div className="p-6 md:p-8">
                             <div className="text-[10px] font-black text-lh-purple uppercase tracking-[0.3em] mb-8 pb-4 border-b border-white/5 flex items-center justify-between">
                                 <span>Management_Relay</span>
                                 <div className="w-2 h-2 bg-lh-purple rounded-full animate-ping shadow-[0_0_10px_rgba(188,19,254,0.6)]"></div>
                             </div>
 
-                            <h3 className="text-3xl md:text-4xl font-black text-white tracking-tighter mb-4 uppercase italic leading-tight">Exam_Control</h3>
-                            <p className="text-[10px] text-gray-300/80 font-bold mb-8 leading-relaxed uppercase tracking-wide italic opacity-90">
+                            <h3 className="text-3xl md:text-4xl font-black text-white tracking-tighter mb-4 uppercase leading-tight">Exam_Control</h3>
+                            <p className="text-[10px] text-gray-300/80 font-bold mb-8 leading-relaxed uppercase tracking-wide opacity-90">
                                 Secure exam scheduling and testing node management.
                             </p>
 
@@ -186,8 +186,8 @@ const DashboardHome = () => {
                         </div>
 
                         <div className="p-8 bg-white/[0.03] border-t border-white/5 rounded-b-[1.5rem]">
-                            <h3 className="text-2xl font-black text-white tracking-tighter mb-3 uppercase italic leading-tight">Profile_<span className="text-lh-purple">Vault</span></h3>
-                            <p className="text-[10px] text-gray-500 font-bold mb-6 leading-relaxed uppercase tracking-wide italic opacity-60">
+                            <h3 className="text-2xl font-black text-white tracking-tighter mb-3 uppercase leading-tight">Profile_<span className="text-lh-purple">Vault</span></h3>
+                            <p className="text-[10px] text-gray-500 font-bold mb-6 leading-relaxed uppercase tracking-wide opacity-60">
                                 Access certified metrics, pay CE fees, and verify logos.
                             </p>
                             <Link to="/dashboard/certifications" className="block w-full py-3.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-center text-gray-400 hover:text-lh-purple hover:border-lh-purple/30 transition-all active:scale-95">

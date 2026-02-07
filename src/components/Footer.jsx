@@ -71,7 +71,7 @@ const Footer = () => {
                 <div className="w-8 h-8 bg-lh-blue rounded-lg flex items-center justify-center">
                   <Shield size={20} className="text-white fill-current" />
                 </div>
-                <h3 className="text-2xl font-black tracking-tighter uppercase italic">
+                <h3 className="text-2xl font-black tracking-tighter uppercase">
                   CS<span className="text-lh-blue">CA</span>
                 </h3>
               </div>
@@ -140,7 +140,7 @@ const Footer = () => {
               <a href="tel:+919026764985" className="text-2xl font-black text-white tracking-tight hover:text-lh-purple transition-colors block">
                 +91 90267 64985
               </a>
-              <p className="text-gray-400 text-xs font-bold italic">info@csca.edu.in</p>
+              <p className="text-gray-400 text-xs font-bold">info@csca.edu.in</p>
             </div>
           </div>
 

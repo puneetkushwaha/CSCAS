@@ -154,7 +154,7 @@ const Careers = () => {
               </div>
               <div className="pt-6 border-t border-white/10">
                 <p className="text-[9px] uppercase tracking-widest text-gray-400">Primary Risks</p>
-                <p className="text-[11px] text-gray-300 italic">{ind.risks}</p>
+                <p className="text-[11px] text-gray-300">{ind.risks}</p>
               </div>
             </div>
           ))}

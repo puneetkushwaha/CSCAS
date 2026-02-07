@@ -30,16 +30,16 @@ const AdditionalInfo = () => {
                 <div className="mb-12">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-1 bg-lh-purple rounded-full"></div>
-                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] italic">Knowledge_Node</span>
+                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em]">Knowledge_Node</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none">
+                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
                         ADDITIONAL <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>INFORMATION</span>
                     </h1>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     <PrecisionPanel className="p-10">
-                        <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-8 italic flex items-center gap-3">
+                        <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
                             <FileText size={18} className="text-lh-purple" /> Policy_Documentation
                         </h3>
                         <div className="space-y-6">
@@ -50,7 +50,7 @@ const AdditionalInfo = () => {
                                 'Intellectual Property Rights'
                             ].map((policy, i) => (
                                 <button key={i} className="w-full flex items-center justify-between p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-lh-purple/30 transition-all group/p">
-                                    <span className="text-[11px] font-black text-gray-400 group-hover/p:text-white uppercase tracking-widest italic">{policy}</span>
+                                    <span className="text-[11px] font-black text-gray-400 group-hover/p:text-white uppercase tracking-widest">{policy}</span>
                                     <ExternalLink size={14} className="text-lh-purple opacity-30 group-hover/p:opacity-100 transition-opacity" />
                                 </button>
                             ))}
@@ -58,15 +58,15 @@ const AdditionalInfo = () => {
                     </PrecisionPanel>
 
                     <PrecisionPanel className="p-10">
-                        <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-8 italic flex items-center gap-3">
+                        <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
                             <HelpCircle size={18} className="text-lh-purple" /> Support_Relay
                         </h3>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-8 italic italic">
+                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed mb-8">
                             Contact our specialized synchronization nodes for technical assistance regarding registry entry and certification deployment.
                         </p>
                         <div className="p-8 bg-lh-purple/5 border border-lh-purple/10 rounded-3xl">
                             <p className="text-[9px] font-black text-lh-purple uppercase tracking-[0.4em] mb-4">Priority_Nodes:</p>
-                            <p className="text-lg font-black text-white tracking-tighter uppercase italic">CSCA_COMMAND_CENTER_V1</p>
+                            <p className="text-lg font-black text-white tracking-tighter uppercase">CSCA_COMMAND_CENTER_V1</p>
                         </div>
                     </PrecisionPanel>
                 </div>

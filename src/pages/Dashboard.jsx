@@ -18,7 +18,7 @@ const Dashboard = () => {
 
     const menuItems = [
         { icon: <LayoutDashboard size={18} />, label: 'Overview', path: '/dashboard' },
-        { icon: <Activity size={18} />, label: 'Certifications', path: '/certifications' },
+        { icon: <Activity size={18} />, label: 'Certifications', path: '/dashboard/certifications' },
         { icon: <FileText size={18} />, label: 'My Exams', path: '/dashboard/pearson' },
     ];
 
@@ -37,15 +37,15 @@ const Dashboard = () => {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[25%] h-[25%] bg-lh-purple/5 blur-[80px] rounded-full"></div>
             </div>
 
-            {/* Sidebar */}
+            {/* Desktop/Tablet Sidebar - Hidden on Mobile */}
             <aside
-                className={`relative z-20 bg-[#0a0a0a]/80 backdrop-blur-3xl border-r border-white/5 transition-all duration-500 ease-in-out flex flex-col ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
+                className={`hidden md:flex relative z-20 bg-[#0a0a0a]/80 backdrop-blur-3xl border-r border-white/5 transition-all duration-500 ease-in-out flex-col ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}
             >
                 {/* Logo Section */}
                 <div className="p-6 flex items-center justify-between">
                     {!isSidebarCollapsed && (
                         <Link to="/" className="text-xl font-black tracking-tighter cursor-pointer text-white">
-                            CS<span className="text-lh-purple italic">CA</span>
+                            CS<span className="text-lh-purple">CA</span>
                         </Link>
                     )}
                     <button
@@ -104,7 +104,7 @@ const Dashboard = () => {
 
                     <div className="flex items-center gap-3 p-1.5 rounded-xl bg-white/[0.02] border border-white/5">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-lh-purple to-[#ff00ff] p-0.5 shadow-lg">
-                            <div className="w-full h-full rounded-full bg-lh-dark flex items-center justify-center text-[10px] font-black uppercase italic">
+                            <div className="w-full h-full rounded-full bg-lh-dark flex items-center justify-center text-[10px] font-black uppercase">
                                 {user?.firstName?.[0] || user?.email?.[0] || 'A'}
                             </div>
                         </div>
@@ -128,23 +128,75 @@ const Dashboard = () => {
                 </div>
             </aside>
 
+            {/* Mobile Bottom Navbar - Only visible on Mobile */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-t border-white/10">
+                <div className="flex items-center justify-around px-2 py-3">
+                    {menuItems.map((item) => (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300 relative ${isActive(item.path)
+                                ? 'bg-lh-purple/20 text-white'
+                                : 'text-gray-500'
+                                }`}
+                        >
+                            <span className={`${isActive(item.path) ? 'text-lh-purple scale-110' : ''} transition-all`}>
+                                {item.icon}
+                            </span>
+                            <span className="text-[8px] font-black uppercase tracking-wider">
+                                {item.label.split(' ')[0]}
+                            </span>
+                            {isActive(item.path) && (
+                                <motion.div
+                                    layoutId="mobile-active"
+                                    className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-lh-purple rounded-full"
+                                />
+                            )}
+                        </Link>
+                    ))}
+                    <button
+                        onClick={toggleCart}
+                        className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-gray-500 relative"
+                    >
+                        <ShoppingCart size={18} className="text-lh-purple" />
+                        <span className="text-[8px] font-black uppercase tracking-wider">Cart</span>
+                        {cartCount > 0 && (
+                            <span className="absolute top-1 right-2 w-4 h-4 bg-lh-purple text-white text-[8px] font-black flex items-center justify-center rounded-full shadow-lg border border-black">
+                                {cartCount}
+                            </span>
+                        )}
+                    </button>
+                </div>
+            </nav>
+
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col relative overflow-hidden">
-                <header className="h-16 px-8 flex items-center justify-between border-b border-white/5 bg-[#0a0a0a]/40 backdrop-blur-xl z-20">
+                <header className="h-16 px-4 md:px-8 flex items-center justify-between border-b border-white/5 bg-[#0a0a0a]/40 backdrop-blur-xl z-20">
                     <div className="flex items-center gap-4">
                         <div className="h-3 w-[2px] bg-lh-purple"></div>
-                        <h2 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.4em]">Command_Center / <span className="text-white italic">{location.pathname.split('/').pop() || 'overview'}</span></h2>
+                        <h2 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.4em] hidden sm:block">Command_Center / <span className="text-white">{location.pathname.split('/').pop() || 'overview'}</span></h2>
+                        {/* Mobile: Show logo instead */}
+                        <Link to="/" className="sm:hidden text-lg font-black tracking-tighter text-white">
+                            CS<span className="text-lh-purple">CA</span>
+                        </Link>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[8px] font-black text-lh-purple uppercase tracking-widest italic animate-pulse">System_Live</span>
+                    <div className="flex items-center gap-3 md:gap-6">
+                        {/* Profile icon on mobile header */}
+                        <Link to="/profile" className="md:hidden w-8 h-8 rounded-full bg-gradient-to-tr from-lh-purple to-[#ff00ff] p-0.5 shadow-lg active:scale-95 transition-transform">
+                            <div className="w-full h-full rounded-full bg-lh-dark flex items-center justify-center text-[10px] font-black uppercase">
+                                {user?.firstName?.[0] || user?.email?.[0] || 'A'}
+                            </div>
+                        </Link>
+                        {/* Desktop: System status */}
+                        <div className="hidden md:flex flex-col items-end">
+                            <span className="text-[8px] font-black text-lh-purple uppercase tracking-widest animate-pulse">System_Live</span>
                             <span className="text-[10px] font-bold text-gray-500">Sector_01_Online</span>
                         </div>
                     </div>
                 </header>
 
-                <main className="flex-1 relative overflow-y-auto custom-scrollbar z-10 p-8">
+                <main className="flex-1 relative overflow-y-auto custom-scrollbar z-10 px-3 py-4 md:p-8 pb-24 md:pb-8">
                     <div className="max-w-[1400px] mx-auto min-h-full">
                         <Outlet />
                     </div>

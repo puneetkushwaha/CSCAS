@@ -30,9 +30,9 @@ const RegistryPreferences = () => {
                 <div className="mb-12">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-1 bg-lh-purple rounded-full"></div>
-                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] italic">Configuration_Terminal</span>
+                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em]">Configuration_Terminal</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none">
+                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
                         REGISTRY <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>PREFERENCES</span>
                     </h1>
                 </div>
@@ -40,7 +40,7 @@ const RegistryPreferences = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                     <div className="lg:col-span-8 space-y-8">
                         <PrecisionPanel className="p-12">
-                            <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-12 italic flex items-center gap-3">
+                            <h3 className="text-[12px] font-black text-white uppercase tracking-[0.3em] mb-12 flex items-center gap-3">
                                 <Shield size={18} className="text-lh-purple" /> Privacy_Parameters
                             </h3>
 
@@ -52,7 +52,7 @@ const RegistryPreferences = () => {
                                 ].map((pref, i) => (
                                     <div key={i} className="flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-3xl">
                                         <div className="space-y-1">
-                                            <p className="text-[12px] font-black text-white uppercase tracking-wider italic">{pref.label}</p>
+                                            <p className="text-[12px] font-black text-white uppercase tracking-wider">{pref.label}</p>
                                             <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">{pref.desc}</p>
                                         </div>
                                         <div className="w-14 h-7 bg-lh-purple rounded-full relative p-1 cursor-pointer">
@@ -69,8 +69,8 @@ const RegistryPreferences = () => {
                             <div className="w-16 h-16 rounded-2xl bg-lh-purple flex items-center justify-center mb-8 shadow-xl">
                                 <Lock size={28} className="text-white" />
                             </div>
-                            <h3 className="text-[14px] font-black text-white uppercase tracking-widest mb-4 italic">Security_Audit</h3>
-                            <p className="text-[11px] text-gray-400 font-bold leading-relaxed uppercase tracking-widest italic opacity-70 mb-8">
+                            <h3 className="text-[14px] font-black text-white uppercase tracking-widest mb-4">Security_Audit</h3>
+                            <p className="text-[11px] text-gray-400 font-bold leading-relaxed uppercase tracking-widest opacity-70 mb-8">
                                 Last registry synchronization occurred: <br /><span className="text-lh-purple">24_MIN_AGO</span>
                             </p>
                             <button className="w-full py-4 bg-white text-lh-dark text-[10px] font-black uppercase tracking-[0.4em] rounded-xl hover:bg-lh-purple hover:text-white transition-all transform active:scale-95 shadow-2xl">

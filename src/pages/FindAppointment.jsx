@@ -163,7 +163,7 @@ const FindAppointment = () => {
                                 </div>
                                 <div>
                                     <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-1">Testing Protocol: START NOW</h4>
-                                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest italic opacity-70">Bypass scheduling for immediate session validation.</p>
+                                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest opacity-70">Bypass scheduling for immediate session validation.</p>
                                 </div>
                             </div>
                             <button

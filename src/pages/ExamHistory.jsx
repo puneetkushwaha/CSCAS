@@ -46,9 +46,9 @@ const ExamHistory = () => {
                     <div>
                         <div className="flex items-center gap-3 mb-3">
                             <div className="w-10 h-1 bg-lh-purple rounded-full"></div>
-                            <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] italic">Registry_Archives</span>
+                            <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em]">Registry_Archives</span>
                         </div>
-                        <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none">
+                        <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
                             EXAM MISSION <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>HISTORY</span>
                         </h1>
                     </div>
@@ -63,17 +63,17 @@ const ExamHistory = () => {
                                         <History size={24} />
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-black text-white uppercase tracking-tighter italic">{item.exam}</h4>
-                                        <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest mt-1 italic">{item.date}</p>
+                                        <h4 className="text-lg font-black text-white uppercase tracking-tighter">{item.exam}</h4>
+                                        <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest mt-1">{item.date}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-12">
                                     <div className="text-right">
                                         <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Node_Status</p>
-                                        <p className="text-[11px] text-white font-black uppercase tracking-widest italic">{item.status}</p>
+                                        <p className="text-[11px] text-white font-black uppercase tracking-widest">{item.status}</p>
                                     </div>
                                     <div className={`w-20 text-center p-3 rounded-xl border ${item.score === 'PASS' ? 'bg-green-500/10 border-green-500/30' : 'bg-lh-purple/20 border-lh-purple/30'}`}>
-                                        <span className={`text-[12px] font-black italic ${item.score === 'PASS' ? 'text-green-500' : 'text-lh-purple'}`}>{item.score}</span>
+                                        <span className={`text-[12px] font-black ${item.score === 'PASS' ? 'text-green-500' : 'text-lh-purple'}`}>{item.score}</span>
                                     </div>
                                 </div>
                             </div>

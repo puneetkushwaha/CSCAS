@@ -90,7 +90,7 @@ const AcademicPrograms = () => {
                             className="text-5xl md:text-8xl font-[1000] tracking-tighter uppercase leading-none"
                         >
                             Program <br />
-                            <span className="text-lh-purple italic">Catalog</span>
+                            <span className="text-lh-purple">Catalog</span>
                         </motion.h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">
@@ -179,7 +179,7 @@ const AcademicPrograms = () => {
             <section className="py-24 px-6 relative z-10 bg-white/[0.01] border-t border-white/5">
                 <div className="max-w-[1300px] mx-auto text-center space-y-10">
                     <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase">Ready to <span className="text-lh-purple">Enroll?</span></h2>
-                    <p className="text-gray-400 text-lg font-medium max-w-xl mx-auto uppercase tracking-widest italic">
+                    <p className="text-gray-400 text-lg font-medium max-w-xl mx-auto uppercase tracking-widest">
                         "Your journey into the cyber battlefield starts here."
                     </p>
                     <button className="px-16 py-6 bg-lh-purple text-white rounded-full font-black text-xs uppercase tracking-[0.4em] shadow-[0_0_50px_rgba(188,19,254,0.3)] hover:bg-white hover:text-black transition-all transform hover:scale-105 duration-500">

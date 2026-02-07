@@ -96,7 +96,7 @@ const CareersPlus = () => {
 
                         <h1 className="text-4xl md:text-5xl lg:text-7xl font-[900] leading-[1] tracking-tighter uppercase max-w-4xl">
                             Simulate Your <br />
-                            <span className="text-lh-purple italic">Future Self</span>
+                            <span className="text-lh-purple">Future Self</span>
                         </h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">

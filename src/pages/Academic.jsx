@@ -68,7 +68,7 @@ const Academic = () => {
 
                         <h1 className="text-4xl md:text-5xl lg:text-7xl font-[1000] leading-[1] tracking-tighter uppercase max-w-4xl">
                             Academic <br />
-                            <span className="text-lh-purple italic">Programs</span>
+                            <span className="text-lh-purple">Programs</span>
                         </h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">
@@ -109,7 +109,46 @@ const Academic = () => {
                         <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase">Academic <span className="text-white/20">Programs</span></h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[280px]">
+                    {/* Mobile: Simple single column layout */}
+                    <div className="grid md:hidden grid-cols-1 gap-6">
+                        {academicPrograms.map((program, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
+                                viewport={{ once: true }}
+                            >
+                                <div
+                                    className={`group relative w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden flex flex-col p-10 transition-all duration-500 hover:border-lh-purple/50 hover:bg-white/[0.05] hover:shadow-[0_20px_60px_rgba(188,19,254,0.1)] cursor-default`}
+                                >
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${program.color} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
+
+                                    <div className="relative z-10 flex flex-col justify-between">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="p-4 bg-white/5 rounded-2xl text-white group-hover:text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
+                                                {program.icon}
+                                            </div>
+                                            <ArrowRight size={20} className="text-lh-purple opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <h3 className="text-2xl font-black uppercase tracking-tight leading-tight text-white group-hover:text-lh-purple transition-colors">
+                                                {program.title}
+                                            </h3>
+                                            <p className="text-gray-400 text-base leading-relaxed font-medium group-hover:text-gray-300 transition-colors">
+                                                {program.desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-700 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Desktop: Bento grid layout */}
+                    <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[280px]">
                         {academicPrograms.map((program, idx) => (
                             <motion.div
                                 key={idx}
@@ -120,11 +159,11 @@ const Academic = () => {
                                 className={`${program.size}`}
                             >
                                 <div
-                                    className={`group relative h-full w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden flex flex-col p-8 transition-all duration-500 hover:border-lh-purple/50 hover:bg-white/[0.05] hover:shadow-[0_20px_60px_rgba(188,19,254,0.1)] cursor-default`}
+                                    className={`group relative h-full w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden flex flex-col p-10 transition-all duration-500 hover:border-lh-purple/50 hover:bg-white/[0.05] hover:shadow-[0_20px_60px_rgba(188,19,254,0.1)] cursor-default`}
                                 >
                                     <div className={`absolute inset-0 bg-gradient-to-br ${program.color} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
 
-                                    <div className="relative z-10 flex flex-col h-full">
+                                    <div className="relative z-10 flex flex-col h-full justify-between">
                                         <div className="flex justify-between items-start mb-6">
                                             <div className="p-4 bg-white/5 rounded-2xl text-white group-hover:text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
                                                 {program.icon}
@@ -132,18 +171,13 @@ const Academic = () => {
                                             <ArrowRight size={20} className="text-lh-purple opacity-0 group-hover:opacity-100 transition-all duration-500" />
                                         </div>
 
-                                        <div className="space-y-3 flex-grow">
-                                            <h3 className="text-xl font-black uppercase tracking-tight leading-tight group-hover:text-white transition-colors">
+                                        <div className="space-y-4">
+                                            <h3 className="text-2xl font-black uppercase tracking-tight leading-tight text-white group-hover:text-lh-purple transition-colors">
                                                 {program.title}
                                             </h3>
-                                            <p className="text-gray-400 text-sm leading-relaxed font-medium line-clamp-3 md:line-clamp-none group-hover:text-gray-300 transition-colors">
+                                            <p className="text-gray-400 text-base leading-relaxed font-medium group-hover:text-gray-300 transition-colors">
                                                 {program.desc}
                                             </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 pt-6 border-t border-white/5 mt-auto">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-lh-purple animate-pulse"></span>
-                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Program Module</span>
                                         </div>
                                     </div>
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-700 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>

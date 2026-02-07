@@ -50,7 +50,7 @@ const PaymentSuccess = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-xl w-full"
             >
-                <PrecisionPanel className="p-12 text-center border-lh-purple/20">
+                <PrecisionPanel className="p-6 md:p-12 text-center border-lh-purple/20">
                     <div className="mb-8 relative flex justify-center">
                         <div className="absolute inset-0 bg-lh-purple/20 blur-2xl animate-pulse"></div>
                         <div className="w-20 h-20 bg-lh-purple rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(188,19,254,0.5)] relative">
@@ -58,31 +58,31 @@ const PaymentSuccess = () => {
                         </div>
                     </div>
 
-                    <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">
+                    <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tighter mb-4">
                         Authorization <span className="text-lh-purple">Successful</span>
                     </h2>
-                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-10">
+                    <p className="text-[9px] md:text-[11px] font-bold text-gray-500 uppercase tracking-[0.2em] md:tracking-[0.3em] mb-8 md:mb-10">
                         Protocol_Registration_Confirmed // Transaction_ID: {Math.random().toString(36).substring(7).toUpperCase()}
                     </p>
 
                     <div className="space-y-4 mb-10">
-                        <div className="p-6 bg-white/[0.03] border border-white/5 rounded-2xl flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-left">
-                                <div className="p-3 bg-lh-purple/10 rounded-xl">
-                                    <Calendar size={20} className="text-lh-purple" />
+                        <div className="p-4 md:p-6 bg-white/[0.03] border border-white/5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 md:gap-0">
+                            <div className="flex items-center gap-4 text-center md:text-left">
+                                <div className="p-2 md:p-3 bg-lh-purple/10 rounded-xl">
+                                    <Calendar size={18} className="text-lh-purple" />
                                 </div>
                                 <div>
                                     <p className="text-[8px] font-black text-lh-purple uppercase tracking-widest">Scheduled_Date</p>
-                                    <h4 className="text-[13px] font-bold text-white uppercase">{new Date(appointmentDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</h4>
+                                    <h4 className="text-[11px] md:text-[13px] font-bold text-white uppercase">{new Date(appointmentDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</h4>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4 text-right">
+                            <div className="flex items-center gap-4 text-center md:text-right">
+                                <div className="md:order-last p-2 md:p-3 bg-lh-purple/10 rounded-xl">
+                                    <Clock size={18} className="text-lh-purple" />
+                                </div>
                                 <div>
                                     <p className="text-[8px] font-black text-lh-purple uppercase tracking-widest">Operational_Window</p>
-                                    <h4 className="text-[13px] font-bold text-white uppercase">{appointmentTime}</h4>
-                                </div>
-                                <div className="p-3 bg-lh-purple/10 rounded-xl">
-                                    <Clock size={20} className="text-lh-purple" />
+                                    <h4 className="text-[11px] md:text-[13px] font-bold text-white uppercase">{appointmentTime}</h4>
                                 </div>
                             </div>
                         </div>
@@ -96,9 +96,10 @@ const PaymentSuccess = () => {
 
                     <button
                         onClick={() => navigate('/dashboard/pearson')}
-                        className="w-full py-5 bg-lh-purple text-white rounded-xl text-[11px] font-black uppercase tracking-[0.5em] shadow-2xl shadow-lh-purple/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4"
+                        className="w-full py-4 md:py-5 bg-lh-purple text-white rounded-[1.25rem] text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.5em] shadow-2xl shadow-lh-purple/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4 group"
                     >
-                        RETURN_TO_DASHBOARD <ArrowRight size={16} className="animate-bounce-x" />
+                        <span className="relative z-10">Return to Dashboard</span>
+                        <ArrowRight size={16} className="relative z-10 group-hover:translate-x-2 transition-transform" />
                     </button>
 
                     <div className="mt-8 flex items-center justify-center gap-2">

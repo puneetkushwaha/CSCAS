@@ -27,7 +27,7 @@ const GlobalPageLoader = () => (
         </div>
         <div className="flex flex-col items-center gap-2">
             <span className="text-[9px] font-black text-white uppercase tracking-[0.4em] animate-pulse">Configuring Session...</span>
-            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest italic tracking-widest">Bridging secure connection</span>
+            <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest tracking-widest">Bridging secure connection</span>
         </div>
     </div>
 );

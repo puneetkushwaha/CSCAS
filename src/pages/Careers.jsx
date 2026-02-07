@@ -65,7 +65,7 @@ const Careers = () => {
                         </div>
 
                         <h1 className="text-3xl md:text-4xl lg:text-5xl font-[900] leading-[1.2] tracking-tighter uppercase max-w-4xl">
-                            Build a <span className="text-lh-purple italic">Cyber Career</span> <br />
+                            Build a <span className="text-lh-purple">Cyber Career</span> <br />
                             <span className="text-white opacity-40 outline-text">That Actually Pays</span> — <br />
                             <span className="text-white/80">Not Just A Certificate</span>
                         </h1>

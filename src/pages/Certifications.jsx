@@ -46,6 +46,8 @@ const Certifications = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const isDashboard = location.pathname.startsWith('/dashboard');
+
     useEffect(() => {
         if (location.state?.certId) {
             const certId = location.state.certId;
@@ -61,11 +63,11 @@ const Certifications = () => {
     }, [location.state, navigate]);
 
     return (
-        <div className="bg-[#050505] min-h-screen text-white font-plus-jakarta overflow-x-hidden selection:bg-lh-purple selection:text-white">
-            <Navbar />
+        <div className={`${isDashboard ? '' : 'bg-[#050505] min-h-screen'} text-white font-plus-jakarta overflow-x-hidden selection:bg-lh-purple selection:text-white`}>
+            {!isDashboard && <Navbar />}
 
             {/* --- Section 1: Hero (CSCA Branded) --- */}
-            <section className="relative pt-40 pb-20 px-6 overflow-hidden">
+            <section className={`relative ${isDashboard ? 'pt-10' : 'pt-40'} pb-20 px-6 overflow-hidden`}>
                 {/* Background Glows */}
                 <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-lh-purple/20 blur-[150px] rounded-full animate-pulse"></div>
                 <div className="absolute bottom-[20%] left-[-5%] w-[300px] h-[300px] bg-blue-500/10 blur-[120px] rounded-full"></div>
@@ -84,7 +86,7 @@ const Certifications = () => {
 
                         <h1 className="text-4xl md:text-5xl lg:text-7xl font-[900] leading-[1] tracking-tighter uppercase max-w-4xl">
                             Elite <br />
-                            <span className="text-lh-purple italic">Certifications</span>
+                            <span className="text-lh-purple">Certifications</span>
                         </h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">
@@ -169,7 +171,7 @@ const Certifications = () => {
                                                     <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none group-hover:text-lh-purple transition-colors">
                                                         {cert.title.split(' – ')[0]}
                                                     </h3>
-                                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest italic">{cert.level} Specialized</p>
+                                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{cert.level} Specialized</p>
                                                 </div>
 
                                                 <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
@@ -264,7 +266,7 @@ const Certifications = () => {
                 </AnimatePresence>
             </main>
 
-            <Footer />
+            {!isDashboard && <Footer />}
         </div>
     );
 };

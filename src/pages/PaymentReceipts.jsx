@@ -30,9 +30,9 @@ const PaymentReceipts = () => {
                 <div className="mb-12">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-1 bg-lh-purple rounded-full"></div>
-                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em] italic">Billing_Interface</span>
+                        <span className="text-[10px] font-black text-lh-purple uppercase tracking-[0.5em]">Billing_Interface</span>
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none">
+                    <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
                         PROTOCOL <span className="text-transparent font-black" style={{ WebkitTextStroke: '1px #bc13fe' }}>RECEIPTS</span>
                     </h1>
                 </div>
@@ -56,8 +56,8 @@ const PaymentReceipts = () => {
                                     { id: 'TX-98441', item: 'NetGuardian Protocol Entry', amount: '$299.00', status: 'VERIFIED' }
                                 ].map((tx, i) => (
                                     <tr key={i} className="group/row hover:bg-white/[0.01] transition-colors">
-                                        <td className="py-8 text-[11px] font-mono text-lh-purple font-black tracking-widest uppercase italic">{tx.id}</td>
-                                        <td className="py-8 text-[13px] font-black text-white uppercase tracking-tighter italic">{tx.item}</td>
+                                        <td className="py-8 text-[11px] font-mono text-lh-purple font-black tracking-widest uppercase">{tx.id}</td>
+                                        <td className="py-8 text-[13px] font-black text-white uppercase tracking-tighter">{tx.item}</td>
                                         <td className="py-8 text-[12px] font-black text-gray-400 font-mono tracking-widest">{tx.amount}</td>
                                         <td className="py-8">
                                             <div className="flex items-center gap-2 text-green-500">
