@@ -101,10 +101,12 @@ const DashboardHome = () => {
                                     Explore the full directory of professional technical standards. Each module is engineered for maximum operational efficiency and skill validation.
                                 </p>
                             </div>
-                            <button className="group relative px-8 py-4 bg-lh-purple overflow-hidden rounded-xl transition-all hover:scale-110 active:scale-95 shadow-[0_0_40px_rgba(188,19,254,0.3)] animate-pulse">
-                                <span className="relative z-10 text-[11px] font-black text-white uppercase tracking-[0.2em] drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] animate-[glow_2s_ease-in-out_infinite]">Active Registry</span>
-                                <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 opacity-20"></div>
-                            </button>
+                            <Link to="/dashboard/certifications">
+                                <button className="group relative px-8 py-4 bg-lh-purple overflow-hidden rounded-xl transition-all hover:scale-110 active:scale-95 shadow-[0_0_40px_rgba(188,19,254,0.3)] animate-pulse cursor-pointer">
+                                    <span className="relative z-10 text-[11px] font-black text-white uppercase tracking-[0.2em] drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] animate-[glow_2s_ease-in-out_infinite]">Active Registry</span>
+                                    <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 opacity-20"></div>
+                                </button>
+                            </Link>
                         </div>
 
                         {/* Interactive Hero Area */}
