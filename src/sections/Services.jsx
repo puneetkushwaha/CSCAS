@@ -67,7 +67,7 @@ const Certifications = () => {
                   {cert.desc}
                 </p>
                 <div className="pt-4 flex items-center gap-2 text-lh-purple text-[10px] font-black uppercase tracking-widest cursor-pointer group-hover:gap-4 transition-all">
-                  LEARN MORE <span>→</span>
+                  LEARN MORE <span className="inline-block animate-[slideRight_1.5s_ease-in-out_infinite] text-lh-purple drop-shadow-[0_0_8px_rgba(188,19,254,0.6)]">→</span>
                 </div>
               </div>
             </div>

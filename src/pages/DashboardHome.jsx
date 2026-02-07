@@ -75,9 +75,9 @@ const DashboardHome = () => {
                         </div>
                     </div>
                 </div>
-                <div className="text-right hidden md:block">
-                    <p className="text-[10px] font-black text-lh-purple uppercase tracking-widest mb-1 italic">Current System Time:</p>
-                    <p className="text-3xl font-black italic text-white uppercase tracking-tighter tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                <div className="text-right hidden md:block ml-auto">
+                    <p className="text-[8px] font-black text-lh-purple uppercase tracking-widest mb-1 italic">Current System Time:</p>
+                    <p className="text-xl font-black italic text-white uppercase tracking-tighter tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
                         {formatTime(currentTime)}
                     </p>
                 </div>
@@ -94,15 +94,15 @@ const DashboardHome = () => {
 
                         <div className="flex flex-col md:flex-row justify-between items-start mb-10 gap-8 relative z-10">
                             <div className="space-y-4">
-                                <h2 className="text-4xl font-black text-white tracking-tighter uppercase italic leading-none">
-                                    Certification <span className="text-lh-purple">Hub</span>
+                                <h2 className="text-4xl font-black text-white tracking-tight uppercase italic leading-none">
+                                    Certification<span className="text-lh-purple">Hub</span>
                                 </h2>
                                 <p className="text-gray-400 font-bold text-sm leading-relaxed max-w-xl opacity-80">
                                     Explore the full directory of professional technical standards. Each module is engineered for maximum operational efficiency and skill validation.
                                 </p>
                             </div>
-                            <button className="group relative px-8 py-4 bg-lh-purple overflow-hidden rounded-xl transition-all hover:scale-110 active:scale-95 shadow-[0_0_40px_rgba(188,19,254,0.3)]">
-                                <span className="relative z-10 text-[11px] font-black text-white uppercase tracking-[0.2em]">Active Registry</span>
+                            <button className="group relative px-8 py-4 bg-lh-purple overflow-hidden rounded-xl transition-all hover:scale-110 active:scale-95 shadow-[0_0_40px_rgba(188,19,254,0.3)] animate-pulse">
+                                <span className="relative z-10 text-[11px] font-black text-white uppercase tracking-[0.2em] drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] animate-[glow_2s_ease-in-out_infinite]">Active Registry</span>
                                 <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 opacity-20"></div>
                             </button>
                         </div>
@@ -164,8 +164,8 @@ const DashboardHome = () => {
                                 <div className="w-2 h-2 bg-lh-purple rounded-full animate-ping shadow-[0_0_10px_rgba(188,19,254,0.6)]"></div>
                             </div>
 
-                            <h3 className="text-3xl font-black text-white tracking-tighter mb-5 uppercase italic">Exam_Control</h3>
-                            <p className="text-[11px] text-gray-500 font-bold mb-10 leading-relaxed uppercase tracking-widest italic opacity-70">
+                            <h3 className="text-5xl font-black text-white tracking-tighter mb-5 uppercase italic">Exam_Control</h3>
+                            <p className="text-[11px] text-gray-300/80 font-bold mb-10 leading-relaxed uppercase tracking-widest italic opacity-90">
                                 Secure exam scheduling and testing node management.
                             </p>
 

@@ -144,20 +144,6 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-4 flex flex-col md:flex-row lg:justify-center gap-8 border-white/5 md:border-l lg:border-l-0 lg:border-x px-0 md:px-12">
-            <div className="space-y-2">
-              <h4 className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Our Headquarters</h4>
-              <a
-                href="https://www.google.com/maps/search/?api=1&query=A76,+Chandganj+Garden+Road,+Kapoorthla,+Aliganj,+Sector+A,+Chandralok,+Lucknow,+Uttar+Pradesh+226024"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white text-xs font-bold leading-relaxed max-w-[200px] hover:text-lh-purple transition-colors block"
-              >
-                A76, Chandganj Garden Road, Kapoorthla, Aliganj, Sector A, Chandralok, Lucknow, Uttar Pradesh 226024
-              </a>
-            </div>
-          </div>
-
           <div className="lg:col-span-4 flex flex-col items-start lg:items-end space-y-6 pr-0 lg:pr-4">
             <div className="flex items-center gap-3">
               <Shield size={16} className="text-lh-purple" />
