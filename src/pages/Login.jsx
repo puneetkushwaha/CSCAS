@@ -5,7 +5,7 @@ import { Mail, Lock, ArrowLeft, Shield, Eye, EyeOff, AlertTriangle, Loader2 } fr
 import ngdPic from '../assets/images/ngd-pic.png';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
 import api from '../utils/api';
@@ -35,6 +35,37 @@ const Login = () => {
             navigate('/');
         }
     }, [user, navigate]);
+
+    // Handle redirect result for mobile Google login
+    useEffect(() => {
+        const handleRedirectResult = async () => {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result && result.user) {
+                    const user = result.user;
+
+                    // Send to backend
+                    const res = await api.post('/auth/google-login', {
+                        email: user.email,
+                        name: user.displayName,
+                        avatar: user.photoURL,
+                        uid: user.uid
+                    });
+
+                    login(res.data.user, res.data.token);
+                    navigate('/');
+                }
+            } catch (error) {
+                console.error("Redirect Result Error:", error);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    const message = error.response?.data?.message || error.message || 'Login failed';
+                    alert(message);
+                }
+            }
+        };
+
+        handleRedirectResult();
+    }, [login, navigate]);
 
     useEffect(() => {
         const handleMouseMove = (e) => {
@@ -85,26 +116,40 @@ const Login = () => {
     const socialLogin = async (provider) => {
         if (provider === 'google') {
             setIsLoading(true);
+
+            // Detect mobile device
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
             try {
-                const result = await signInWithPopup(auth, googleProvider);
-                const user = result.user;
+                if (isMobile) {
+                    // Use redirect for mobile devices (better compatibility)
+                    await signInWithRedirect(auth, googleProvider);
+                    // Note: The page will redirect, so loader will stay visible
+                    // The actual login will be handled in the useEffect with getRedirectResult
+                } else {
+                    // Use popup for desktop (better UX)
+                    const result = await signInWithPopup(auth, googleProvider);
+                    const user = result.user;
 
-                // Send to backend
-                const res = await api.post('/auth/google-login', {
-                    email: user.email,
-                    name: user.displayName,
-                    avatar: user.photoURL,
-                    uid: user.uid
-                });
+                    // Send to backend
+                    const res = await api.post('/auth/google-login', {
+                        email: user.email,
+                        name: user.displayName,
+                        avatar: user.photoURL,
+                        uid: user.uid
+                    });
 
-                login(res.data.user, res.data.token);
-                navigate('/');
-
+                    login(res.data.user, res.data.token);
+                    navigate('/');
+                    setIsLoading(false);
+                }
             } catch (error) {
                 console.error("Google Login Error:", error);
-                const message = error.response?.data?.message || error.message || 'Google Login Failed';
-                alert(message);
-            } finally {
+                // Don't show error if user closed popup intentionally
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    const message = error.response?.data?.message || error.message || 'Google Login Failed';
+                    alert(message);
+                }
                 setIsLoading(false);
             }
         }

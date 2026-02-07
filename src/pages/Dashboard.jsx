@@ -11,7 +11,10 @@ const Dashboard = () => {
     const { toggleCart, cartCount } = useCart();
     const location = useLocation();
     const navigate = useNavigate();
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(() => {
+        // Auto-collapse sidebar on mobile devices (screen width < 768px)
+        return typeof window !== 'undefined' && window.innerWidth < 768;
+    });
 
     const menuItems = [
         { icon: <LayoutDashboard size={18} />, label: 'Overview', path: '/dashboard' },
