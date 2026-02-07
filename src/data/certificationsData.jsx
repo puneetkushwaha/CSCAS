@@ -15,6 +15,7 @@ export const certifications = [
         color: 'from-primary-600 to-primary-950',
         popular: true,
         price: 499,
+        image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200',
     },
     {
         id: 'cvs-wapt',
@@ -27,6 +28,7 @@ export const certifications = [
         icon: <Globe className="w-8 h-8 text-white" />,
         color: 'from-primary-500 to-primary-800',
         price: 449,
+        image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200',
     },
     {
         id: 'cvs-mapt',
@@ -39,6 +41,7 @@ export const certifications = [
         icon: <Laptop className="w-8 h-8 text-white" />,
         color: 'from-primary-700 to-primary-900',
         price: 449,
+        image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=1200',
     },
     {
         id: 'cvs-rto',
@@ -51,6 +54,7 @@ export const certifications = [
         icon: <Target className="w-8 h-8 text-white" />,
         color: 'from-primary-800 to-black',
         price: 599,
+        image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc51?q=80&w=1200',
     },
 
     // Blue / Defensive Security
@@ -66,6 +70,7 @@ export const certifications = [
         color: 'from-primary-600 to-primary-900',
         popular: true,
         price: 449,
+        image: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&w=1200',
     },
     {
         id: 'cvs-tmdr',
@@ -78,6 +83,7 @@ export const certifications = [
         icon: <Zap className="w-8 h-8 text-white" />,
         color: 'from-primary-500 to-primary-800',
         price: 499,
+        image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=1200',
     },
     {
         id: 'cvs-dfir',
@@ -90,6 +96,7 @@ export const certifications = [
         icon: <FileText className="w-8 h-8 text-white" />,
         color: 'from-primary-600 to-primary-800',
         price: 499,
+        image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1200',
     },
     {
         id: 'cvs-map',
@@ -102,6 +109,7 @@ export const certifications = [
         icon: <Cpu className="w-8 h-8 text-white" />,
         color: 'from-primary-700 to-primary-900',
         price: 549,
+        image: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=1200',
     },
 
     // Cloud & DevSecOps
@@ -117,6 +125,7 @@ export const certifications = [
         icon: <Cloud className="w-8 h-8 text-white" />,
         color: 'from-primary-500 to-primary-700',
         price: 399,
+        image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200',
     },
     {
         id: 'csca-cpdso',
@@ -130,6 +139,7 @@ export const certifications = [
         icon: <Layers className="w-8 h-8 text-white" />,
         color: 'from-primary-600 to-primary-800',
         price: 399,
+        image: 'https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?q=80&w=1200',
     },
 
     // AI & Emerging Tech
@@ -144,6 +154,7 @@ export const certifications = [
         icon: <Brain className="w-8 h-8 text-white" />,
         color: 'from-primary-600 to-primary-900',
         price: 499,
+        image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1200',
     },
 
     // Governance / ISO
@@ -159,6 +170,7 @@ export const certifications = [
         icon: <ClipboardCheck className="w-8 h-8 text-white" />,
         color: 'from-primary-700 to-primary-950',
         price: 599,
+        image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=1200',
     },
     {
         id: 'csca-cpisla',
@@ -172,5 +184,6 @@ export const certifications = [
         icon: <ClipboardList className="w-8 h-8 text-white" />,
         color: 'from-primary-800 to-black',
         price: 599,
+        image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1200',
     },
 ];
