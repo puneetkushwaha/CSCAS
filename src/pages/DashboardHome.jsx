@@ -160,37 +160,37 @@ const DashboardHome = () => {
                             <img src={ngdPic} alt="" className="w-24 h-24 object-contain -rotate-12" />
                         </div>
 
-                        <div className="p-10">
-                            <div className="text-[10px] font-black text-lh-purple uppercase tracking-[0.4em] mb-10 pb-5 border-b border-white/5 flex items-center justify-between">
+                        <div className="p-8">
+                            <div className="text-[10px] font-black text-lh-purple uppercase tracking-[0.3em] mb-8 pb-4 border-b border-white/5 flex items-center justify-between">
                                 <span>Management_Relay</span>
                                 <div className="w-2 h-2 bg-lh-purple rounded-full animate-ping shadow-[0_0_10px_rgba(188,19,254,0.6)]"></div>
                             </div>
 
-                            <h3 className="text-5xl font-black text-white tracking-tighter mb-5 uppercase italic">Exam_Control</h3>
-                            <p className="text-[11px] text-gray-300/80 font-bold mb-10 leading-relaxed uppercase tracking-widest italic opacity-90">
+                            <h3 className="text-3xl md:text-4xl font-black text-white tracking-tighter mb-4 uppercase italic leading-tight">Exam_Control</h3>
+                            <p className="text-[10px] text-gray-300/80 font-bold mb-8 leading-relaxed uppercase tracking-wide italic opacity-90">
                                 Secure exam scheduling and testing node management.
                             </p>
 
-                            <nav className="space-y-4">
+                            <nav className="space-y-3">
                                 {[
                                     { label: 'Schedule and Manage Exams', path: '/dashboard/pearson' },
                                     { label: 'View Testing Options', path: '/dashboard/certifications' },
                                     { label: 'Test Accommodations', path: '/dashboard/certifications' }
                                 ].map((link, i) => (
-                                    <Link key={i} to={link.path} className="group flex items-center justify-between text-[11px] font-black text-lh-purple uppercase tracking-[0.2em] hover:text-white transition-all p-3 rounded-xl hover:bg-lh-purple/5 border border-transparent hover:border-lh-purple/10">
-                                        {link.label}
-                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                                    <Link key={i} to={link.path} className="group flex items-center justify-between gap-2 text-[10px] font-black text-lh-purple uppercase tracking-wide hover:text-white transition-all p-3 rounded-xl hover:bg-lh-purple/5 border border-transparent hover:border-lh-purple/10">
+                                        <span className="flex-1 leading-tight break-words">{link.label}</span>
+                                        <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-2 transition-transform" />
                                     </Link>
                                 ))}
                             </nav>
                         </div>
 
                         <div className="p-8 bg-white/[0.03] border-t border-white/5 rounded-b-[1.5rem]">
-                            <h3 className="text-2xl font-black text-white tracking-tighter mb-3 uppercase italic leading-none">Profile_<span className="text-lh-purple">Vault</span></h3>
-                            <p className="text-[10px] text-gray-500 font-bold mb-6 leading-relaxed uppercase tracking-widest italic opacity-60">
+                            <h3 className="text-2xl font-black text-white tracking-tighter mb-3 uppercase italic leading-tight">Profile_<span className="text-lh-purple">Vault</span></h3>
+                            <p className="text-[10px] text-gray-500 font-bold mb-6 leading-relaxed uppercase tracking-wide italic opacity-60">
                                 Access certified metrics, pay CE fees, and verify logos.
                             </p>
-                            <Link to="/dashboard/certifications" className="block w-full py-4 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] text-center text-gray-400 hover:text-lh-purple hover:border-lh-purple/30 transition-all active:scale-95">
+                            <Link to="/dashboard/certifications" className="block w-full py-3.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-center text-gray-400 hover:text-lh-purple hover:border-lh-purple/30 transition-all active:scale-95">
                                 ACCESS_PORTAL
                             </Link>
                         </div>
