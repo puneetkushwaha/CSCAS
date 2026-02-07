@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Database, Eye, Shield, Target, Activity, Cloud, Cpu, ClipboardCheck, Wifi, Zap, Award, Globe } from 'lucide-react';
 import { certifications as certificationsData } from '../data/certificationsData.jsx';
-
+import CertificateSlider from '../components/CertificateSlider.jsx';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
@@ -232,7 +232,7 @@ const Certifications = () => {
                         >
                             {categoryFilteredCertifications.length > 0 ? (
                                 <div className="space-y-10">
-                                    <div className="flex items-center justify-between px-4 mb-8">
+                                    <div className="flex items-center justify-between px-4">
                                         <button
                                             onClick={() => setActiveCategory(null)}
                                             className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-lh-purple transition-all"
@@ -241,45 +241,7 @@ const Certifications = () => {
                                         </button>
                                         <span className="text-[11px] font-black uppercase tracking-[0.3em] text-lh-purple">{activeCategory}</span>
                                     </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                        {categoryFilteredCertifications.map((cert, i) => (
-                                            <motion.div
-                                                key={cert.id}
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.05 }}
-                                                className="group relative p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-lh-purple/30 transition-all duration-500 text-left flex flex-col justify-between h-[300px] overflow-hidden"
-                                            >
-                                                <div className={`absolute inset-0 bg-gradient-to-br ${cert.color} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700`}></div>
-
-                                                <div className="relative z-10 flex flex-col h-full">
-                                                    <div className="flex justify-between items-start mb-6">
-                                                        <div className="p-4 bg-white/5 rounded-2xl text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
-                                                            {React.cloneElement(cert.icon, { size: 28 })}
-                                                        </div>
-                                                        <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] group-hover:text-lh-purple/40 transition-colors">{cert.code}</span>
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none group-hover:text-lh-purple transition-colors">
-                                                            {cert.title.split(' – ')[0]}
-                                                        </h3>
-                                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest italic">{cert.level} Specialized</p>
-                                                    </div>
-
-                                                    <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/30 group-hover:text-white transition-all">View Details</span>
-                                                        <ChevronRight size={16} className="text-white/20 group-hover:text-lh-purple group-hover:translate-x-1 transition-all" />
-                                                    </div>
-                                                </div>
-
-                                                <div className="absolute -bottom-10 -right-6 text-[120px] font-black opacity-[0.02] group-hover:opacity-[0.05] pointer-events-none transition-all rotate-12">
-                                                    {cert.code}
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </div>
+                                    <CertificateSlider data={categoryFilteredCertifications} onBack={() => setActiveCategory(null)} />
                                 </div>
                             ) : (
                                 <div className="py-32 flex flex-col items-center justify-center text-center border border-dashed border-white/10 rounded-[3rem] bg-white/[0.02]">
