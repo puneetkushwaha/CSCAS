@@ -53,7 +53,14 @@ const Login = () => {
                     });
 
                     login(res.data.user, res.data.token);
-                    navigate('/');
+
+                    // Redirect based on role
+                    if (res.data.user.role === 'admin') {
+                        navigate('/admin/dashboard');
+                    } else {
+                        navigate('/');
+                    }
+
                 }
             } catch (error) {
                 console.error("Redirect Result Error:", error);
@@ -103,7 +110,14 @@ const Login = () => {
             const res = await api.post('/auth/login', payload);
 
             login(res.data.user, res.data.token);
-            navigate('/');
+
+            // Redirect based on role
+            if (res.data.user.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/');
+            }
+
         } catch (error) {
             console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
@@ -140,7 +154,14 @@ const Login = () => {
                     });
 
                     login(res.data.user, res.data.token);
-                    navigate('/');
+
+                    // Redirect based on role
+                    if (res.data.user.role === 'admin') {
+                        navigate('/admin/dashboard');
+                    } else {
+                        navigate('/');
+                    }
+
                     setIsLoading(false);
                 }
             } catch (error) {

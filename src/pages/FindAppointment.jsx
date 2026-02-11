@@ -32,7 +32,8 @@ const GlobalPageLoader = () => (
 const FindAppointment = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { examName, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption, proctorLanguage } = location.state || {};
+    const { examName, examId, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption, proctorLanguage } = location.state || {};
+
     const displayExamName = examName || "CSCA Certification Exam";
 
     const [isPageLoading, setIsPageLoading] = useState(true);
@@ -76,6 +77,8 @@ const FindAppointment = () => {
         navigate('/dashboard/review-booking', {
             state: {
                 ...location.state,
+                examId,
+
                 confirmedTimeZone: detectedTimeZone,
                 appointmentDate: `${year}-${month}-${day}`,
                 appointmentTime: `${hours}:${minutes}`,
@@ -88,6 +91,8 @@ const FindAppointment = () => {
         navigate('/dashboard/review-booking', {
             state: {
                 ...location.state,
+                examId,
+
                 confirmedTimeZone: detectedTimeZone,
                 appointmentDate: selectedDate ? `2026-02-${selectedDate.toString().padStart(2, '0')}` : null,
                 appointmentTime: selectedTimeSlot || '06:15'

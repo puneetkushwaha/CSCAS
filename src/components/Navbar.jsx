@@ -222,6 +222,14 @@ export default function Navbar() {
                       <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-lh-purple hover:bg-white/[0.03] rounded-xl transition-all">
                         <Activity size={16} /> Dashboard
                       </Link>
+
+                      {/* Admin Link - Only for Admins */}
+                      {user && user.role === 'admin' && (
+                        <Link to="/admin/dashboard" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-lh-purple hover:bg-white/[0.03] rounded-xl transition-all">
+                          <ShieldCheck size={16} /> Admin Panel
+                        </Link>
+                      )}
+
                       <div className="h-[1px] bg-white/5 my-2 mx-2"></div>
                       <button
                         onClick={logout}
@@ -326,6 +334,13 @@ export default function Navbar() {
                       <Link to="/dashboard" className="bg-lh-purple text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full" onClick={() => setIsOpen(false)}>
                         <Activity size={16} /> DASHBOARD
                       </Link>
+                      {/* Admin Mobile */}
+                      {user && user.role === 'admin' && (
+                        <Link to="/admin/dashboard" className="bg-white/[0.05] border border-white/10 text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full" onClick={() => setIsOpen(false)}>
+                          <ShieldCheck size={16} /> ADMIN PANEL
+                        </Link>
+                      )}
+
                       <button
                         onClick={() => { logout(); setIsOpen(false); }}
                         className="bg-red-500/10 border border-red-500/20 text-red-500 px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full"

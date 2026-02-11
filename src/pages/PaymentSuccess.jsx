@@ -14,7 +14,8 @@ const PrecisionPanel = ({ children, className = "" }) => (
 const PaymentSuccess = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { appointmentDate, appointmentTime, examName } = location.state || {
+    const { appointmentDate, appointmentTime, examName, examId } = location.state || {
+
         examName: "CSCA Certification Exam",
         appointmentDate: "2026-02-24",
         appointmentTime: "10:00 AM"
@@ -24,6 +25,8 @@ const PaymentSuccess = () => {
     useEffect(() => {
         const scheduledExam = {
             id: Math.random().toString(36).substring(7).toUpperCase(),
+            examId, // Store real backend ID
+
             examName,
             date: appointmentDate,
             time: appointmentTime,
@@ -38,7 +41,8 @@ const PaymentSuccess = () => {
             // Keep activeExam for backward compatibility with existing components until they are updated
             localStorage.setItem('activeExam', JSON.stringify(scheduledExam));
         }
-    }, [appointmentDate, appointmentTime, examName]);
+    }, [appointmentDate, appointmentTime, examName, examId]);
+
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-lh-dark">

@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '../utils/api';
+
 
 const PrecisionPanel = ({ children, className = "" }) => (
     <div className={`relative bg-[#0a0a0a]/70 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] overflow-hidden group transition-all duration-700 ${className}`}>
@@ -32,37 +34,33 @@ const GlobalPageLoader = () => (
     </div>
 );
 
-const exams = [
-    "CSCA A+ Certification Exams",
-    "CSCA Cloud+ Certification Exam",
-    "CSCA CloudNetX Certification Exam",
-    "CSCA Cybersecurity Analyst (CySA+) Certification Exam",
-    "CSCA Data+ Certification Exam",
-    "CSCA DataAI Certification Exam",
-    "CSCA DataSys+ Certification Exam",
-    "CSCA Linux+ Certification Exam",
-    "CSCA Network+ Certification Exam",
-    "CSCA PenTest+ Certification Exam",
-    "CSCA Project+ Certification Exam",
-    "CSCA Security+ Certification Exam",
-    "CSCA SecurityX Certification Exam",
-    "CSCA Server+ Certification Exam",
-    "CSCA Tech+ Certification Exam"
-];
+
 
 const FindExam = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [activeGroup, setActiveGroup] = useState(null);
+    const [exams, setExams] = useState([]);
 
     useEffect(() => {
-        const timer = setTimeout(() => setIsPageLoading(false), 1000);
-        return () => clearTimeout(timer);
+        const fetchExams = async () => {
+            try {
+                const response = await api.get('/exams');
+                setExams(response.data);
+            } catch (error) {
+                console.error("Failed to fetch exams:", error);
+            } finally {
+                setIsPageLoading(false);
+            }
+        };
+
+        fetchExams();
     }, []);
 
     const filteredExams = exams.filter(exam =>
-        exam.toLowerCase().includes(searchTerm.toLowerCase())
+        exam.title.toLowerCase().includes(searchTerm.toLowerCase())
+
     );
 
     if (isPageLoading) return <GlobalPageLoader />;
@@ -114,13 +112,15 @@ const FindExam = () => {
                                     <div className="mt-4 space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar animate-in fade-in slide-in-from-top-4 duration-500">
                                         {filteredExams.map((exam, idx) => (
                                             <button
-                                                key={idx}
-                                                onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam } })}
+                                                key={exam._id}
+                                                onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam.title, examId: exam._id } })}
+
                                                 className="w-full text-left p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-lh-purple/30 hover:bg-lh-purple/10 transition-all group/item flex items-center justify-between"
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-2 h-2 bg-lh-purple rounded-full group-hover/item:scale-150 transition-transform"></div>
-                                                    <span className="text-[11px] font-black text-gray-400 group-hover/item:text-white uppercase tracking-widest transition-colors">{exam}</span>
+                                                    <span className="text-[11px] font-black text-gray-400 group-hover/item:text-white uppercase tracking-widest transition-colors">{exam.title}</span>
+
                                                 </div>
                                                 <ArrowRight size={14} className="text-lh-purple opacity-0 group-hover/item:opacity-100 group-hover/item:translate-x-2 transition-all" />
                                             </button>
@@ -170,7 +170,8 @@ const FindExam = () => {
 
                             <div className="space-y-3 md:space-y-4">
                                 {filteredExams.map((exam, idx) => (
-                                    <div key={idx} className="space-y-px">
+                                    <div key={exam._id} className="space-y-px">
+
                                         <motion.button
                                             whileHover={{ x: 10 }}
                                             onClick={() => setActiveGroup(activeGroup === idx ? null : idx)}
@@ -181,7 +182,8 @@ const FindExam = () => {
                                                     <Shield size={24} />
                                                 </div>
                                                 <div>
-                                                    <span className="text-[13px] md:text-[14px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] font-mono block mb-1 leading-tight">{exam}</span>
+                                                    <span className="text-[13px] md:text-[14px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] font-mono block mb-1 leading-tight">{exam.title}</span>
+
                                                     <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block opacity-70">Certification_Node_Active</span>
                                                 </div>
                                             </div>
@@ -204,7 +206,8 @@ const FindExam = () => {
                                                             initial={{ x: -20, opacity: 0 }}
                                                             animate={{ x: 0, opacity: 1 }}
                                                             transition={{ delay: 0.1 }}
-                                                            onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam } })}
+                                                            onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam.title, examId: exam._id } })}
+
                                                             className="w-full text-left p-4 md:p-6 rounded-[1.5rem] bg-white/[0.03] hover:bg-lh-purple/20 border border-white/10 hover:border-lh-purple/40 transition-all group/action flex flex-col md:flex-row items-center md:justify-between shadow-lg gap-6 md:gap-0"
                                                         >
                                                             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-5 text-center md:text-left">

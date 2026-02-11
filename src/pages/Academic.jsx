@@ -10,37 +10,42 @@ const Academic = () => {
     const academicPrograms = [
         {
             title: "Student Certification Bundles",
-            desc: "Comprehensive certification packages designed specifically for university students to kickstart their cyber careers.",
+            desc: "Comprehensive certification tracks designed for university students. Includes training materials, labs, and exam vouchers aligned to industry job roles.",
+
             icon: <Award size={32} />,
             size: "col-span-1 md:col-span-2 row-span-1",
             color: "from-purple-500/10 to-transparent"
         },
         {
             title: "Faculty Training",
-            desc: "Empower your educators with cutting-edge cybersecurity knowledge and CSCA certified instructor status.",
+            desc: "Skill‑enhancement programs for faculty members with instructor‑level training, academic resources, and ongoing professional development.",
             icon: <Users size={32} />,
-            size: "col-span-1 row-span-1",
+            size: "col-span-1 md:col-span-2 row-span-1",
+
             color: "from-blue-500/10 to-transparent"
         },
         {
             title: "Campus SOC Labs",
-            desc: "Establish state-of-the-art Security Operations Center labs on campus for hands-on technical training.",
+            desc: "State‑of‑the‑art Security Operations Center labs built on campus for hands‑on experience in threat detection, incident response, and cybersecurity monitoring.",
+
             icon: <Laptop size={32} />,
             size: "col-span-1 row-span-2",
             color: "from-emerald-500/10 to-transparent"
         },
         {
             title: "Internship-Ready Skills",
-            desc: "Curriculums focused on high-demand technical skills to ensure students are ready for elite internships.",
+            desc: "Curriculums focused on high‑demand technical skills. Students gain practical, internship‑ready capabilities through simulated attack environments.",
+
             icon: <Shield size={32} />,
             size: "col-span-1 md:col-span-2 row-span-1",
             color: "from-cyan-500/10 to-transparent"
         },
         {
             title: "Academic Licensing",
-            desc: "Flexible licensing models for universities to integrate CSCA materials into their official degree programs.",
+            desc: "Flexible licensing models that allow universities to embed CSCA content directly into their academic programs, including lesson plans, labs, and certification pathways.",
             icon: <BookOpen size={24} />,
-            size: "col-span-1 md:col-span-1 row-span-1",
+            size: "col-span-1 md:col-span-2 row-span-1",
+
             color: "from-orange-500/10 to-transparent"
         }
     ];
@@ -72,7 +77,8 @@ const Academic = () => {
                         </h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">
-                            For Universities & Colleges. Empowering the next generation of cybersecurity leaders with world-class certifications integrated into your curriculum.
+                            For Universities & Colleges. Empowering the next generation of cybersecurity leaders with world‑class certifications integrated into academic curriculums.
+
                         </p>
 
                         <div className="flex flex-wrap gap-4 pt-4">
@@ -148,7 +154,8 @@ const Academic = () => {
                     </div>
 
                     {/* Desktop: Bento grid layout */}
-                    <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[280px]">
+                    <div className="hidden md:grid grid-cols-4 lg:grid-cols-5 gap-6 auto-rows-[280px]">
+
                         {academicPrograms.map((program, idx) => (
                             <motion.div
                                 key={idx}

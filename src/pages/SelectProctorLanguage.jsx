@@ -32,7 +32,8 @@ const GlobalPageLoader = () => (
 const SelectProctorLanguage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { examName, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption } = location.state || {};
+    const { examName, examId, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption } = location.state || {};
+
     const displayExamName = examName || "CSCA Certification Exam";
 
     const [isPageLoading, setIsPageLoading] = useState(true);
@@ -47,6 +48,8 @@ const SelectProctorLanguage = () => {
         navigate('/dashboard/find-appointment', {
             state: {
                 examName: displayExamName,
+                examId,
+
                 temporaryCountry,
                 hasAuthorization,
                 selectedLanguage,

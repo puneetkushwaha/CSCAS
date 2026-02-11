@@ -37,6 +37,8 @@ import RegistryPreferences from './pages/RegistryPreferences';
 import ExamHistory from './pages/ExamHistory';
 import ScoreReports from './pages/ScoreReports';
 import PaymentReceipts from './pages/PaymentReceipts';
+import AdminDashboard from './pages/AdminDashboard'; // Import Admin Dashboard
+import AdminRoute from './components/AdminRoute';
 
 function App() {
   return (
@@ -91,6 +93,11 @@ function App() {
             <Route path="/exam-player" element={<ExamPlayer />} />
 
             <Route path="/pearson-dashboard" element={<PearsonDashboard />} />
+
+            {/* Admin Route - Protected */}
+            <Route element={<AdminRoute />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            </Route>
           </Routes>
         </Router>
       </CartProvider>
