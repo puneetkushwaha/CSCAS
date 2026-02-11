@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, BookOpen, Activity, Play, Plus, Trash2, Edit, Search,
     BarChart2, Save, X, Check, AlertCircle, LayoutDashboard, FileText,
-    TrendingUp, Shield, Terminal, Zap, MoreVertical, LogOut, Home
+    TrendingUp, Shield, Terminal, Zap, MoreVertical, LogOut, Home,
+    AlertTriangle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
@@ -212,8 +213,8 @@ const AdminDashboard = () => {
     const SX = {
         glass: "bg-white/[0.02] backdrop-blur-xl border border-white/10",
         glassHover: "hover:bg-white/[0.05] hover:border-lh-purple/30 transition-all duration-300",
-        input: "w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-lh-purple focus:ring-1 focus:ring-lh-purple outline-none transition-all placeholder:text-gray-700",
-        label: "block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2"
+        input: "w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-lh-purple focus:ring-1 focus:ring-lh-purple outline-none transition-all placeholder:text-gray-600 hover:bg-white/10",
+        label: "block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1"
     };
 
     const handleToggleStatus = async (exam) => {
@@ -695,7 +696,7 @@ const AdminDashboard = () => {
                                                     <div className="grid grid-cols-2 gap-4">
                                                         {currentQuestion.options.map((opt, idx) => (
                                                             <div key={idx} className="relative group">
-                                                                <span className="absolute left-3 top-3 text-[10px] font-black text-gray-600 uppercase">Opt {idx + 1}</span>
+                                                                <span className="absolute left-3 top-3 text-[10px] font-black text-gray-400 uppercase">Opt {idx + 1}</span>
                                                                 <input
                                                                     type="text"
                                                                     className={`${SX.input} pl-12 pr-4 ${currentQuestion.correctAnswer === opt && opt !== '' ? 'border-green-500/50 bg-green-500/10' : ''}`}
@@ -724,7 +725,7 @@ const AdminDashboard = () => {
                                                         <button
                                                             type="button"
                                                             onClick={handleAddQuestion}
-                                                            className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 shrink-0 border ${editingIndex !== null ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/20' : 'bg-white text-black hover:bg-gray-200 border-white'}`}
+                                                            className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 shrink-0 border border-dashed border-emerald-500/30 ${editingIndex !== null ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}
                                                         >
                                                             {editingIndex !== null ? 'Update Item' : 'Add Item'}
                                                         </button>
