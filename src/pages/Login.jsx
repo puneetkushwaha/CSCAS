@@ -39,6 +39,7 @@ const Login = () => {
     // Handle redirect result for mobile Google login
     useEffect(() => {
         const handleRedirectResult = async () => {
+            setIsLoading(true); // Start loading when checking for redirect
             try {
                 const result = await getRedirectResult(auth);
                 if (result && result.user) {
@@ -68,6 +69,8 @@ const Login = () => {
                     const message = error.response?.data?.message || error.message || 'Login failed';
                     alert(message);
                 }
+            } finally {
+                setIsLoading(false); // Ensure loading stops
             }
         };
 
