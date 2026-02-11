@@ -5,6 +5,13 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   server: {
+    proxy: {
+      '/api': {
+        target: 'https://csca.onrender.com',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     headers: {
       'Cross-Origin-Opener-Policy': 'unsafe-none',
     },
