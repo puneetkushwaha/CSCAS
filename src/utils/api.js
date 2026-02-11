@@ -11,7 +11,7 @@ const getBaseURL = () => {
 
 const api = axios.create({
     baseURL: getBaseURL(),
-    timeout: 30000, // 30 seconds timeout
+    timeout: 60000, // 60 seconds timeout for Render cold starts
 });
 
 // Add a request interceptor to add the auth token to every request
