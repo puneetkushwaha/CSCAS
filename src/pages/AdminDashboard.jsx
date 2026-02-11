@@ -202,7 +202,7 @@ const AdminDashboard = () => {
         }
     };
 
-    constSX = {
+    const SX = {
         glass: "bg-white/[0.02] backdrop-blur-xl border border-white/10",
         glassHover: "hover:bg-white/[0.05] hover:border-lh-purple/30 transition-all duration-300",
         input: "w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-lh-purple focus:ring-1 focus:ring-lh-purple outline-none transition-all placeholder:text-gray-700",
@@ -225,7 +225,7 @@ const AdminDashboard = () => {
             <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-blue-500/10 blur-[150px] rounded-full pointer-events-none"></div>
 
             {/* Sidebar */}
-            <aside className={`w-72 ${constSX.glass} border-r border-white/5 p-6 flex flex-col gap-2 z-20 h-screen sticky top-0`}>
+            <aside className={`w-72 ${SX.glass} border-r border-white/5 p-6 flex flex-col gap-2 z-20 h-screen sticky top-0`}>
                 <div className="mb-10 px-2 flex items-center gap-3 text-lh-purple">
                     <Shield size={28} />
                     <div>
@@ -281,10 +281,10 @@ const AdminDashboard = () => {
                         <p className="text-gray-500 text-sm font-medium">Welcome back to the command center.</p>
                     </div>
                     <div className="flex gap-4">
-                        <button className={`p-3 rounded-full ${constSX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}>
+                        <button className={`p-3 rounded-full ${SX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}>
                             <Search size={20} />
                         </button>
-                        <button className={`p-3 rounded-full ${constSX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}>
+                        <button className={`p-3 rounded-full ${SX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}>
                             <Terminal size={20} />
                         </button>
                     </div>
@@ -325,7 +325,7 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Placeholder for Chart/Activity Stream */}
-                            <div className={`p-8 rounded-[32px] ${constSX.glass} min-h-[300px] flex items-center justify-center flex-col gap-4 text-gray-500`}>
+                            <div className={`p-8 rounded-[32px] ${SX.glass} min-h-[300px] flex items-center justify-center flex-col gap-4 text-gray-500`}>
                                 <BarChart2 size={48} className="opacity-20" />
                                 <span className="text-xs font-bold uppercase tracking-widest opacity-50">Analytics Module Loading...</span>
                             </div>
@@ -353,7 +353,7 @@ const AdminDashboard = () => {
                                 </button>
                             </div>
 
-                            <div className={`rounded-[32px] overflow-hidden ${constSX.glass}`}>
+                            <div className={`rounded-[32px] overflow-hidden ${SX.glass}`}>
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-white/[0.02] border-b border-white/5 text-[10px] text-gray-400 uppercase tracking-[0.2em]">
@@ -431,7 +431,7 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className={`rounded-[32px] overflow-hidden ${constSX.glass}`}>
+                            <div className={`rounded-[32px] overflow-hidden ${SX.glass}`}>
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-white/[0.02] border-b border-white/5 text-[10px] text-gray-400 uppercase tracking-[0.2em]">
@@ -511,10 +511,10 @@ const AdminDashboard = () => {
                                         { label: 'Total Marks', key: 'totalMarks', type: 'number' }
                                     ].map(field => (
                                         <div key={field.key}>
-                                            <label className={constSX.label}>{field.label}</label>
+                                            <label className={SX.label}>{field.label}</label>
                                             <input
                                                 type={field.type}
-                                                className={constSX.input}
+                                                className={SX.input}
                                                 value={editingResult[field.key]}
                                                 onChange={e => setEditingResult({ ...editingResult, [field.key]: parseInt(e.target.value) })}
                                             />
@@ -522,9 +522,9 @@ const AdminDashboard = () => {
                                     ))}
 
                                     <div>
-                                        <label className={constSX.label}>Status</label>
+                                        <label className={SX.label}>Status</label>
                                         <select
-                                            className={constSX.input}
+                                            className={SX.input}
                                             value={editingResult.status}
                                             onChange={e => setEditingResult({ ...editingResult, status: e.target.value })}
                                         >
@@ -569,10 +569,10 @@ const AdminDashboard = () => {
                                                 <h4 className="text-sm font-black uppercase tracking-widest text-lh-purple border-b border-white/5 pb-4">Exam Configuration</h4>
 
                                                 <div>
-                                                    <label className={constSX.label}>Exam Title</label>
+                                                    <label className={SX.label}>Exam Title</label>
                                                     <input
                                                         type="text"
-                                                        className={constSX.input}
+                                                        className={SX.input}
                                                         placeholder="e.g. Certified Ethical Hacker v12"
                                                         value={newExam.title}
                                                         onChange={e => setNewExam({ ...newExam, title: e.target.value })}
@@ -582,11 +582,11 @@ const AdminDashboard = () => {
 
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className={constSX.label}>Duration (min)</label>
+                                                        <label className={SX.label}>Duration (min)</label>
                                                         <div className="relative">
                                                             <input
                                                                 type="number"
-                                                                className={constSX.input}
+                                                                className={SX.input}
                                                                 value={newExam.duration}
                                                                 onChange={e => setNewExam({ ...newExam, duration: parseInt(e.target.value) })}
                                                             />
@@ -594,12 +594,12 @@ const AdminDashboard = () => {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className={constSX.label}>Pricing ($)</label>
+                                                        <label className={SX.label}>Pricing ($)</label>
                                                         <div className="relative">
                                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-bold">$</span>
                                                             <input
                                                                 type="number"
-                                                                className={`${constSX.input} pl-6`}
+                                                                className={`${SX.input} pl-6`}
                                                                 value={newExam.price}
                                                                 onChange={e => setNewExam({ ...newExam, price: parseInt(e.target.value) })}
                                                             />
@@ -608,9 +608,9 @@ const AdminDashboard = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label className={constSX.label}>Description</label>
+                                                    <label className={SX.label}>Description</label>
                                                     <textarea
-                                                        className={`${constSX.input} h-32 resize-none`}
+                                                        className={`${SX.input} h-32 resize-none`}
                                                         placeholder="Provide a comprehensive overview of the exam..."
                                                         value={newExam.description}
                                                         onChange={e => setNewExam({ ...newExam, description: e.target.value })}
@@ -639,7 +639,7 @@ const AdminDashboard = () => {
                                                         <div className="absolute top-3 right-3 text-[10px] font-mono text-gray-600">MARKDOWN SUPPORTED</div>
                                                         <textarea
                                                             placeholder="Enter question text here..."
-                                                            className={`${constSX.input} pl-10 pt-3 h-28 resize-none`}
+                                                            className={`${SX.input} pl-10 pt-3 h-28 resize-none`}
                                                             value={currentQuestion.questionText}
                                                             onChange={e => setCurrentQuestion({ ...currentQuestion, questionText: e.target.value })}
                                                         />
@@ -651,13 +651,13 @@ const AdminDashboard = () => {
                                                                 <span className="absolute left-3 top-3 text-[10px] font-black text-gray-600 uppercase">Opt {idx + 1}</span>
                                                                 <input
                                                                     type="text"
-                                                                    className={`${constSX.input} pl-12 pr-4 ${currentQuestion.correctAnswer === HV opt && opt !== '' ? 'border-green-500/50 bg-green-500/10' : ''}`}
-                                                                value={opt}
-                                                                onChange={e => {
-                                                                    const newOptions = [...currentQuestion.options];
-                                                                    newOptions[idx] = e.target.value;
-                                                                    setCurrentQuestion({ ...currentQuestion, options: newOptions });
-                                                                }}
+                                                                    className={`${SX.input} pl-12 pr-4 ${currentQuestion.correctAnswer === opt && opt !== '' ? 'border-green-500/50 bg-green-500/10' : ''}`}
+                                                                    value={opt}
+                                                                    onChange={e => {
+                                                                        const newOptions = [...currentQuestion.options];
+                                                                        newOptions[idx] = e.target.value;
+                                                                        setCurrentQuestion({ ...currentQuestion, options: newOptions });
+                                                                    }}
                                                                 />
                                                             </div>
                                                         ))}
@@ -665,7 +665,7 @@ const AdminDashboard = () => {
 
                                                     <div className="flex gap-3">
                                                         <select
-                                                            className={`${constSX.input} flex-1 appearance-none cursor-pointer`}
+                                                            className={`${SX.input} flex-1 appearance-none cursor-pointer`}
                                                             value={currentQuestion.correctAnswer}
                                                             onChange={e => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
                                                         >
