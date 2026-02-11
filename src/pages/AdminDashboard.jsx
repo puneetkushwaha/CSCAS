@@ -4,7 +4,7 @@ import {
     Users, BookOpen, Activity, Play, Plus, Trash2, Edit, Search,
     BarChart2, Save, X, Check, AlertCircle, LayoutDashboard, FileText,
     TrendingUp, Shield, Zap, MoreVertical, LogOut, Home,
-    AlertTriangle
+    AlertTriangle, Code
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
@@ -676,7 +676,7 @@ const AdminDashboard = () => {
 
                                                 <div className="space-y-5 mb-8">
                                                     <div className="relative">
-                                                        <div className="absolute top-3 left-3 text-gray-500"><Terminal size={16} /></div>
+                                                        <div className="absolute top-3 left-3 text-gray-500"><Code size={16} /></div>
                                                         <div className="absolute top-3 right-3 text-[10px] font-mono text-gray-600">MARKDOWN SUPPORTED</div>
                                                         <textarea
                                                             placeholder="Enter question text here..."
