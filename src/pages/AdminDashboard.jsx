@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, BookOpen, Activity, Play, Plus, Trash2, Edit, Search,
     BarChart2, Save, X, Check, AlertCircle, LayoutDashboard, FileText,
-    TrendingUp, Shield, Terminal, Zap, MoreVertical
+    TrendingUp, Shield, Terminal, Zap, MoreVertical, LogOut, Home
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview'); // overview, exams, results
     const [stats, setStats] = useState({ totalExams: 0, totalResults: 0, distinctUsers: 0 });
     const [exams, setExams] = useState([]);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Search & Terminal State
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isTerminalOpen, setIsTerminalOpen] = useState(false);
 
     // Result Editing State
     const [editingResult, setEditingResult] = useState(null);
@@ -218,6 +225,18 @@ const AdminDashboard = () => {
         }
     };
 
+    // Filter Logic
+    const filteredExams = exams.filter(exam =>
+        exam.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exam.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const filteredResults = results.filter(result =>
+        (result.user?.firstName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (result.user?.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (result.examTitle?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="min-h-screen bg-[#050505] text-white font-plus-jakarta flex relative overflow-hidden">
             {/* Background Effects */}
@@ -226,11 +245,14 @@ const AdminDashboard = () => {
 
             {/* Sidebar */}
             <aside className={`w-72 ${SX.glass} border-r border-white/5 p-6 flex flex-col gap-2 z-20 h-screen sticky top-0`}>
-                <div className="mb-10 px-2 flex items-center gap-3 text-lh-purple">
-                    <Shield size={28} />
-                    <div>
+                <div
+                    onClick={() => navigate('/')}
+                    className="mb-10 px-2 flex items-center gap-3 text-lh-purple cursor-pointer group"
+                >
+                    <Shield size={28} className="group-hover:drop-shadow-[0_0_10px_rgba(188,19,254,0.8)] transition-all" />
+                    <div className="group-hover:translate-x-1 transition-transform">
                         <h2 className="text-xl font-[1000] uppercase tracking-wider leading-none">Command</h2>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">Center</span>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] group-hover:text-white transition-colors">Center</span>
                     </div>
                 </div>
 
@@ -280,11 +302,36 @@ const AdminDashboard = () => {
                         </h1>
                         <p className="text-gray-500 text-sm font-medium">Welcome back to the command center.</p>
                     </div>
-                    <div className="flex gap-4">
-                        <button className={`p-3 rounded-full ${SX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}>
-                            <Search size={20} />
-                        </button>
-                        <button className={`p-3 rounded-full ${SX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}>
+
+                    <div className="flex items-center gap-4">
+                        <div className={`flex items-center transition-all duration-300 ${isSearchOpen ? 'w-64' : 'w-10'}`}>
+                            <AnimatePresence>
+                                {isSearchOpen && (
+                                    <motion.input
+                                        initial={{ width: 0, opacity: 0 }}
+                                        animate={{ width: "100%", opacity: 1 }}
+                                        exit={{ width: 0, opacity: 0 }}
+                                        type="text"
+                                        placeholder="Search system..."
+                                        className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 px-4 pr-12 text-xs text-white outline-none focus:border-lh-purple"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        autoFocus
+                                    />
+                                )}
+                            </AnimatePresence>
+                            <button
+                                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                                className={`p-3 rounded-full ${isSearchOpen ? 'absolute right-0' : ''} ${SX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all z-10`}
+                            >
+                                {isSearchOpen ? <X size={20} /> : <Search size={20} />}
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setIsTerminalOpen(true)}
+                            className={`p-3 rounded-full ${SX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}
+                        >
                             <Terminal size={20} />
                         </button>
                     </div>
@@ -343,7 +390,7 @@ const AdminDashboard = () => {
                         >
                             <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded-2xl border border-white/5">
                                 <span className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                    {exams.length} Examination Records
+                                    {filteredExams.length} Examination Records
                                 </span>
                                 <button
                                     onClick={() => setIsExamModalOpen(true)}
@@ -365,7 +412,7 @@ const AdminDashboard = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
-                                        {exams.map(exam => (
+                                        {filteredExams.map(exam => (
                                             <tr key={exam._id} className="hover:bg-white/[0.02] transition-colors group">
                                                 <td className="p-6 font-bold text-sm text-white group-hover:text-lh-purple transition-colors">{exam.title}</td>
                                                 <td className="p-6 text-sm text-gray-400 font-medium">{exam.duration} mins</td>
@@ -391,10 +438,10 @@ const AdminDashboard = () => {
                                             </tr>
                                         ))}
                                     </tbody>
-                                    {exams.length === 0 && (
+                                    {filteredExams.length === 0 && (
                                         <tfoot>
                                             <tr>
-                                                <td colSpan="5" className="p-12 text-center text-gray-500 text-sm font-medium">No exams found in the system.</td>
+                                                <td colSpan="5" className="p-12 text-center text-gray-500 text-sm font-medium">No results found for "{searchQuery}"</td>
                                             </tr>
                                         </tfoot>
                                     )}
@@ -444,7 +491,7 @@ const AdminDashboard = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
-                                        {results
+                                        {filteredResults
                                             .filter(result => selectedExamFilter === 'All' || (result.examTitle || result.exam?.title) === selectedExamFilter)
                                             .sort((a, b) => b.score - a.score)
                                             .map((result, idx) => (
@@ -721,6 +768,66 @@ const AdminDashboard = () => {
                         </div>
                     )}
                 </AnimatePresence>
+
+                {/* System Logs Modal (Terminal) */}
+                <AnimatePresence>
+                    {isTerminalOpen && (
+                        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center backdrop-blur-md p-4">
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.95, opacity: 0 }}
+                                className="w-full max-w-2xl bg-black border border-green-500/30 rounded-lg shadow-[0_0_30px_rgba(0,255,0,0.1)] overflow-hidden font-mono"
+                            >
+                                <div className="flex items-center justify-between px-4 py-2 bg-green-500/10 border-b border-green-500/20">
+                                    <div className="flex items-center gap-2 text-green-500 text-xs font-bold uppercase tracking-widest">
+                                        <Terminal size={14} /> System_Logs_v2.0.4.log
+                                    </div>
+                                    <button onClick={() => setIsTerminalOpen(false)} className="text-green-500/50 hover:text-green-500 transition-colors">
+                                        <X size={16} />
+                                    </button>
+                                </div>
+                                <div className="p-6 h-[400px] overflow-y-auto custom-scrollbar text-xs space-y-2">
+                                    {[
+                                        "[SYSTEM] Connection established to secure gateway...",
+                                        "[AUTH] Admin user verified (UID: 8849-AF)",
+                                        "[DB] Database integrity check: PASSED",
+                                        "[DB] Syncing results...",
+                                        "[API] GET /exams/list - 200 OK (14ms)",
+                                        "[SYSTEM] Memory usage: 14% (Stable)",
+                                        "[AUTH] New session started from IP 192.168.1.104",
+                                        "[SYSTEM] Background worker 'result-processor' active",
+                                        "[API] GET /stats/overview - 200 OK (8ms)",
+                                        "[WARN] Rate limit approached for IP 10.0.0.5",
+                                        "[SYSTEM] Cache cleared",
+                                        "[UPDATE] Module 'exam-engine' updated to v1.2",
+                                        "[SYSTEM] All systems operational."
+                                    ].map((log, i) => (
+                                        <motion.div
+                                            key={i}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.1 }}
+                                            className="text-green-500/80"
+                                        >
+                                            <span className="text-green-800 mr-2">{new Date().toLocaleTimeString()}</span>
+                                            {log}
+                                        </motion.div>
+                                    ))}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1 }}
+                                        className="text-green-500 font-bold"
+                                    >
+                                        _
+                                    </motion.div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
             </main>
         </div>
     );
