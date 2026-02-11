@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, BookOpen, Activity, Play, Plus, Trash2, Edit, Search,
     BarChart2, Save, X, Check, AlertCircle, LayoutDashboard, FileText,
-    TrendingUp, Shield, Terminal, Zap, MoreVertical, LogOut, Home,
+    TrendingUp, Shield, Zap, MoreVertical, LogOut, Home,
     AlertTriangle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -17,10 +17,9 @@ const AdminDashboard = () => {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Search & Terminal State
+    // Search State
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isTerminalOpen, setIsTerminalOpen] = useState(false);
 
     // Result Editing State
     const [editingResult, setEditingResult] = useState(null);
@@ -329,12 +328,6 @@ const AdminDashboard = () => {
                             </button>
                         </div>
 
-                        <button
-                            onClick={() => setIsTerminalOpen(true)}
-                            className={`p-3 rounded-full ${SX.glass} hover:bg-white/10 text-gray-400 hover:text-white transition-all`}
-                        >
-                            <Terminal size={20} />
-                        </button>
                     </div>
                 </header>
 
@@ -592,12 +585,12 @@ const AdminDashboard = () => {
                 {/* Create Exam Modal */}
                 <AnimatePresence>
                     {isExamModalOpen && (
-                        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md overflow-y-auto custom-scrollbar">
+                        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md overflow-y-auto custom-scrollbar">
                             <motion.div
                                 initial={{ opacity: 0, y: 50 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 50 }}
-                                className="w-full min-h-screen p-4 md:p-8 max-w-6xl mx-auto space-y-6"
+                                className="w-full min-h-screen p-4 md:p-8 max-w-5xl mx-auto space-y-6"
                             >
                                 <div className="flex justify-between items-center sticky top-0 bg-black/50 backdrop-blur-md z-20 pb-4 border-b border-white/5 pt-4 rounded-b-2xl px-4">
                                     <div className="flex items-center gap-3">
@@ -696,7 +689,7 @@ const AdminDashboard = () => {
                                                     <div className="grid grid-cols-2 gap-4">
                                                         {currentQuestion.options.map((opt, idx) => (
                                                             <div key={idx} className="relative group">
-                                                                <span className="absolute left-3 top-3 text-[10px] font-black text-gray-400 uppercase">Opt {idx + 1}</span>
+                                                                <span className="absolute left-3 top-3 text-[10px] font-black text-gray-600 uppercase">Opt {idx + 1}</span>
                                                                 <input
                                                                     type="text"
                                                                     className={`${SX.input} pl-12 pr-4 ${currentQuestion.correctAnswer === opt && opt !== '' ? 'border-green-500/50 bg-green-500/10' : ''}`}
@@ -765,65 +758,6 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
                                 </form>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
-
-                {/* System Logs Modal (Terminal) */}
-                <AnimatePresence>
-                    {isTerminalOpen && (
-                        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center backdrop-blur-md p-4">
-                            <motion.div
-                                initial={{ scale: 0.95, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.95, opacity: 0 }}
-                                className="w-full max-w-2xl bg-black border border-green-500/30 rounded-lg shadow-[0_0_30px_rgba(0,255,0,0.1)] overflow-hidden font-mono"
-                            >
-                                <div className="flex items-center justify-between px-4 py-2 bg-green-500/10 border-b border-green-500/20">
-                                    <div className="flex items-center gap-2 text-green-500 text-xs font-bold uppercase tracking-widest">
-                                        <Terminal size={14} /> System_Logs_v2.0.4.log
-                                    </div>
-                                    <button onClick={() => setIsTerminalOpen(false)} className="text-green-500/50 hover:text-green-500 transition-colors">
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                                <div className="p-6 h-[400px] overflow-y-auto custom-scrollbar text-xs space-y-2">
-                                    {[
-                                        "[SYSTEM] Connection established to secure gateway...",
-                                        "[AUTH] Admin user verified (UID: 8849-AF)",
-                                        "[DB] Database integrity check: PASSED",
-                                        "[DB] Syncing results...",
-                                        "[API] GET /exams/list - 200 OK (14ms)",
-                                        "[SYSTEM] Memory usage: 14% (Stable)",
-                                        "[AUTH] New session started from IP 192.168.1.104",
-                                        "[SYSTEM] Background worker 'result-processor' active",
-                                        "[API] GET /stats/overview - 200 OK (8ms)",
-                                        "[WARN] Rate limit approached for IP 10.0.0.5",
-                                        "[SYSTEM] Cache cleared",
-                                        "[UPDATE] Module 'exam-engine' updated to v1.2",
-                                        "[SYSTEM] All systems operational."
-                                    ].map((log, i) => (
-                                        <motion.div
-                                            key={i}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: i * 0.1 }}
-                                            className="text-green-500/80"
-                                        >
-                                            <span className="text-green-800 mr-2">{new Date().toLocaleTimeString()}</span>
-                                            {log}
-                                        </motion.div>
-                                    ))}
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        transition={{ repeat: Infinity, duration: 1 }}
-                                        className="text-green-500 font-bold"
-                                    >
-                                        _
-                                    </motion.div>
-                                </div>
                             </motion.div>
                         </div>
                     )}
