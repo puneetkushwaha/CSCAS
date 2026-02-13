@@ -45,10 +45,20 @@ const ForgotPassword = () => {
             return;
         }
 
+        const isEmail = identifier.includes("@");
+
+        // If not email, validate as phone number (digits only)
+        if (!isEmail) {
+            const phoneRegex = /^[0-9]+$/;
+            if (!phoneRegex.test(identifier)) {
+                alert("Please enter a valid phone number (digits only) or email address. Special characters are not allowed in phone numbers.");
+                return;
+            }
+        }
+
         setIsLoading(true);
 
         // Determine if input is email or phone
-        const isEmail = identifier.includes("@");
         const payload = isEmail ? { email: identifier.trim() } : { phone: identifier.trim() };
 
         try {

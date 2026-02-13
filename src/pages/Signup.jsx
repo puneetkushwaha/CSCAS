@@ -134,6 +134,25 @@ const Signup = () => {
             return;
         }
 
+        // Validation Regex
+        const nameRegex = /^[a-zA-Z\s]+$/;
+        const phoneRegex = /^[0-9]+$/;
+
+        if (!nameRegex.test(formData.firstName)) {
+            alert("First Name cannot contain special characters or numbers.");
+            return;
+        }
+
+        if (!nameRegex.test(formData.lastName)) {
+            alert("Last Name cannot contain special characters or numbers.");
+            return;
+        }
+
+        if (!phoneRegex.test(formData.phone)) {
+            alert("Phone Number cannot contain special characters. Only digits are allowed.");
+            return;
+        }
+
         setIsLoading(true);
 
         const payload = {

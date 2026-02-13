@@ -104,6 +104,17 @@ const Login = () => {
             return;
         }
 
+        const isEmail = identifier.includes("@");
+        // If not email format, assume phone and validate digits only
+        if (!isEmail) {
+            const phoneRegex = /^[0-9]+$/;
+            if (!phoneRegex.test(identifier)) {
+                alert("Invalid format. Please enter a valid Email or Phone Number (only digits allowed).");
+                setIsLoading(false);
+                return;
+            }
+        }
+
         const payload = {
             identifier: identifier.trim(),
             password: password,
