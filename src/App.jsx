@@ -40,6 +40,8 @@ import PaymentReceipts from './pages/PaymentReceipts';
 import AdminDashboard from './pages/AdminDashboard'; // Import Admin Dashboard
 import AdminRoute from './components/AdminRoute';
 
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   return (
     <AuthProvider>
@@ -52,32 +54,36 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/signup" element={<Signup />} />
 
-            {/* Nested Dashboard Routes */}
-            <Route path="/dashboard" element={<Dashboard />}>
-              <Route index element={<DashboardHome />} />
-              <Route path="certifications" element={<Certifications />} />
-              <Route path="exam" element={<Exam />} />
-              <Route path="exam-player" element={<ExamPlayer />} />
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />}>
+                <Route index element={<DashboardHome />} />
+                <Route path="certifications" element={<Certifications />} />
+                <Route path="exam" element={<Exam />} />
+                <Route path="exam-player" element={<ExamPlayer />} />
 
-              <Route path="find-exam" element={<FindExam />} />
-              <Route path="select-exam-options" element={<SelectExamOptions />} />
-              <Route path="select-exam-language" element={<SelectExamLanguage />} />
-              <Route path="provide-additional-info" element={<ProvideAdditionalInfo />} />
-              <Route path="testing-policies" element={<TestingPolicies />} />
-              <Route path="select-proctor-language" element={<SelectProctorLanguage />} />
-              <Route path="find-appointment" element={<FindAppointment />} />
-              <Route path="review-booking" element={<ReviewBooking />} />
-              <Route path="payment-success" element={<PaymentSuccess />} />
-              <Route path="pearson" element={<PearsonDashboard />} />
-              <Route path="account-intel" element={<AccountIntel />} />
-              <Route path="additional-info" element={<AdditionalInfo />} />
-              <Route path="registry-preferences" element={<RegistryPreferences />} />
-              <Route path="exam-history" element={<ExamHistory />} />
-              <Route path="score-reports" element={<ScoreReports />} />
-              <Route path="payment-receipts" element={<PaymentReceipts />} />
+                <Route path="find-exam" element={<FindExam />} />
+                <Route path="select-exam-options" element={<SelectExamOptions />} />
+                <Route path="select-exam-language" element={<SelectExamLanguage />} />
+                <Route path="provide-additional-info" element={<ProvideAdditionalInfo />} />
+                <Route path="testing-policies" element={<TestingPolicies />} />
+                <Route path="select-proctor-language" element={<SelectProctorLanguage />} />
+                <Route path="find-appointment" element={<FindAppointment />} />
+                <Route path="review-booking" element={<ReviewBooking />} />
+                <Route path="payment-success" element={<PaymentSuccess />} />
+                <Route path="pearson" element={<PearsonDashboard />} />
+                <Route path="account-intel" element={<AccountIntel />} />
+                <Route path="additional-info" element={<AdditionalInfo />} />
+                <Route path="registry-preferences" element={<RegistryPreferences />} />
+                <Route path="exam-history" element={<ExamHistory />} />
+                <Route path="score-reports" element={<ScoreReports />} />
+                <Route path="payment-receipts" element={<PaymentReceipts />} />
+              </Route>
+
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/pearson-dashboard" element={<PearsonDashboard />} />
             </Route>
 
-            <Route path="/profile" element={<Profile />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/careers-plus" element={<CareersPlus />} />
             <Route path="/tech-careers" element={<TechCareers />} />
@@ -92,7 +98,6 @@ function App() {
             <Route path="/exam" element={<Exam />} />
             <Route path="/exam-player" element={<ExamPlayer />} />
 
-            <Route path="/pearson-dashboard" element={<PearsonDashboard />} />
 
             {/* Admin Route - Protected */}
             <Route element={<AdminRoute />}>

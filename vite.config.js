@@ -16,4 +16,7 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'unsafe-none',
     },
   },
+  build: {
+    sourcemap: false
+  }
 })
