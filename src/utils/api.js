@@ -1,11 +1,8 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-    // Check if VITE_BASE_URL is set. If not, use relative path to leverage Vite/Vercel proxies.
-    // This avoids CORS issues by keeping requests on the same origin.
-    const baseURL = import.meta.env.VITE_BASE_URL || '';
-    // If baseURL is empty, this returns '/api'. If set, ensures no trailing slash before appending /api
-    return `${baseURL.replace(/\/$/, '')}/api`;
+    // Always use relative path to leverage Vercel Rewrites and Vite Proxy
+    return '/api';
 };
 
 const api = axios.create({
