@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-    // Check if VITE_BASE_URL is set, otherwise default to localhost
-    const baseURL = import.meta.env.VITE_BASE_URL || 'https://csca.onrender.com';
-    // Ensure the baseURL doesn't end with a slash before appending /api
+    // Check if VITE_BASE_URL is set. If not, use relative path to leverage Vite/Vercel proxies.
+    // This avoids CORS issues by keeping requests on the same origin.
+    const baseURL = import.meta.env.VITE_BASE_URL || '';
+    // If baseURL is empty, this returns '/api'. If set, ensures no trailing slash before appending /api
     return `${baseURL.replace(/\/$/, '')}/api`;
 };
 
