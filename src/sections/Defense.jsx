@@ -1,4 +1,5 @@
 import { ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function WhyChoose() {
   const points = [
@@ -37,9 +38,11 @@ export default function WhyChoose() {
           <p className="text-white text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0">
             CSCA sets the benchmark for practical cybersecurity excellence, ensuring that certified professionals are ready for the complex challenges of modern enterprise security.
           </p>
-          <button className="bg-lh-purple p-4 md:p-5 px-10 md:px-12 rounded-full text-[10px] md:text-[11px] font-black tracking-widest flex items-center gap-3 hover:bg-white hover:text-black transition-all mx-auto lg:mx-0">
-            <ShieldCheck size={18} /> WHY CHOOSE US
-          </button>
+          <Link to="/why-choose-csca">
+            <button className="bg-lh-purple p-4 md:p-5 px-10 md:px-12 rounded-full text-[10px] md:text-[11px] font-black tracking-widest flex items-center gap-3 hover:bg-white hover:text-black transition-all mx-auto lg:mx-0">
+              <ShieldCheck size={18} /> WHY CHOOSE US
+            </button>
+          </Link>
         </div>
 
         {/* Right Column: Points Grid */}

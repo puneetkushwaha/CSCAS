@@ -30,6 +30,7 @@ import Academic from './pages/Academic';
 import AcademicPrograms from './pages/AcademicPrograms';
 import Resources from './pages/Resources';
 import Certifications from './pages/Certifications';
+import WhyChooseCSCA from './pages/WhyChooseCSCA';
 import Profile from './pages/Profile';
 import AccountIntel from './pages/AccountIntel';
 import AdditionalInfo from './pages/AdditionalInfo';
@@ -93,6 +94,7 @@ function App() {
             <Route path="/academic-catalog" element={<AcademicPrograms />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/certifications" element={<Certifications />} />
+            <Route path="/why-choose-csca" element={<WhyChooseCSCA />} />
 
             {/* Other Dashboard-linked routes outside nested structure if needed */}
             <Route path="/exam" element={<Exam />} />
