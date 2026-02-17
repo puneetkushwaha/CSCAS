@@ -523,7 +523,7 @@ const AdminDashboard = () => {
                                 <h3 className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Performance Log</h3>
                                 <div className="relative">
                                     <select
-                                        className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-white/5 transition-all min-w-[200px]"
+                                        className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-purpul/5 transition-all min-w-[200px]"
                                         value={selectedExamFilter}
                                         onChange={(e) => setSelectedExamFilter(e.target.value)}
                                     >
@@ -605,7 +605,7 @@ const AdminDashboard = () => {
                                 <h3 className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Live Monitoring</h3>
                                 <div className="relative">
                                     <select
-                                        className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-white/5 transition-all min-w-[200px]"
+                                        className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-purpul/5 transition-all min-w-[200px]"
                                         value={selectedExamFilter}
                                         onChange={(e) => setSelectedExamFilter(e.target.value)}
                                     >
