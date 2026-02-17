@@ -1,100 +1,249 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { GraduationCap, Building2, Briefcase, Cpu, Percent, BookOpen, Ticket, Globe, Megaphone, Terminal, Scan, ArrowRight, Server, Layers, Settings, Code, ArrowLeft } from 'lucide-react';
+import {
+    GraduationCap,
+    Building2,
+    Briefcase,
+    Cpu,
+    Percent,
+    BookOpen,
+    Ticket,
+    Globe,
+    Megaphone,
+    Terminal,
+    Scan,
+    ArrowRight,
+    Server,
+    Layers,
+    Settings,
+    Code,
+    ArrowLeft,
+    CheckCircle2,
+    X,
+    User,
+    Mail,
+    Phone,
+    Link2,
+    MessageSquare,
+    Zap,
+    MapPin,
+    Users
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
 
 const PartnersEcosystem = () => {
-    const partnerTypes = [
-        {
-            title: "Authorized Training Partner",
-            desc: "Deliver official CSCA certifications and training programs to your local market.",
-            icon: <GraduationCap size={32} />,
-            size: "col-span-1 md:col-span-2 row-span-1",
-            color: "from-purple-500/10 to-transparent",
-            benefits: ["Instructor kits", "Discounted vouchers", "Regional leads", "Annual bootcamps"]
-        },
-        {
-            title: "Academic Partner",
-            desc: "Integrate CSCA curriculum into university programs to prepare the next generation of cyber talent.",
-            icon: <BookOpen size={32} />,
-            size: "col-span-1 row-span-1",
-            color: "from-blue-500/10 to-transparent",
-            benefits: ["Curriculum mapping", "Faculty training", "Student pathways", "Lab support"]
-        },
-        {
-            title: "Corporate Partner",
-            desc: "Upskill your internal security teams with customized training and certification pathways.",
-            icon: <Building2 size={32} />,
-            size: "col-span-1 row-span-2",
-            color: "from-emerald-500/10 to-transparent",
-            benefits: ["Private batches", "Skill assessments", "SOC/Red Team training"]
-        },
-        {
-            title: "Technology Partner",
-            desc: "Collaborate on R&D and integrate advanced security tools into the CSCA training ecosystem.",
-            icon: <Cpu size={32} />,
-            size: "col-span-1 md:col-span-3 row-span-1",
-            color: "from-cyan-500/10 to-transparent",
-            benefits: ["Tech showcase", "Joint research", "API integrations", "Event exposure"]
-        }
-    ];
+    const [isFormOpen, setIsFormOpen] = useState(false);
 
-    const benefits = [
+    const partnershipBenefits = [
         {
-            title: "Revenue Sharing",
-            desc: "Attractive commission models on training and exam sales.",
+            title: "Revenue Sharing Model",
+            desc: "Competitive margins with scalable earning potential.",
             icon: <Percent size={24} />,
             color: "bg-purple-500/20"
         },
         {
-            title: "Trainer Materials",
-            desc: "Full access to official CSCA instructional kits and labs.",
-            icon: <Briefcase size={24} />,
+            title: "Official Trainer Materials",
+            desc: "Access to structured curriculum, lab manuals, and slide decks.",
+            icon: <BookOpen size={24} />,
             color: "bg-blue-500/20"
         },
         {
             title: "Exam Vouchers",
-            desc: "Discounted vouchers for partner internal use and students.",
+            desc: "Discounted certification vouchers for your students.",
             icon: <Ticket size={24} />,
             color: "bg-emerald-500/20"
         },
         {
-            title: "Global Directory",
-            desc: "Get listed on our official partner locator for worldwide visibility.",
+            title: "Global Recognition",
+            desc: "Listed in the official CSCA Partner Directory.",
             icon: <Globe size={24} />,
             color: "bg-orange-500/20"
         },
         {
-            title: "Marketing Collateral",
-            desc: "Access to co-branded sales materials and digital assets.",
+            title: "Marketing Support",
+            desc: "Co-branded assets, social media kits, and launch support.",
             icon: <Megaphone size={24} />,
             color: "bg-rose-500/20"
         }
     ];
 
-    const backendTech = [
-        "Node.js / Golang", "PostgreSQL", "Redis", "Kafka / RabbitMQ",
-        "Elasticsearch", "MinIO / S3", "Keycloak / Auth0", "Kubernetes"
+    const detailedPartnershipTypes = [
+        {
+            title: "Academic Partner",
+            sub: "For universities, colleges, and institutions.",
+            desc: "Integrating CSCA certifications into curriculum to prepare students for real-world cyber roles.",
+            bestFor: "Engineering colleges, cybersecurity institutes, training academies",
+            benefits: ["Curriculum integration", "Semester-based certification path", "Faculty onboarding support"],
+            icon: <GraduationCap size={40} />,
+            color: "border-blue-500/20 shadow-blue-500/5",
+            iconColor: "text-blue-500"
+        },
+        {
+            title: "Training Partner",
+            sub: "For professional training centers and academies.",
+            desc: "Enable your academy to deliver top-tier certifications with our official training roadmap.",
+            bestFor: "EdTech companies, IT training institutes",
+            benefits: ["Revenue share per batch", "Instructor enablement", "Marketing toolkit"],
+            icon: <Users size={40} />,
+            color: "border-lh-purple/20 shadow-lh-purple/5",
+            iconColor: "text-lh-purple"
+        },
+        {
+            title: "Technology Partner",
+            sub: "For security vendors, SOC providers, and consulting firms.",
+            desc: "Collaborate on custom certification tracks and align your tech stack with CSCA standards.",
+            bestFor: "Security startups, MSSPs, consulting firms",
+            benefits: ["Enterprise alignment", "Custom certification tracks", "Co-branded programs"],
+            icon: <Settings size={40} />,
+            color: "border-emerald-500/20 shadow-emerald-500/5",
+            iconColor: "text-emerald-500"
+        }
     ];
 
-    const microservices = [
-        "Auth Service", "Partner Management", "Certification Engine", "Courseware Delivery",
-        "Global Directory", "Payment Gateway", "Marketing & Notifications", "Audit & Security"
+    const howItWorks = [
+        { id: 1, title: "Submit Application", desc: "Fill out the detailed form to begin your partnership journey." },
+        { id: 2, title: "Review & Approval", desc: "Our ecosystem experts review your business model and reach out." },
+        { id: 3, title: "Onboarding & Agreement", desc: "Sign the agreement and receive your customized partner portal login." },
+        { id: 4, title: "Access Materials & Portal", desc: "Get all curriculum, instructor kits, and marketing assets." },
+        { id: 5, title: "Start Delivering Certifications", desc: "Launch your first batch and certify your students globally." }
     ];
-
-    const adminFeatures = [
-        "Exam creation", "Partner approval", "Content management", "Instructor assignment",
-        "Pricing updates", "Revenue dashboard", "User blocking", "Certificate revocation"
-    ];
-
-    const frontendTech = ["Next.js", "TailwindCSS", "ShadCN UI", "Framer Motion"];
 
     return (
         <div className="bg-[#050505] min-h-screen text-white font-plus-jakarta overflow-x-hidden selection:bg-lh-purple selection:text-white">
             <Navbar />
+
+            {/* Modal Logic */}
+            <AnimatePresence>
+                {isFormOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsFormOpen(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        ></motion.div>
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="relative w-full max-w-2xl bg-[#0f0f0f] border border-white/10 rounded-[32px] p-8 md:p-12 overflow-y-auto max-h-[90vh] custom-scrollbar"
+                        >
+                            <button
+                                onClick={() => setIsFormOpen(false)}
+                                className="absolute top-6 right-6 p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+
+                            <div className="mb-8">
+                                <h3 className="text-3xl font-[1000] uppercase tracking-tighter">Partner <span className="text-lh-purple">Application</span></h3>
+                                <p className="text-gray-400 mt-2">Become a CSCA authorized partner and lead the change.</p>
+                            </div>
+
+                            <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={(e) => e.preventDefault()}>
+                                {/* Org Name */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Organization Name</label>
+                                    <div className="relative">
+                                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="text" placeholder="Your University/Academy" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Website */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Website URL</label>
+                                    <div className="relative">
+                                        <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="url" placeholder="https://example.com" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Country */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Country</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="text" placeholder="e.g. India" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Partner Type */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Partner Type</label>
+                                    <div className="relative">
+                                        <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <select className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm appearance-none cursor-pointer">
+                                            <option className="bg-[#0f0f0f]">Select Type</option>
+                                            <option className="bg-[#0f0f0f]">Academic Partner</option>
+                                            <option className="bg-[#0f0f0f]">Training Partner</option>
+                                            <option className="bg-[#0f0f0f]">Technology Partner</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                {/* Years in Biz */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Years in Business</label>
+                                    <div className="relative">
+                                        <Activity className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="number" placeholder="e.g. 5" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Estimated Students */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Est. Students / Year</label>
+                                    <div className="relative">
+                                        <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="number" placeholder="e.g. 500" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Contact Person */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Contact Person Name</label>
+                                    <div className="relative">
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="text" placeholder="John Doe" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Email */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Official Email</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="email" placeholder="john@company.com" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Phone */}
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Phone Number</label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
+                                        <input type="tel" placeholder="+1 (555) 000-0000" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                    </div>
+                                </div>
+                                {/* Message */}
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Message / Business Model</label>
+                                    <div className="relative">
+                                        <MessageSquare className="absolute left-4 top-4 text-white/30" size={18} />
+                                        <textarea rows="4" placeholder="Briefly describe your business model..." className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm resize-none"></textarea>
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-2 flex items-center gap-3 py-2">
+                                    <input type="checkbox" id="terms" className="w-5 h-5 accent-lh-purple rounded-md cursor-pointer border-white/20" />
+                                    <label htmlFor="terms" className="text-xs text-gray-400 cursor-pointer">I agree to the <span className="text-lh-purple font-bold">CSCA partnership terms & conditions</span>.</label>
+                                </div>
+
+                                <button className="md:col-span-2 w-full py-5 bg-white text-black font-[1000] uppercase tracking-[0.3em] text-xs rounded-2xl hover:bg-lh-purple hover:text-white transition-all duration-300 shadow-[0_0_50px_rgba(255,255,255,0.1)]">
+                                    Submit Application
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* --- Section 1: Hero --- */}
             <section className="relative pt-40 pb-20 px-6 overflow-hidden">
@@ -117,21 +266,24 @@ const PartnersEcosystem = () => {
                         </Link>
 
                         <div className="flex items-center gap-3 text-lh-purple">
-                            <Terminal size={20} className="animate-pulse" />
-                            <span className="uppercase tracking-[0.4em] text-[11px] font-black">Ecosystem v2.0</span>
+                            <Zap size={20} className="animate-pulse" />
+                            <span className="uppercase tracking-[0.4em] text-[11px] font-black">Join the Ecosystem</span>
                         </div>
 
                         <h1 className="text-5xl md:text-6xl lg:text-7xl font-[1000] leading-[1] tracking-tighter uppercase max-w-4xl">
-                            Partner With <br />
-                            <span className="text-lh-purple">CSCA</span>
+                            Why <span className="text-lh-purple">Partner</span> <br />
+                            With CSCA?
                         </h1>
 
                         <p className="text-gray-400 text-lg font-medium max-w-xl leading-relaxed">
-                            Grow your cybersecurity training business inside the CSCA global partner ecosystem. Join an elite network of institutions, educators, and industry leaders.
+                            Scale your business with industry-recognized certifications. From official curriculum to revenue sharing, we provide everything you need to succeed.
                         </p>
 
                         <div className="flex flex-wrap gap-4 pt-4">
-                            <button className="px-12 py-5 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-lh-purple hover:text-white transition-all shadow-[0_0_50px_rgba(255,255,255,0.1)] flex items-center gap-4 group">
+                            <button
+                                onClick={() => setIsFormOpen(true)}
+                                className="px-12 py-5 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-lh-purple hover:text-white transition-all shadow-[0_0_50px_rgba(255,255,255,0.1)] flex items-center gap-4 group"
+                            >
                                 Apply to Partner <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
@@ -144,177 +296,145 @@ const PartnersEcosystem = () => {
                         className="relative flex justify-center items-center h-[500px] lg:h-[600px] order-first lg:order-last"
                     >
                         <div className="absolute inset-0 bg-lh-purple/10 blur-[100px] rounded-full scale-75 animate-pulse"></div>
-                        <div className="absolute w-[85%] h-[75%] bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[60px] transform rotate-3"></div>
+                        <div className="absolute w-[80%] h-[70%] bg-white/[0.02] backdrop-blur-3xl border border-white/5 rounded-[60px] transform rotate-3"></div>
                         <img
                             src={ngdPic}
                             alt="CSCA Partner Mascot"
-                            className="relative z-10 w-full max-w-[450px] animate-float-glow drop-shadow-[0_0_50px_rgba(188,19,254,0.3)] object-contain"
+                            className="relative z-10 w-full max-w-[420px] animate-float-glow drop-shadow-[0_0_50px_rgba(188,19,254,0.3)] object-contain"
                         />
                     </motion.div>
                 </div>
             </section>
 
-            {/* --- Section 2: Partner Types --- */}
-            <section className="py-24 px-6 relative z-10">
+            {/* --- Section 2: Why Partner Benefits --- */}
+            <section className="py-24 px-6 relative z-10 border-y border-white/5 bg-white/[0.01]">
                 <div className="max-w-[1300px] mx-auto">
-                    <div className="flex items-center gap-4 mb-16 justify-center lg:justify-start">
-                        <Scan className="text-lh-purple hidden lg:block" size={32} />
-                        <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase">Partner <span className="text-lh-purple">Types</span></h2>
+                    <div className="text-center mb-20 space-y-4">
+                        <span className="text-lh-purple text-xs font-black uppercase tracking-[0.6em] block">Benefits</span>
+                        <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase leading-none">Why Choose <span className="text-lh-purple">Partnership?</span></h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {partnerTypes.map((type, idx) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                        {partnershipBenefits.map((benefit, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, y: 30 }}
+                                initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
                                 viewport={{ once: true }}
-                                className="group relative bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden p-8 hover:border-lh-purple/50 hover:bg-white/[0.05] transition-all duration-500"
+                                className="group p-8 bg-white/[0.03] border border-white/10 rounded-[32px] hover:border-lh-purple/30 transition-all duration-300 relative overflow-hidden"
                             >
-                                <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-0 group-hover:opacity-100 transition-opacity duration-700`}></div>
-
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="p-4 bg-white/5 rounded-2xl text-lh-purple group-hover:bg-lh-purple/20 transition-all">
-                                            {type.icon}
-                                        </div>
-                                        <ArrowRight size={20} className="text-gray-600 group-hover:text-lh-purple transition-all transform group-hover:-rotate-45" />
-                                    </div>
-
-                                    <h3 className="text-2xl font-black uppercase tracking-tight mb-3">{type.title}</h3>
-                                    <p className="text-gray-400 text-sm font-medium leading-relaxed mb-6">{type.desc}</p>
-
-                                    <ul className="space-y-2">
-                                        {type.benefits.map((benefit, i) => (
-                                            <li key={i} className="flex items-center gap-2 text-xs text-gray-500 group-hover:text-gray-300 transition-colors">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-lh-purple"></div>
-                                                {benefit}
-                                            </li>
-                                        ))}
-                                    </ul>
+                                <div className={`w-12 h-12 ${benefit.color} rounded-xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform mx-auto`}>
+                                    {benefit.icon}
                                 </div>
+                                <h3 className="text-sm font-black uppercase tracking-tight mb-3 text-center">{benefit.title}</h3>
+                                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed text-center group-hover:text-gray-300 transition-colors">
+                                    {benefit.desc}
+                                </p>
                             </motion.div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* --- Section 3: Partner Benefits --- */}
-            <section className="py-24 px-6 relative z-10 bg-white/[0.01] border-y border-white/5">
-                <div className="max-w-[1300px] mx-auto text-center">
-                    <span className="text-lh-purple text-xs font-black uppercase tracking-[0.6em] block mb-4">Operational Perks</span>
-                    <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase mb-20">Why <span className="text-lh-purple">Partner?</span></h2>
+            {/* --- Section 3: Detailed Partnership Types --- */}
+            <section className="py-24 px-6 relative z-10">
+                <div className="max-w-[1300px] mx-auto">
+                    <div className="text-center mb-16 space-y-4">
+                        <span className="text-lh-purple text-xs font-black uppercase tracking-[0.6em] block">Tracks</span>
+                        <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase leading-none">Partnership <span className="text-lh-purple">Types</span></h2>
+                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                        {benefits.map((benefit, idx) => (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {detailedPartnershipTypes.map((type, idx) => (
                             <motion.div
                                 key={idx}
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: idx * 0.1 }}
                                 viewport={{ once: true }}
-                                className="p-8 bg-white/[0.03] border border-white/10 rounded-[32px] hover:border-lh-purple/30 hover:-translate-y-2 transition-all duration-300"
+                                className={`p-10 bg-white/[0.02] backdrop-blur-xl border ${type.color} rounded-[40px] flex flex-col justify-between transition-all duration-500 group relative border shadow-2xl`}
                             >
-                                <div className={`w-12 h-12 ${benefit.color} rounded-xl flex items-center justify-center text-white mb-6 mx-auto`}>
-                                    {benefit.icon}
+                                <div className="space-y-6">
+                                    <div className={`p-5 bg-white/5 w-fit rounded-[24px] ${type.iconColor} group-hover:scale-110 transition-transform duration-500`}>
+                                        {type.icon}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-2xl font-[1000] uppercase tracking-tight leading-none">{type.title}</h3>
+                                        <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{type.sub}</p>
+                                    </div>
+                                    <p className="text-gray-400 text-sm font-medium leading-relaxed italic border-l-2 border-white/10 pl-4">{type.desc}</p>
+
+                                    <div className="space-y-4 pt-4">
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-lh-purple">Best For:</span>
+                                            <p className="text-xs text-white/70 mt-1 font-bold">{type.bestFor}</p>
+                                        </div>
+                                        <div className="pt-4 space-y-3">
+                                            {type.benefits.map((benefit, i) => (
+                                                <div key={i} className="flex items-center gap-3 text-xs text-gray-400">
+                                                    <CheckCircle2 size={14} className={type.iconColor} />
+                                                    <span className="font-medium">{benefit}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
-                                <h3 className="text-lg font-black uppercase tracking-tight mb-3">{benefit.title}</h3>
-                                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider leading-relaxed">{benefit.desc}</p>
                             </motion.div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* --- Section 4: Architecture & Tech --- */}
-            <section className="py-24 px-6 relative z-10">
-                <div className="max-w-[1300px] mx-auto grid lg:grid-cols-2 gap-16">
-                    {/* Backend */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        className="space-y-8"
-                    >
-                        <h3 className="text-3xl md:text-4xl font-[1000] uppercase tracking-tighter flex items-center gap-3">
-                            <Server className="text-lh-purple" />
-                            Backend <span className="text-gray-600">Architecture</span>
-                        </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            {backendTech.map((tech, i) => (
-                                <div key={i} className="flex items-center gap-3 p-4 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-white/[0.05] transition-colors">
-                                    <div className="w-1.5 h-6 bg-lh-purple rounded-full"></div>
-                                    <span className="text-sm font-bold text-gray-300">{tech}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
+            {/* --- Section 4: How It Works --- */}
+            <section className="py-24 px-6 relative z-10 bg-white/[0.01]">
+                <div className="max-w-[1300px] mx-auto text-center">
+                    <h2 className="text-3xl md:text-5xl font-[1000] tracking-tighter uppercase mb-20 leading-none">How It <span className="text-lh-purple">Works</span></h2>
 
-                    {/* Microservices */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 30 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        className="space-y-8"
-                    >
-                        <h3 className="text-3xl md:text-4xl font-[1000] uppercase tracking-tighter flex items-center gap-3">
-                            <Layers className="text-lh-purple" />
-                            Micro<span className="text-gray-600">services</span>
-                        </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            {microservices.map((service, i) => (
-                                <div key={i} className="flex items-center gap-3 p-4 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-white/[0.05] transition-colors">
-                                    <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
-                                    <span className="text-sm font-bold text-gray-300">{service}</span>
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 relative">
+                        {/* Connecting Line (Desktop) */}
+                        <div className="hidden lg:block absolute top-[25%] left-0 w-full h-px bg-white/10 z-0"></div>
+
+                        {howItWorks.map((step, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                viewport={{ once: true }}
+                                className="relative z-10 space-y-6"
+                            >
+                                <div className="w-12 h-12 bg-lh-purple text-white rounded-full mx-auto flex items-center justify-center font-black shadow-[0_0_30px_rgba(188,19,254,0.4)]">
+                                    {step.id}
                                 </div>
-                            ))}
-                        </div>
-                    </motion.div>
+                                <div className="space-y-2 px-4">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-white">{step.title}</h4>
+                                    <p className="text-[10px] text-gray-500 font-medium leading-relaxed">{step.desc}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
             </section>
 
-            {/* --- Section 5: Admin & Frontend --- */}
-            <section className="py-24 px-6 relative z-10 bg-white/[0.01]">
-                <div className="max-w-[1300px] mx-auto grid lg:grid-cols-2 gap-16">
-                    {/* Admin Features */}
+            {/* --- Section 5: Testimonial Trust Section --- */}
+            <section className="py-24 px-6 relative z-10">
+                <div className="max-w-[1000px] mx-auto">
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        className="space-y-8"
+                        className="p-12 md:p-20 bg-white/[0.02] border border-white/10 rounded-[60px] relative overflow-hidden text-center"
                     >
-                        <h3 className="text-3xl md:text-4xl font-[1000] uppercase tracking-tighter flex items-center gap-3">
-                            <Settings className="text-lh-purple" />
-                            Admin <span className="text-gray-600">Panel Features</span>
-                        </h3>
-                        <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            {adminFeatures.map((feature, i) => (
-                                <li key={i} className="flex items-center gap-2 text-gray-400 font-medium text-sm">
-                                    <ArrowRight size={14} className="text-lh-purple" />
-                                    {feature}
-                                </li>
-                            ))}
-                        </ul>
-                    </motion.div>
-
-                    {/* Frontend Tech */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="space-y-8"
-                    >
-                        <h3 className="text-3xl md:text-4xl font-[1000] uppercase tracking-tighter flex items-center gap-3">
-                            <Code className="text-lh-purple" />
-                            Frontend <span className="text-gray-600">Tech</span>
-                        </h3>
-                        <div className="flex flex-wrap gap-4">
-                            {frontendTech.map((tech, i) => (
-                                <span key={i} className="px-6 py-3 rounded-full bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-lh-purple/20 transition-all cursor-default">
-                                    {tech}
-                                </span>
-                            ))}
+                        <div className="absolute top-0 right-0 p-10 opacity-5">
+                            <MessageSquare size={120} className="text-lh-purple" />
+                        </div>
+                        <p className="text-2xl md:text-3xl lg:text-4xl font-black text-white italic leading-tight relative z-10">
+                            “Partnering with CSCA increased our cybersecurity enrollment by <span className="text-lh-purple">40% within 6 months.</span>”
+                        </p>
+                        <div className="mt-10 space-y-1 relative z-10">
+                            <span className="text-white font-black uppercase text-sm tracking-widest">Director</span>
+                            <p className="text-lh-purple font-bold text-xs">XYZ Cyber Academy</p>
                         </div>
                     </motion.div>
                 </div>
@@ -323,22 +443,27 @@ const PartnersEcosystem = () => {
             {/* --- Section 6: Final CTA --- */}
             <section className="py-24 px-6 relative z-10">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     className="max-w-[1300px] mx-auto rounded-[60px] p-10 md:p-20 bg-gradient-to-br from-lh-purple/20 via-black to-black border border-white/10 relative overflow-hidden text-center"
                 >
                     <div className="absolute inset-0 bg-lh-purple/5 blur-[100px] animate-pulse" />
                     <div className="relative z-10 space-y-8">
-                        <h2 className="text-4xl md:text-6xl lg:text-8xl font-[1000] tracking-tighter uppercase leading-[0.9]">
-                            Forge an <br /> <span className="text-lh-purple">Alliance</span>
+                        <h2 className="text-4xl md:text-6xl lg:text-7xl font-[1000] tracking-tighter uppercase leading-[0.9]">
+                            Ready to <span className="text-lh-purple">Scale</span> <br /> Your Academy?
                         </h2>
                         <p className="text-gray-400 text-lg md:text-xl font-medium max-w-2xl mx-auto italic">
                             "The cybersecurity landscape changes every minute. We empower our partners to lead that change."
                         </p>
-                        <button className="px-16 py-6 bg-white text-black rounded-full font-black text-sm uppercase tracking-[0.3em] hover:bg-lh-purple hover:text-white transition-all transform hover:scale-105 duration-500 shadow-[0_0_60px_rgba(255,255,255,0.2)]">
-                            Get Started Now
-                        </button>
+                        <div className="pt-6">
+                            <button
+                                onClick={() => setIsFormOpen(true)}
+                                className="px-16 py-6 bg-white text-black rounded-full font-black text-sm uppercase tracking-[0.3em] hover:bg-lh-purple hover:text-white transition-all transform hover:scale-105 duration-500 shadow-[0_0_60px_rgba(255,255,255,0.2)]"
+                            >
+                                Get Started Now
+                            </button>
+                        </div>
                     </div>
                 </motion.div>
             </section>
