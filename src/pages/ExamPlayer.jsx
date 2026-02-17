@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Shield, Clock, AlertTriangle, ArrowRight, CheckCircle2,
   ShieldAlert, Activity, Lock, Laptop, Menu, X, ChevronRight,
-  User, Bookmark, RotateCcw, Save, LayoutGrid, Camera
+  User, Bookmark, RotateCcw, Save, LayoutGrid, Camera, Maximize2
 } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +28,12 @@ const ExamPlayer = () => {
 
   // Result State
   const [examResult, setExamResult] = useState(null);
+
+  // --- Anti-Cheating State ---
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [violationCount, setViolationCount] = useState(0);
+  const [isLocked, setIsLocked] = useState(false); // True if tab switch detected
+  const [lockReason, setLockReason] = useState(null);
 
   // --- Initial Sync & Data Fetching ---
   useEffect(() => {
@@ -73,8 +79,6 @@ const ExamPlayer = () => {
     const fetchQuestions = async () => {
       if (!activeExam?.examId) return;
 
-      // If we already have questions for this exam, don't refetch? 
-      // Actually, to solve the "missing added question" bug, we SHOULD refetch on mount/ID change.
       setLoadingQuestions(true);
       try {
         const response = await api.get(`/exams/${activeExam.examId}`);
@@ -117,21 +121,50 @@ const ExamPlayer = () => {
   }, [phase, examTimer]);
 
   // --- Anti-Cheat Measures ---
+
+  // Fullscreen Enforcer
+  const enterFullscreen = async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+      setIsLocked(false);
+    } catch (err) {
+      console.error("Error attempting to enable fullscreen:", err);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      if (!isFs && phase === 'active') {
+        setIsLocked(true);
+        setLockReason('fullscreen_exit');
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, [phase]);
+
+
   useEffect(() => {
     if (phase !== 'active') return;
 
-    // 1. Prevent Page Reload/Refresh
+    // 1. Prevent Page Reload/Close
     const handleBeforeUnload = (e) => {
       e.preventDefault();
       e.returnValue = 'Your exam is in progress. Leaving will forfeit your submission.';
       return e.returnValue;
     };
 
-    // 2. Detect Tab Switching
+    // 2. Detect Tab Switching (Aggressive Lockdown)
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        alert('⚠️ WARNING: Tab switching detected! This may count as a violation.');
-        // You could also auto-submit or log violations here
+        setViolationCount(prev => prev + 1);
+        setIsLocked(true);
+        setLockReason('tab_switch');
+        // Optional: Auto-submit after N violations
       }
     };
 
@@ -141,33 +174,39 @@ const ExamPlayer = () => {
       return false;
     };
 
-    // 4. Disable Keyboard Shortcuts (F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+U)
+    // 4. Disable Keyboard Shortcuts (F5, Ctrl+R, F12, etc.)
     const handleKeyDown = (e) => {
-      // F12 or Ctrl+Shift+I (Inspect) or Ctrl+Shift+C (Inspect Element) or Ctrl+U (View Source)
+      // Prevent F5, Ctrl+R, Command+R
       if (
-        e.keyCode === 123 || // F12
-        (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
-        (e.ctrlKey && e.shiftKey && e.keyCode === 67) || // Ctrl+Shift+C
-        (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
-        (e.ctrlKey && e.keyCode === 85) // Ctrl+U
+        e.key === 'F5' ||
+        (e.ctrlKey && e.key === 'r') ||
+        (e.metaKey && e.key === 'r')
+      ) {
+        e.preventDefault();
+        alert("Reloading is disabled during the exam.");
+        return false;
+      }
+
+      // Prevent Inspect Element and Source View
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && e.key === 'I') || // Ctrl+Shift+I
+        (e.ctrlKey && e.shiftKey && e.key === 'C') || // Ctrl+Shift+C
+        (e.ctrlKey && e.shiftKey && e.key === 'J') || // Ctrl+Shift+J
+        (e.ctrlKey && e.key === 'u') // Ctrl+U
       ) {
         e.preventDefault();
         return false;
       }
+
+      // Prevent Alt+Tab (Detection only, cannot block OS level)
+      if (e.altKey && e.key === 'Tab') {
+        // This usually triggers blur/visibilitychange anyway
+      }
     };
 
     // 5. Disable Copy/Cut/Paste
-    const handleCopy = (e) => {
-      e.preventDefault();
-      return false;
-    };
-
-    const handleCut = (e) => {
-      e.preventDefault();
-      return false;
-    };
-
-    const handlePaste = (e) => {
+    const handleCopyCutPaste = (e) => {
       e.preventDefault();
       return false;
     };
@@ -177,9 +216,15 @@ const ExamPlayer = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('copy', handleCopy);
-    document.addEventListener('cut', handleCut);
-    document.addEventListener('paste', handlePaste);
+    document.addEventListener('copy', handleCopyCutPaste);
+    document.addEventListener('cut', handleCopyCutPaste);
+    document.addEventListener('paste', handleCopyCutPaste);
+
+    // Initial check for fullscreen
+    if (!document.fullscreenElement) {
+      // setIsLocked(true); 
+      // We don't lock immediately on mount, wait for user to start
+    }
 
     // Cleanup
     return () => {
@@ -187,9 +232,9 @@ const ExamPlayer = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('copy', handleCopy);
-      document.removeEventListener('cut', handleCut);
-      document.removeEventListener('paste', handlePaste);
+      document.removeEventListener('copy', handleCopyCutPaste);
+      document.removeEventListener('cut', handleCopyCutPaste);
+      document.removeEventListener('paste', handleCopyCutPaste);
     };
   }, [phase]);
 
@@ -298,6 +343,11 @@ const ExamPlayer = () => {
   };
 
   const handleFinalSubmit = async () => {
+    // Exit fullscreen on submit
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.log(err));
+    }
+
     const timeTaken = 3600 - examTimer; // roughly calculated
 
     try {
@@ -323,6 +373,42 @@ const ExamPlayer = () => {
       alert("Submission failed. Please try again.");
     }
   };
+
+
+  // --- LOCKDOWN OVERLAY RENDER ---
+  if (phase === 'active' && (!isFullscreen || isLocked)) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#000] flex flex-col items-center justify-center text-center p-6">
+        <ShieldAlert size={80} className="text-red-500 mb-6 animate-pulse" />
+        <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Exam Paused</h1>
+
+        {lockReason === 'tab_switch' ? (
+          <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg mb-8">
+            <h3 className="text-xl font-bold text-red-500 mb-2">Security Violation Detected</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              You attempted to switch tabs or minimize the browser. This action has been recorded.
+              Repeated violations will result in automatic disqualification.
+            </p>
+            <div className="text-white font-mono text-2xl font-bold">
+              Violation Count: <span className="text-red-500">{violationCount}</span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-400 max-w-md mb-8 text-lg">
+            Full-screen mode is required to continue this assessment.
+            Please do not exit full-screen or switch windows.
+          </p>
+        )}
+
+        <button
+          onClick={enterFullscreen}
+          className="px-8 py-4 bg-white text-black rounded-xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-3"
+        >
+          <Maximize2 size={20} /> Resume Exam
+        </button>
+      </div>
+    )
+  }
 
   // --- Completion & Error States ---
   if (phase === 'loading' || (phase === 'active' && questions.length === 0)) {
