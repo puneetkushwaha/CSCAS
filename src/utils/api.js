@@ -6,22 +6,12 @@ const getBaseURL = () => {
 };
 
 const api = axios.create({
-    baseURL: getBaseURL(),
-    timeout: 60000,
-});
-
-// Add a request interceptor to add the auth token to every request
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+    baseURL: getBaseURL(), // Keeping getBaseURL() as API_URL is not defined in the original context
+    timeout: 10000,
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json'
     }
-);
+});
 
 export default api;

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Shield, Clock, AlertTriangle, ArrowRight, CheckCircle2,
   ShieldAlert, Activity, Lock, Laptop, Menu, X, ChevronRight,
-  User, Bookmark, RotateCcw, Save, LayoutGrid
+  User, Bookmark, RotateCcw, Save, LayoutGrid, Camera
 } from 'lucide-react';
+import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -191,6 +192,34 @@ const ExamPlayer = () => {
       document.removeEventListener('paste', handlePaste);
     };
   }, [phase]);
+
+  // --- Proctoring Logic ---
+  const webcamRef = useRef(null);
+
+  const captureAndUpload = useCallback(async () => {
+    if (webcamRef.current && activeExam?.examId) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) {
+        try {
+          await api.post('/proctor/upload-snapshot', {
+            examId: activeExam.examId,
+            snapshot: imageSrc
+          });
+        } catch (error) {
+          console.error("Proctor upload failed", error);
+        }
+      }
+    }
+  }, [activeExam?.examId]);
+
+  useEffect(() => {
+    let interval;
+    if (phase === 'active') {
+      // Capture every 10 seconds
+      interval = setInterval(captureAndUpload, 10000);
+    }
+    return () => clearInterval(interval);
+  }, [phase, captureAndUpload]);
 
   // --- Helpers ---
   const formatExamTime = (seconds) => {
@@ -502,10 +531,26 @@ const ExamPlayer = () => {
             ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
         `}>
           <div className="flex flex-col h-full">
+            {/* Webcam Feed */}
+            <div className="p-4 bg-black border-b border-white/5 flex justify-center">
+              <div className="relative w-48 h-36 bg-black rounded-lg overflow-hidden border-2 border-lh-purple shadow-lg shadow-lh-purple/20">
+                <Webcam
+                  audio={false}
+                  ref={webcamRef}
+                  mirrored={true}
+                  screenshotFormat="image/jpeg"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 right-2 flex items-center gap-1 bg-red-500/80 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest animate-pulse">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" /> REC
+                </div>
+              </div>
+            </div>
+
             {/* User Profile Mock */}
             <div className="p-6 border-b border-white/5 flex items-center gap-4 bg-[#1a1a1a]">
               <div className="w-12 h-12 bg-lh-purple rounded-full flex items-center justify-center text-white font-black text-lg">
-                {user?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                <User size={24} />
               </div>
               <div>
                 <h4 className="text-sm font-bold text-white">{user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.email || 'Candidate'}</h4>

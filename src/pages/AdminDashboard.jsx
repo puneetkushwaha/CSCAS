@@ -9,6 +9,70 @@ import {
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
+const ProctorView = ({ examId }) => {
+    const [sessions, setSessions] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let interval;
+        const fetchSessions = async () => {
+            try {
+                const res = await api.get(`/proctor/exam/${examId}`);
+                setSessions(res.data);
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to fetch proctor sessions", error);
+            }
+        };
+
+        fetchSessions();
+        interval = setInterval(fetchSessions, 5000); // Poll every 5 seconds
+
+        return () => clearInterval(interval);
+    }, [examId]);
+
+    if (loading) return <div className="text-white">Loading streams...</div>;
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sessions.map(session => (
+                <div key={session._id} className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden group hover:border-lh-purple/50 transition-all">
+                    <div className="relative aspect-video bg-black">
+                        <img
+                            src={session.lastSnapshot}
+                            alt="Student Feed"
+                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        />
+                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-red-500/80 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest animate-pulse">
+                            LIVE
+                        </div>
+                    </div>
+                    <div className="p-4 bg-white/5">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-8 rounded-full bg-lh-purple flex items-center justify-center text-[10px] font-black text-white">
+                                {session.userId?.firstName?.[0] || 'U'}
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-white">{session.userId?.firstName} {session.userId?.lastName}</h4>
+                                <p className="text-[9px] text-gray-500 font-mono">{session.userId?.email}</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center pt-2 border-t border-white/5">
+                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Last Sync</span>
+                            <span className="text-[9px] font-mono text-emerald-500">{new Date(session.lastUpdated).toLocaleTimeString()}</span>
+                        </div>
+                    </div>
+                </div>
+            ))}
+            {sessions.length === 0 && (
+                <div className="col-span-full h-40 flex items-center justify-center text-gray-500 text-xs font-bold uppercase tracking-widest border border-dashed border-white/10 rounded-2xl">
+                    No active candidates found
+                </div>
+            )}
+        </div>
+    );
+};
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview'); // overview, exams, results
@@ -260,7 +324,8 @@ const AdminDashboard = () => {
                     {[
                         { id: 'overview', icon: Activity, label: 'Overview' },
                         { id: 'exams', icon: BookOpen, label: 'Exam_Manager' },
-                        { id: 'results', icon: Users, label: 'Student_Results' }
+                        { id: 'results', icon: Users, label: 'Student_Results' },
+                        { id: 'proctoring', icon: Shield, label: 'Live_Proctor' }
                     ].map((item) => (
                         <button
                             key={item.id}
@@ -299,6 +364,7 @@ const AdminDashboard = () => {
                             {activeTab === 'overview' && 'System Overview'}
                             {activeTab === 'exams' && 'Exam Management'}
                             {activeTab === 'results' && 'Student Performance'}
+                            {activeTab === 'proctoring' && 'Live Proctoring'}
                         </h1>
                         <p className="text-gray-500 text-sm font-medium">Welcome back to the command center.</p>
                     </div>
@@ -523,6 +589,45 @@ const AdminDashboard = () => {
                                     </tbody>
                                 </table>
                             </div>
+                        </motion.div>
+                    )}
+
+                    {/* Proctoring Tab */}
+                    {activeTab === 'proctoring' && (
+                        <motion.div
+                            key="proctoring"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="space-y-6"
+                        >
+                            <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded-2xl border border-white/5">
+                                <h3 className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Live Monitoring</h3>
+                                <div className="relative">
+                                    <select
+                                        className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-white/5 transition-all min-w-[200px]"
+                                        value={selectedExamFilter}
+                                        onChange={(e) => setSelectedExamFilter(e.target.value)}
+                                    >
+                                        <option value="All">Select Exam to Monitor</option>
+                                        {exams.map(e => (
+                                            <option key={e._id} value={e._id}>{e.title}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedExamFilter !== 'All' ? (
+                                <ProctorView examId={selectedExamFilter} />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center p-12 text-gray-500 gap-4 min-h-[400px]">
+                                    <Shield size={48} className="opacity-20 animate-pulse" />
+                                    <p className="text-xs font-bold uppercase tracking-widest">Select an exam to start monitoring</p>
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -764,7 +869,7 @@ const AdminDashboard = () => {
                 </AnimatePresence>
 
             </main>
-        </div>
+        </div >
     );
 };
 

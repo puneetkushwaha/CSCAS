@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const Profile = () => {
-    const { user, token, updateUser } = useAuth();
+    const { user, updateUser } = useAuth();
     const fileInputRef = useRef(null);
 
     const [isLoading, setIsLoading] = useState(false);
@@ -131,7 +131,11 @@ const Profile = () => {
 
         try {
             // 1. Upload to Cloudinary via backend
-            const uploadRes = await api.post('/upload', formData); // changed endpoint
+            const uploadRes = await api.post('/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             const imageUrl = uploadRes.data.url;
 
             // 2. Update user profile with new image URL

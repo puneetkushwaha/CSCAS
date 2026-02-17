@@ -53,7 +53,7 @@ const Login = () => {
                         uid: user.uid
                     });
 
-                    login(res.data.user, res.data.token);
+                    login(res.data.user);
 
                     // Redirect based on role
                     if (res.data.user.role === 'admin') {
@@ -123,7 +123,7 @@ const Login = () => {
         try {
             const res = await api.post('/auth/login', payload);
 
-            login(res.data.user, res.data.token);
+            login(res.data.user);
 
             // Redirect based on role
             if (res.data.user.role === 'admin') {
@@ -167,7 +167,7 @@ const Login = () => {
                         uid: user.uid
                     });
 
-                    login(res.data.user, res.data.token);
+                    login(res.data.user);
 
                     // Redirect based on role
                     if (res.data.user.role === 'admin') {

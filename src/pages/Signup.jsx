@@ -59,7 +59,7 @@ const Signup = () => {
                         uid: user.uid
                     });
 
-                    login(res.data.user, res.data.token);
+                    login(res.data.user);
                     alert("Success! Now redirecting to NEW DASHBOARD...");
                     navigate('/dashboard');
                 }
@@ -109,7 +109,7 @@ const Signup = () => {
                         uid: user.uid
                     });
 
-                    login(res.data.user, res.data.token);
+                    login(res.data.user);
                     alert("Success! Now redirecting to NEW DASHBOARD...");
                     navigate('/dashboard');
                     setIsLoading(false);
