@@ -755,18 +755,43 @@ const Careers = () => {
                 doc.text(`${section.id} ${section.title}`, 20, yPos);
                 yPos += 6;
 
-                doc.setFontSize(9);
-                doc.setTextColor(180, 180, 180);
-                const skillText = "Skills: " + section.skills.join(", ");
-                const skillLines = doc.splitTextToSize(skillText, pageWidth - 40);
-                doc.text(skillLines, 25, yPos);
-                yPos += (skillLines.length * 5);
+                // Skills
+                if (section.skills && section.skills.length > 0) {
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 180, 180);
+                    const skillText = "Skills: " + section.skills.join(", ");
+                    const skillLines = doc.splitTextToSize(skillText, pageWidth - 40);
+                    doc.text(skillLines, 25, yPos);
+                    yPos += (skillLines.length * 5);
+                }
 
-                if (section.tools.length > 0) {
+                // Tools
+                if (section.tools && section.tools.length > 0) {
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 180, 180);
                     const toolText = "Tools: " + section.tools.join(", ");
                     const toolLines = doc.splitTextToSize(toolText, pageWidth - 40);
                     doc.text(toolLines, 25, yPos);
                     yPos += (toolLines.length * 5);
+                }
+
+                // Tool Groups (for RTO)
+                if (section.toolGroups && section.toolGroups.length > 0) {
+                    section.toolGroups.forEach(group => {
+                        if (yPos > pageHeight - 30) {
+                            addFooter(pageNum);
+                            doc.addPage();
+                            pageNum++;
+                            addHeader(pageNum);
+                            yPos = 40;
+                        }
+                        doc.setFontSize(8);
+                        doc.setTextColor(150, 150, 150);
+                        const groupText = `${group.name}: ${group.tools.join(", ")}`;
+                        const groupLines = doc.splitTextToSize(groupText, pageWidth - 45);
+                        doc.text(groupLines, 30, yPos);
+                        yPos += (groupLines.length * 4) + 2;
+                    });
                 }
 
                 yPos += 5;
