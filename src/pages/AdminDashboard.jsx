@@ -4,14 +4,144 @@ import {
     Users, BookOpen, Activity, Play, Plus, Trash2, Edit, Search,
     BarChart2, Save, X, Check, AlertCircle, LayoutDashboard, FileText,
     TrendingUp, Shield, Zap, MoreVertical, LogOut, Home,
-    AlertTriangle, Code
+    AlertTriangle, Code, MessageSquare, Mic, MicOff, Phone,
+    Monitor, ShieldAlert, Power, Camera, Clock, CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import { io } from 'socket.io-client';
+import ChatWidget from '../components/ChatWidget';
+import { useAuth } from '../context/AuthContext';
 
 const ProctorView = ({ examId }) => {
+    const { user: currentUser } = useAuth();
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [socket, setSocket] = useState(null);
+    const [noiseAlerts, setNoiseAlerts] = useState({}); // { userId: level }
+    const [activeChat, setActiveChat] = useState(null); // { examId, userId, userName }
+
+    // --- Voice & Video State ---
+    const [activeVoice, setActiveVoice] = useState(null); // userId
+    const [remoteStreams, setRemoteStreams] = useState({}); // { userId: MediaStream }
+    const [remoteScreenStreams, setRemoteScreenStreams] = useState({}); // { userId: MediaStream }
+    const pc = useRef({});
+    const screenPc = useRef({}); // Store PeerConnections per user: { userId: pc }
+    const localStream = useRef(null);
+    useEffect(() => {
+        const newSocket = io(); // Use relative path for proxy support
+        setSocket(newSocket);
+
+        newSocket.on('noise_alert', ({ level, room }) => {
+            const userId = room.split('_')[1];
+            setNoiseAlerts(prev => ({ ...prev, [userId]: level }));
+            // Clear alert after 5 seconds
+            setTimeout(() => {
+                setNoiseAlerts(prev => {
+                    const next = { ...prev };
+                    delete next[userId];
+                    return next;
+                });
+            }, 5000);
+        });
+
+        newSocket.on('webrtc-signal', async ({ signal, type, userId: signalUserId, room }) => {
+            if (!signalUserId) return;
+
+            const setupPeer = async (id) => {
+                const peer = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                pc.current[id] = peer;
+
+                peer.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        newSocket.emit('webrtc-signal', { room, userId: currentUser?.id || currentUser?._id, signal: event.candidate, type: 'candidate' });
+                    }
+                };
+
+                peer.ontrack = (event) => {
+                    setRemoteStreams(prev => ({
+                        ...prev,
+                        [id]: event.streams[0]
+                    }));
+                };
+                return peer;
+            };
+
+            if (type === 'offer') {
+                const peer = await setupPeer(signalUserId);
+                await peer.setRemoteDescription(new RTCSessionDescription(signal));
+                const answer = await peer.createAnswer();
+                await peer.setLocalDescription(answer);
+                newSocket.emit('webrtc-signal', {
+                    room,
+                    userId: currentUser?.id || currentUser?._id,
+                    signal: answer,
+                    type: 'answer'
+                });
+            } else if (pc.current[signalUserId]) {
+                const peer = pc.current[signalUserId];
+                if (type === 'answer') {
+                    await peer.setRemoteDescription(new RTCSessionDescription(signal));
+                } else if (type === 'candidate') {
+                    await peer.addIceCandidate(new RTCIceCandidate(signal));
+                }
+            }
+        });
+
+        newSocket.on('webrtc-screen-signal', async ({ signal, type, userId: signalUserId, room }) => {
+            if (!signalUserId) return;
+
+            const setupScreenPeer = async (id) => {
+                const peer = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                screenPc.current[id] = peer;
+
+                peer.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        newSocket.emit('webrtc-screen-signal', { room, userId: currentUser?.id || currentUser?._id, signal: event.candidate, type: 'candidate' });
+                    }
+                };
+
+                peer.ontrack = (event) => {
+                    setRemoteScreenStreams(prev => ({
+                        ...prev,
+                        [id]: event.streams[0]
+                    }));
+                };
+                return peer;
+            };
+
+            if (type === 'offer') {
+                const peer = await setupScreenPeer(signalUserId);
+                await peer.setRemoteDescription(new RTCSessionDescription(signal));
+                const answer = await peer.createAnswer();
+                await peer.setLocalDescription(answer);
+                newSocket.emit('webrtc-screen-signal', {
+                    room,
+                    userId: currentUser?.id || currentUser?._id,
+                    signal: answer,
+                    type: 'answer'
+                });
+            } else if (screenPc.current[signalUserId]) {
+                const peer = screenPc.current[signalUserId];
+                if (type === 'answer') {
+                    await peer.setRemoteDescription(new RTCSessionDescription(signal));
+                } else if (type === 'candidate') {
+                    await peer.addIceCandidate(new RTCIceCandidate(signal));
+                }
+            }
+        });
+
+        return () => {
+            newSocket.disconnect();
+            Object.values(pc.current).forEach(p => p.close());
+            Object.values(screenPc.current).forEach(p => p.close());
+            localStream.current?.getTracks().forEach(track => track.stop());
+        };
+    }, [currentUser]);
 
     useEffect(() => {
         let interval;
@@ -31,43 +161,245 @@ const ProctorView = ({ examId }) => {
         return () => clearInterval(interval);
     }, [examId]);
 
+    const handleVerifyID = async (sessionId, status) => {
+        try {
+            await api.patch('/proctor/verify-id', { sessionId, status });
+            // Optionally update local state to show change immediately
+            setSessions(prev => prev.map(s => s._id === sessionId ? { ...s, verificationStatus: status } : s));
+        } catch (error) {
+            console.error("Failed to verify ID", error);
+        }
+    };
+
+    const handleStartVoice = async (sessionId, userId, examId) => {
+        try {
+            const room = `${examId}_${userId}`;
+
+            if (activeVoice === userId) {
+                // Stop voice
+                pc.current[userId]?.close();
+                delete pc.current[userId];
+                setActiveVoice(null);
+                return;
+            }
+
+            // Get local audio
+            if (!localStream.current) {
+                localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
+
+            const peer = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            pc.current[userId] = peer;
+
+            localStream.current.getTracks().forEach(track => {
+                peer.addTrack(track, localStream.current);
+            });
+
+            peer.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('webrtc-signal', { room, signal: event.candidate, type: 'candidate' });
+                }
+            };
+
+            const offer = await peer.createOffer();
+            await peer.setLocalDescription(offer);
+            socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId });
+
+            setActiveVoice(userId);
+
+        } catch (error) {
+            console.error("Voice call error", error);
+            alert("Could not start voice call. Please check microphone permissions.");
+        }
+    };
+
+    const handleSendWarning = (userId, examId) => {
+        const message = prompt("Enter warning message:", "Please stay in front of the camera.");
+        if (message) {
+            const room = `${examId}_${userId}`;
+            socket.emit('send_warning', { room, message });
+        }
+    };
+
+    const handleDisqualify = (userId, examId) => {
+        if (window.confirm("Are you sure you want to DISQUALIFY this student? This will end their exam immediately.")) {
+            const room = `${examId}_${userId}`;
+            socket.emit('disqualify_student', { room, reason: "Manual disqualification by proctor" });
+        }
+    };
+
     if (loading) return <div className="text-white">Loading streams...</div>;
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sessions.map(session => (
-                <div key={session._id} className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden group hover:border-lh-purple/50 transition-all">
-                    <div className="relative aspect-video bg-black">
-                        <img
-                            src={session.lastSnapshot}
-                            alt="Student Feed"
-                            className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                        />
-                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-red-500/80 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest animate-pulse">
-                            LIVE
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {sessions.map(session => (
+                    <div key={session._id} className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden group hover:border-lh-purple/50 transition-all flex flex-col">
+                        <div className="relative aspect-video bg-black">
+                            {remoteStreams[session.userId?._id] ? (
+                                <video
+                                    autoPlay
+                                    muted={activeVoice !== session.userId?._id}
+                                    ref={el => {
+                                        if (el && remoteStreams[session.userId?._id]) {
+                                            el.srcObject = remoteStreams[session.userId?._id];
+                                        }
+                                    }}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <img
+                                    src={session.lastSnapshot}
+                                    alt="Student Feed"
+                                    crossOrigin="anonymous"
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                />
+                            )}
+                            <div className="absolute top-2 left-2 bg-lh-purple px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest">
+                                Camera
+                            </div>
+                            {noiseAlerts[session.userId?._id] && (
+                                <div className="absolute top-2 right-2 bg-amber-500 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest animate-pulse flex items-center gap-1">
+                                    <Mic size={10} /> NOISE: {noiseAlerts[session.userId?._id]}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Screen Feed Section */}
+                        <div className="relative aspect-video bg-black border-t border-white/5">
+                            {remoteScreenStreams[session.userId?._id] ? (
+                                <video
+                                    autoPlay
+                                    playsInline
+                                    ref={el => {
+                                        if (el && remoteScreenStreams[session.userId?._id]) {
+                                            el.srcObject = remoteScreenStreams[session.userId?._id];
+                                        }
+                                    }}
+                                    className="w-full h-full object-contain"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-700 bg-white/[0.02]">
+                                    <Monitor size={24} className="mb-2 opacity-10" />
+                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-20 text-center px-4">Waiting for screen...</span>
+                                </div>
+                            )}
+                            <div className="absolute top-2 left-2 bg-blue-500 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-widest">
+                                Desktop
+                            </div>
+                        </div>
+
+                        {/* ID Verification Section */}
+                        {session.idSnapshot && (
+                            <div className="p-2 bg-white/5 border-b border-white/5">
+                                <div className="flex justify-between items-center mb-2 px-1">
+                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">ID Verification</span>
+                                    <span className={`text-[8px] font-black uppercase tracking-widest ${session.verificationStatus === 'verified' ? 'text-emerald-500' :
+                                        session.verificationStatus === 'rejected' ? 'text-rose-500' : 'text-amber-500 animate-pulse'
+                                        }`}>
+                                        {session.verificationStatus}
+                                    </span>
+                                </div>
+                                <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-white/10 mb-2">
+                                    <img
+                                        src={session.idSnapshot}
+                                        crossOrigin="anonymous"
+                                        referrerPolicy="no-referrer"
+                                        className="w-full h-full object-cover"
+                                        alt="ID Card"
+                                    />
+                                </div>
+                                {session.verificationStatus === 'pending' && (
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => handleVerifyID(session._id, 'verified')}
+                                            className="py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[8px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all hover:text-white rounded-md"
+                                        >
+                                            Verify
+                                        </button>
+                                        <button
+                                            onClick={() => handleVerifyID(session._id, 'rejected')}
+                                            className="py-1.5 bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[8px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all hover:text-white rounded-md"
+                                        >
+                                            Reject
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="p-4 flex-1">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-8 h-8 rounded-full bg-lh-purple flex items-center justify-center text-[10px] font-black text-white">
+                                    {session.userId?.firstName?.[0] || 'U'}
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">{session.userId?.firstName} {session.userId?.lastName}</h4>
+                                    <p className="text-[9px] text-gray-500 font-mono">{session.userId?.email}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                                <button
+                                    onClick={() => {
+                                        setActiveChat({
+                                            examId: session.examId,
+                                            userId: session.userId?._id,
+                                            userName: session.userId?.firstName
+                                        });
+                                        socket?.emit('join_session', { examId: session.examId, userId: session.userId?._id });
+                                    }}
+                                    className="py-2 bg-white/5 border border-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-lh-purple hover:border-lh-purple transition-all flex items-center justify-center gap-2"
+                                >
+                                    <MessageSquare size={12} /> Chat
+                                </button>
+                                <button
+                                    onClick={() => handleStartVoice(session._id, session.userId?._id, session.examId)}
+                                    className={`py-2 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeVoice === session.userId?._id
+                                        ? 'bg-rose-500/10 border-rose-500/50 text-rose-500 animate-pulse'
+                                        : 'bg-white/5 border-white/10 text-white hover:bg-emerald-500 hover:border-emerald-500'
+                                        }`}
+                                >
+                                    {activeVoice === session.userId?._id ? <MicOff size={12} /> : <Mic size={12} />}
+                                    {activeVoice === session.userId?._id ? 'Stop' : 'Voice'}
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => handleSendWarning(session.userId?._id, session.examId)}
+                                    className="py-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <ShieldAlert size={12} /> Warning
+                                </button>
+                                <button
+                                    onClick={() => handleDisqualify(session.userId?._id, session.examId)}
+                                    className="py-2 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Power size={12} /> Block
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div className="p-4 bg-white/5">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-lh-purple flex items-center justify-center text-[10px] font-black text-white">
-                                {session.userId?.firstName?.[0] || 'U'}
-                            </div>
-                            <div>
-                                <h4 className="text-xs font-bold text-white">{session.userId?.firstName} {session.userId?.lastName}</h4>
-                                <p className="text-[9px] text-gray-500 font-mono">{session.userId?.email}</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">Last Sync</span>
-                            <span className="text-[9px] font-mono text-emerald-500">{new Date(session.lastUpdated).toLocaleTimeString()}</span>
-                        </div>
+                ))}
+                {sessions.length === 0 && (
+                    <div className="col-span-full h-40 flex items-center justify-center text-gray-500 text-xs font-bold uppercase tracking-widest border border-dashed border-white/10 rounded-2xl">
+                        No active candidates found
                     </div>
-                </div>
-            ))}
-            {sessions.length === 0 && (
-                <div className="col-span-full h-40 flex items-center justify-center text-gray-500 text-xs font-bold uppercase tracking-widest border border-dashed border-white/10 rounded-2xl">
-                    No active candidates found
-                </div>
+                )}
+            </div>
+
+            {activeChat && (
+                <ChatWidget
+                    socket={socket}
+                    room={`${activeChat.examId}_${activeChat.userId}`}
+                    currentUser={currentUser}
+                    role="proctor"
+                />
             )}
         </div>
     );
@@ -88,7 +420,8 @@ const AdminDashboard = () => {
     // Result Editing State
     const [editingResult, setEditingResult] = useState(null);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
-    const [selectedExamFilter, setSelectedExamFilter] = useState('All');
+    const [selectedResultExamFilter, setSelectedResultExamFilter] = useState('All');
+    const [selectedProctorExamFilter, setSelectedProctorExamFilter] = useState('All');
 
     // New Exam Form State
     const [currentQuestion, setCurrentQuestion] = useState({
@@ -524,8 +857,8 @@ const AdminDashboard = () => {
                                 <div className="relative">
                                     <select
                                         className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-purpul/5 transition-all min-w-[200px]"
-                                        value={selectedExamFilter}
-                                        onChange={(e) => setSelectedExamFilter(e.target.value)}
+                                        value={selectedResultExamFilter}
+                                        onChange={(e) => setSelectedResultExamFilter(e.target.value)}
                                     >
                                         <option value="All">All Exams</option>
                                         {[...new Set(exams.map(e => e.title))].map(title => (
@@ -552,7 +885,7 @@ const AdminDashboard = () => {
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
                                         {filteredResults
-                                            .filter(result => selectedExamFilter === 'All' || (result.examTitle || result.exam?.title) === selectedExamFilter)
+                                            .filter(result => selectedResultExamFilter === 'All' || (result.examTitle || result.exam?.title) === selectedResultExamFilter)
                                             .sort((a, b) => b.score - a.score)
                                             .map((result, idx) => (
                                                 <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
@@ -606,8 +939,8 @@ const AdminDashboard = () => {
                                 <div className="relative">
                                     <select
                                         className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-purpul/5 transition-all min-w-[200px]"
-                                        value={selectedExamFilter}
-                                        onChange={(e) => setSelectedExamFilter(e.target.value)}
+                                        value={selectedProctorExamFilter}
+                                        onChange={(e) => setSelectedProctorExamFilter(e.target.value)}
                                     >
                                         <option value="All">Select Exam to Monitor</option>
                                         {exams.map(e => (
@@ -620,8 +953,8 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
 
-                            {selectedExamFilter !== 'All' ? (
-                                <ProctorView examId={selectedExamFilter} />
+                            {selectedProctorExamFilter !== 'All' ? (
+                                <ProctorView examId={selectedProctorExamFilter} />
                             ) : (
                                 <div className="flex flex-col items-center justify-center p-12 text-gray-500 gap-4 min-h-[400px]">
                                     <Shield size={48} className="opacity-20 animate-pulse" />

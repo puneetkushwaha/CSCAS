@@ -135,6 +135,7 @@ const Profile = () => {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
+                timeout: 300000, // 5 minute timeout for uploads
             });
             const imageUrl = uploadRes.data.url;
 

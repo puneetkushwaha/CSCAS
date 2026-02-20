@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Shield, Clock, AlertTriangle, ArrowRight, CheckCircle2,
-  ShieldAlert, Activity, Lock, Laptop, Menu, X, ChevronRight,
+  ShieldAlert, Activity, Lock, Laptop, Menu, X, ChevronRight, Power,
   User, Bookmark, RotateCcw, Save, LayoutGrid, Camera, Maximize2
 } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { io } from 'socket.io-client';
+import ChatWidget from '../components/ChatWidget';
 
 const ExamPlayer = () => {
   const navigate = useNavigate();
@@ -34,6 +36,24 @@ const ExamPlayer = () => {
   const [violationCount, setViolationCount] = useState(0);
   const [isLocked, setIsLocked] = useState(false); // True if tab switch detected
   const [lockReason, setLockReason] = useState(null);
+
+  // --- Real-time State ---
+  const [socket, setSocket] = useState(null);
+  const [idPhoto, setIdPhoto] = useState(null);
+  const [isIdVerified, setIsIdVerified] = useState(false);
+  const [isWaitingApproval, setIsWaitingApproval] = useState(false);
+  const [verificationError, setVerificationError] = useState(null);
+  const [proctorWarning, setProctorWarning] = useState(null);
+  const [isDisqualified, setIsDisqualified] = useState(false);
+  const [disqualificationReason, setDisqualificationReason] = useState(null);
+
+  // --- Voice & Video State ---
+  const pc = useRef(null);
+  const screenPc = useRef(null);
+  const localStream = useRef(null);
+  const screenStream = useRef(null);
+  const remoteStream = useRef(new MediaStream());
+  const audioRef = useRef(null);
 
   // --- Initial Sync & Data Fetching ---
   useEffect(() => {
@@ -73,6 +93,315 @@ const ExamPlayer = () => {
     syncTimer();
     return () => clearInterval(interval);
   }, []);
+
+  // --- Socket Initialization ---
+  useEffect(() => {
+    if (user && activeExam?.examId) {
+      const newSocket = io(); // Use relative path for proxy support
+      setSocket(newSocket);
+
+      newSocket.emit('join_session', {
+        examId: activeExam.examId,
+        userId: user.id || user._id
+      });
+
+      newSocket.on('verification_updated', ({ status }) => {
+        if (status === 'verified') {
+          setIsIdVerified(true);
+          setIsWaitingApproval(false);
+        } else if (status === 'rejected') {
+          setIsWaitingApproval(false);
+          setIsIdVerified(false);
+          setIdPhoto(null);
+          setVerificationError("Identity verification rejected. Please retake photo.");
+        }
+      });
+
+      newSocket.on('proctor_warning', ({ message }) => {
+        setProctorWarning(message);
+        // Clear warning after 10 seconds
+        setTimeout(() => setProctorWarning(null), 10000);
+      });
+
+      newSocket.on('disqualify_student', ({ reason }) => {
+        setIsDisqualified(true);
+        setDisqualificationReason(reason);
+      });
+
+      return () => newSocket.disconnect();
+    }
+  }, [user, activeExam?.examId]);
+
+  // --- Fetch Session Status ---
+  useEffect(() => {
+    const fetchStatus = async () => {
+      if (user && activeExam?.examId) {
+        try {
+          const res = await api.get(`/proctor/my-session/${activeExam.examId}`);
+          if (res.data) {
+            if (res.data.verificationStatus === 'verified') {
+              setIsIdVerified(true);
+            } else if (res.data.verificationStatus === 'pending') {
+              setIsWaitingApproval(true);
+              setIdPhoto(res.data.idSnapshot);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch session status", error);
+        }
+      }
+    };
+    fetchStatus();
+  }, [user, activeExam?.examId]);
+
+  // --- WebRTC Logic ---
+  useEffect(() => {
+    if (!socket || !activeExam?.examId || !user || phase !== 'active') return;
+
+    const setupPeerConnection = async () => {
+      pc.current = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      try {
+        if (!localStream.current) {
+          localStream.current = await navigator.mediaDevices.getUserMedia({
+            video: { width: 320, height: 240, frameRate: 15 },
+            audio: true
+          });
+        }
+        localStream.current.getTracks().forEach(track => {
+          pc.current.addTrack(track, localStream.current);
+        });
+      } catch (err) {
+        console.error("Failed to get local stream", err);
+      }
+
+      pc.current.ontrack = (event) => {
+        event.streams[0].getTracks().forEach(track => {
+          remoteStream.current.addTrack(track);
+        });
+        if (audioRef.current) {
+          audioRef.current.srcObject = remoteStream.current;
+        }
+      };
+
+      pc.current.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit('webrtc-signal', {
+            room: `${activeExam.examId}_${user.id || user._id}`,
+            userId: user.id || user._id,
+            signal: event.candidate,
+            type: 'candidate'
+          });
+        }
+      };
+    };
+
+    socket.on('webrtc-signal', async ({ signal, type, userId: signalUserId }) => {
+      // Only handle signals for this student
+      if (signalUserId && signalUserId !== (user.id || user._id)) return;
+
+      if (!pc.current) await setupPeerConnection();
+
+      if (type === 'offer') {
+        await pc.current.setRemoteDescription(new RTCSessionDescription(signal));
+        const answer = await pc.current.createAnswer();
+        await pc.current.setLocalDescription(answer);
+        socket.emit('webrtc-signal', {
+          room: `${activeExam.examId}_${user.id || user._id}`,
+          userId: user.id || user._id,
+          signal: answer,
+          type: 'answer'
+        });
+      } else if (type === 'candidate' && pc.current) {
+        await pc.current.addIceCandidate(new RTCIceCandidate(signal));
+      }
+    });
+
+    const initiateCall = async () => {
+      if (!pc.current) await setupPeerConnection();
+      const offer = await pc.current.createOffer();
+      await pc.current.setLocalDescription(offer);
+      socket.emit('webrtc-signal', {
+        room: `${activeExam.examId}_${user.id || user._id}`,
+        userId: user.id || user._id,
+        signal: offer,
+        type: 'offer'
+      });
+    };
+
+    const timer = setTimeout(initiateCall, 2000);
+
+    return () => {
+      clearTimeout(timer);
+      pc.current?.close();
+      pc.current = null;
+      localStream.current?.getTracks().forEach(t => t.stop());
+      localStream.current = null;
+    };
+  }, [socket, activeExam?.examId, user, phase]);
+
+  // --- Audio Level Monitoring ---
+  useEffect(() => {
+    if (!socket || !activeExam?.examId || !user || phase !== 'active') return;
+
+    let audioContext;
+    let analyser;
+    let source;
+    let animationId;
+
+    const monitorAudio = async () => {
+      try {
+        if (!localStream.current) return;
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        source = audioContext.createMediaStreamSource(localStream.current);
+        source.connect(analyser);
+        analyser.fftSize = 256;
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        let highVolumeDuration = 0;
+        const THRESHOLD = 50;
+
+        const checkVolume = () => {
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i];
+          }
+          const average = sum / bufferLength;
+
+          if (average > THRESHOLD) {
+            highVolumeDuration++;
+            if (highVolumeDuration > 100) {
+              socket.emit('noise_alert', {
+                room: `${activeExam.examId}_${user.id || user._id}`,
+                level: Math.round(average)
+              });
+              highVolumeDuration = 0;
+            }
+          } else {
+            highVolumeDuration = Math.max(0, highVolumeDuration - 2);
+          }
+          animationId = requestAnimationFrame(checkVolume);
+        };
+
+        checkVolume();
+
+      } catch (err) {
+        console.error("Audio monitoring failed", err);
+      }
+    };
+
+    const timer = setTimeout(monitorAudio, 5000);
+
+    return () => {
+      clearTimeout(timer);
+      if (animationId) cancelAnimationFrame(animationId);
+      if (source) source.disconnect();
+      if (audioContext) audioContext.close();
+    };
+  }, [socket, activeExam?.examId, user, phase]);
+
+  // --- Screen Share Monitoring ---
+  useEffect(() => {
+    if (!socket || !activeExam?.examId || !user || phase !== 'active') return;
+
+    const setupScreenPc = async () => {
+      screenPc.current = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      try {
+        screenStream.current = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: 10 },
+          audio: false
+        });
+
+        screenStream.current.getTracks().forEach(track => {
+          screenPc.current.addTrack(track, screenStream.current);
+        });
+
+        // Handle track ending (user stops sharing via browser bar)
+        screenStream.current.getVideoTracks()[0].onended = () => {
+          socket.emit('disqualify_student', {
+            room: `${activeExam.examId}_${user.id || user._id}`,
+            reason: "Screen sharing was stopped."
+          });
+        };
+
+      } catch (err) {
+        console.error("Screen share failed", err);
+        // Auto-disqualify if they refuse screen share
+        setIsDisqualified(true);
+        setDisqualificationReason("Screen sharing must be enabled to continue the exam.");
+      }
+
+      screenPc.current.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit('webrtc-screen-signal', {
+            room: `${activeExam.examId}_${user.id || user._id}`,
+            userId: user.id || user._id,
+            signal: event.candidate,
+            type: 'candidate'
+          });
+        }
+      };
+    };
+
+    socket.on('webrtc-screen-signal', async ({ signal, type, userId: signalUserId }) => {
+      if (signalUserId && signalUserId !== (user.id || user._id)) return;
+      if (!screenPc.current) await setupScreenPc();
+
+      if (type === 'offer') {
+        await screenPc.current.setRemoteDescription(new RTCSessionDescription(signal));
+        const answer = await screenPc.current.createAnswer();
+        await screenPc.current.setLocalDescription(answer);
+        socket.emit('webrtc-screen-signal', {
+          room: `${activeExam.examId}_${user.id || user._id}`,
+          userId: user.id || user._id,
+          signal: answer,
+          type: 'answer'
+        });
+      } else if (type === 'candidate' && screenPc.current) {
+        await screenPc.current.addIceCandidate(new RTCIceCandidate(signal));
+      }
+    });
+
+    const initiateScreenCall = async () => {
+      if (!screenPc.current) await setupScreenPc();
+      const offer = await screenPc.current.createOffer();
+      await screenPc.current.setLocalDescription(offer);
+      socket.emit('webrtc-screen-signal', {
+        room: `${activeExam.examId}_${user.id || user._id}`,
+        userId: user.id || user._id,
+        signal: offer,
+        type: 'offer'
+      });
+    };
+
+    const timer = setTimeout(initiateScreenCall, 3000);
+
+    return () => {
+      clearTimeout(timer);
+      screenPc.current?.close();
+      screenPc.current = null;
+      screenStream.current?.getTracks().forEach(t => t.stop());
+      screenStream.current = null;
+    };
+  }, [socket, activeExam?.examId, user, phase]);
+
+  // --- Auto-Disqualification Logic ---
+  useEffect(() => {
+    if (violationCount >= 3) {
+      setIsDisqualified(true);
+      setDisqualificationReason("Multiple proctoring violations detected (3 warnings).");
+    }
+  }, [violationCount]);
 
   // --- Fetch Questions Component ---
   useEffect(() => {
@@ -375,6 +704,31 @@ const ExamPlayer = () => {
   };
 
 
+  // --- DISQUALIFICATION RENDER ---
+  if (isDisqualified) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center text-center p-6">
+        <Power size={80} className="text-red-500 mb-6" />
+        <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Exam Terminated</h1>
+        <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg mb-8">
+          <h3 className="text-xl font-bold text-red-500 mb-2">You have been Disqualified</h3>
+          <p className="text-gray-400 text-sm mb-4">
+            Reason: {disqualificationReason || "Administrative decision or multiple violations."}
+          </p>
+          <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">
+            This action is final. Please contact your administrator for further details.
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.href = '/dashboard'}
+          className="px-8 py-4 bg-white text-black rounded-xl text-sm font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   // --- LOCKDOWN OVERLAY RENDER ---
   if (phase === 'active' && (!isFullscreen || isLocked)) {
     return (
@@ -408,6 +762,101 @@ const ExamPlayer = () => {
         </button>
       </div>
     )
+  }
+
+  // --- ID Verification Phase ---
+  if (phase === 'active' && !isIdVerified) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-lh-dark p-6 text-center">
+        <Shield size={64} className="text-lh-purple mb-8 animate-pulse" />
+        <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Identity Verification</h2>
+        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-12 max-w-sm">
+          Please place your ID card in front of the camera and capture a clear photo to proceed with the examination.
+        </p>
+
+        <div className="w-full max-w-md bg-[#0a0a0a] border border-white/5 rounded-[2rem] p-8 space-y-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-lh-purple/5 blur-[50px] rounded-full pointer-events-none"></div>
+
+          <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border-2 border-lh-purple/30 group">
+            {idPhoto ? (
+              <img
+                src={idPhoto}
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+                alt="ID Preview"
+              />
+            ) : (
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                mirrored={true}
+                screenshotFormat="image/jpeg"
+                className="w-full h-full object-cover"
+              />
+            )}
+            {!idPhoto && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-48 h-32 border-2 border-dashed border-white/20 rounded-lg flex flex-col items-center justify-center gap-2">
+                  <div className="w-32 h-0.5 bg-lh-purple/20 animate-scan"></div>
+                  <span className="text-[8px] font-bold text-white/20 uppercase tracking-[0.3em]">Align ID card here</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-4">
+            {idPhoto ? (
+              <button
+                onClick={() => {
+                  setIdPhoto(null);
+                  setIsWaitingApproval(false);
+                }}
+                className="flex-1 py-4 bg-white/5 border border-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+              >
+                Retake Photo
+              </button>
+            ) : (
+              <button
+                onClick={() => setIdPhoto(webcamRef.current.getScreenshot())}
+                className="flex-1 py-4 bg-lh-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                <Camera size={16} /> Capture ID
+              </button>
+            )}
+          </div>
+
+          {idPhoto && !isWaitingApproval && (
+            <button
+              onClick={async () => {
+                try {
+                  await api.post('/proctor/upload-id', {
+                    examId: activeExam.examId,
+                    idSnapshot: idPhoto
+                  });
+                  setIsWaitingApproval(true);
+                  setVerificationError(null);
+                } catch (error) {
+                  setVerificationError("Failed to upload ID. Please try again.");
+                }
+              }}
+              className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/10 hover:scale-105 active:scale-95 transition-all"
+            >
+              Confirm and Request Approval
+            </button>
+          )}
+
+          {isWaitingApproval && (
+            <div className="mt-8 p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-pulse">
+              <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-2">Awaiting Proctor Approval</p>
+              <p className="text-gray-500 text-[8px] font-bold uppercase">Your identity is being verified by a live proctor. Please wait.</p>
+            </div>
+          )}
+
+          {verificationError && <p className="text-red-500 text-[10px] font-bold uppercase mt-4">{verificationError}</p>}
+        </div>
+      </div>
+    );
   }
 
   // --- Completion & Error States ---
@@ -495,6 +944,18 @@ const ExamPlayer = () => {
   // --- Main Exam Interface (NTA Style) ---
   return (
     <div className="flex flex-col h-screen bg-[#111] overflow-hidden">
+      {/* Proctor Warning Popup */}
+      {proctorWarning && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] animate-bounce">
+          <div className="bg-amber-600 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border-2 border-amber-400">
+            <ShieldAlert size={24} />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Proctor Message</p>
+              <p className="text-sm font-bold">{proctorWarning}</p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="h-16 bg-[#1a1a1a] border-b border-white/5 flex items-center justify-between px-6 shrink-0 z-20">
         <div className="flex items-center gap-4">
@@ -700,6 +1161,13 @@ const ExamPlayer = () => {
           <div className="fixed inset-0 bg-black/80 z-20 lg:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
         )}
       </div>
+      <ChatWidget
+        socket={socket}
+        room={`${activeExam?.examId}_${user?.id || user?._id}`}
+        currentUser={user}
+        role="student"
+      />
+      <audio ref={audioRef} autoPlay />
     </div>
   );
 };

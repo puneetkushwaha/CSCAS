@@ -7,7 +7,7 @@ const getBaseURL = () => {
 
 const api = axios.create({
     baseURL: getBaseURL(), // Keeping getBaseURL() as API_URL is not defined in the original context
-    timeout: 10000,
+    timeout: 30000,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json'
