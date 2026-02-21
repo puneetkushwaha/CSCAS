@@ -103,11 +103,13 @@ const ProctorView = ({ examId }) => {
 
                 peer.onicecandidate = (event) => {
                     if (event.candidate) {
+                        console.log(`[ProctorView] Sending screen ICE candidate for room ${room}, user ${id}`);
                         newSocket.emit('webrtc-screen-signal', { room, userId: currentUser?.id || currentUser?._id, signal: event.candidate, type: 'candidate' });
                     }
                 };
 
                 peer.ontrack = (event) => {
+                    console.log(`[ProctorView] Received screen track for user ${id}, kind: ${event.track.kind}`);
                     setRemoteScreenStreams(prev => ({
                         ...prev,
                         [id]: event.streams[0]
@@ -117,6 +119,7 @@ const ProctorView = ({ examId }) => {
             };
 
             if (type === 'offer') {
+                console.log(`[ProctorView] Received screen offer from user ${signalUserId} in room ${room}. Setting remote description and creating answer.`);
                 const peer = await setupScreenPeer(signalUserId);
                 await peer.setRemoteDescription(new RTCSessionDescription(signal));
                 const answer = await peer.createAnswer();
@@ -142,8 +145,9 @@ const ProctorView = ({ examId }) => {
             Object.values(pc.current).forEach(p => p.close());
             Object.values(screenPc.current).forEach(p => p.close());
             localStream.current?.getTracks().forEach(track => track.stop());
+            proctorMicStream?.getTracks().forEach(track => track.stop());
         };
-    }, [currentUser]);
+    }, [currentUser, proctorMicStream]);
 
     useEffect(() => {
         if (socket && sessions.length > 0) {
@@ -193,8 +197,9 @@ const ProctorView = ({ examId }) => {
     };
 
     const handleStartVoice = async (sessionId, userId, examId, attemptId) => {
+        const room = `${examId}_${userId}_${attemptId}`;
+        console.log(`[Proctor] Initiating voice for Room: ${room}, Session: ${sessionId}`);
         try {
-            const room = `${examId}_${userId}_${attemptId}`;
             const peer = pc.current[userId];
 
             if (!peer) {
@@ -229,11 +234,13 @@ const ProctorView = ({ examId }) => {
             const oldAudioSender = existingSenders.find(s => s.track?.kind === 'audio');
             if (oldAudioSender) peer.removeTrack(oldAudioSender);
 
+            console.log(`[Proctor] Adding audio track to peer for user ${userId}`);
             micStream.getAudioTracks().forEach(track => {
                 peer.addTrack(track, micStream);
             });
 
             // Re-negotiate
+            console.log("[Proctor] Creating and sending offer for voice...");
             const offer = await peer.createOffer();
             await peer.setLocalDescription(offer);
             socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
@@ -420,8 +427,8 @@ const ProctorView = ({ examId }) => {
                                             : 'bg-white/5 border-white/10 text-white hover:bg-emerald-500 hover:border-emerald-500'
                                             }`}
                                     >
-                                        {activeVoice === session.userId?._id ? <MicOff size={12} /> : <Mic size={12} />}
-                                        {activeVoice === session.userId?._id ? 'Stop' : 'Voice'}
+                                        {activeVoice === session.userId?._id ? <Mic size={12} className="text-white animate-pulse" /> : <Mic size={12} />}
+                                        {activeVoice === session.userId?._id ? 'Microphone On' : 'Voice'}
                                     </button>
                                 )}
                             </div>

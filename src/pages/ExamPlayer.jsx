@@ -197,15 +197,27 @@ const ExamPlayer = () => {
 
       pc.current.ontrack = (event) => {
         const stream = event.streams[0] || new MediaStream([event.track]);
+        console.log(`[ExamPlayer] Received track: ${event.track.kind} from proctor`);
 
         if (event.track.kind === 'audio') {
+          console.log("[ExamPlayer] Proctor audio track detected. Playing...");
           setIsProctorSpeaking(true);
-          event.track.onmute = () => setIsProctorSpeaking(false);
-          event.track.onunmute = () => setIsProctorSpeaking(true);
-          event.track.onended = () => setIsProctorSpeaking(false);
+          event.track.onmute = () => {
+            console.log("[ExamPlayer] Proctor audio muted");
+            setIsProctorSpeaking(false);
+          };
+          event.track.onunmute = () => {
+            console.log("[ExamPlayer] Proctor audio unmuted");
+            setIsProctorSpeaking(true);
+          };
+          event.track.onended = () => {
+            console.log("[ExamPlayer] Proctor audio track ended");
+            setIsProctorSpeaking(false);
+          };
         }
 
         if (audioRef.current) {
+          console.log("[ExamPlayer] Binding proctor stream to audio element");
           audioRef.current.srcObject = stream;
         }
       };
