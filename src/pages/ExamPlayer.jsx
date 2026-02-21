@@ -44,8 +44,16 @@ const ExamPlayer = () => {
   const [isWaitingApproval, setIsWaitingApproval] = useState(false);
   const [verificationError, setVerificationError] = useState(null);
   const [proctorWarning, setProctorWarning] = useState(null);
+  const [isProctorSpeaking, setIsProctorSpeaking] = useState(false);
   const [isDisqualified, setIsDisqualified] = useState(false);
   const [disqualificationReason, setDisqualificationReason] = useState(null);
+
+  // --- KYC / Identity State ---
+  const [kycData, setKycData] = useState({
+    fullName: user?.firstName ? `${user.firstName} ${user.lastName || ''}` : '',
+    idType: '',
+    idNumber: ''
+  });
 
   // --- Voice & Video State ---
   const pc = useRef(null);
@@ -73,7 +81,11 @@ const ExamPlayer = () => {
 
       // Only update activeExam if it's different to avoid re-renders
       setActiveExam(prev => {
-        if (prev?.examId !== current.examId) return current;
+        // Ensure the current exam object has an ID (backward compatibility)
+        if (!current.id) {
+          current.id = current.timestamp?.toString() || 'LEGACY';
+        }
+        if (prev?.examId !== current.examId || prev?.id !== current.id) return current;
         return prev;
       });
 
@@ -102,10 +114,12 @@ const ExamPlayer = () => {
 
       newSocket.emit('join_session', {
         examId: activeExam.examId,
-        userId: user.id || user._id
+        userId: user._id || user.id,
+        attemptId: activeExam.id
       });
 
       newSocket.on('verification_updated', ({ status }) => {
+        console.log("[Socket] Verification status updated:", status);
         if (status === 'verified') {
           setIsIdVerified(true);
           setIsWaitingApproval(false);
@@ -118,12 +132,14 @@ const ExamPlayer = () => {
       });
 
       newSocket.on('proctor_warning', ({ message }) => {
+        console.log("[Socket] Received warning:", message);
         setProctorWarning(message);
         // Clear warning after 10 seconds
         setTimeout(() => setProctorWarning(null), 10000);
       });
 
       newSocket.on('disqualify_student', ({ reason }) => {
+        console.log("[Socket] Received disqualification:", reason);
         setIsDisqualified(true);
         setDisqualificationReason(reason);
       });
@@ -137,7 +153,9 @@ const ExamPlayer = () => {
     const fetchStatus = async () => {
       if (user && activeExam?.examId) {
         try {
-          const res = await api.get(`/proctor/my-session/${activeExam.examId}`);
+          console.log(`[ExamPlayer] Fetching session status for Exam: ${activeExam.examId}, Attempt: ${activeExam.id}`);
+          const res = await api.get(`/proctor/my-session/${activeExam.examId}/${activeExam.id}`);
+          console.log("[ExamPlayer] Session status response:", res.data);
           if (res.data) {
             if (res.data.verificationStatus === 'verified') {
               setIsIdVerified(true);
@@ -178,11 +196,17 @@ const ExamPlayer = () => {
       }
 
       pc.current.ontrack = (event) => {
-        event.streams[0].getTracks().forEach(track => {
-          remoteStream.current.addTrack(track);
-        });
+        const stream = event.streams[0] || new MediaStream([event.track]);
+
+        if (event.track.kind === 'audio') {
+          setIsProctorSpeaking(true);
+          event.track.onmute = () => setIsProctorSpeaking(false);
+          event.track.onunmute = () => setIsProctorSpeaking(true);
+          event.track.onended = () => setIsProctorSpeaking(false);
+        }
+
         if (audioRef.current) {
-          audioRef.current.srcObject = remoteStream.current;
+          audioRef.current.srcObject = stream;
         }
       };
 
@@ -199,8 +223,11 @@ const ExamPlayer = () => {
     };
 
     socket.on('webrtc-signal', async ({ signal, type, userId: signalUserId }) => {
-      // Only handle signals for this student
-      if (signalUserId && signalUserId !== (user.id || user._id)) return;
+      // If signalUserId is provided and doesn't match, it might be from the proctor
+      // Since signaling is in a private room, we can relax this check
+      if (signalUserId && signalUserId !== (user.id || user._id)) {
+        // console.log("Received signal from proctor/other", signalUserId);
+      }
 
       if (!pc.current) await setupPeerConnection();
 
@@ -230,6 +257,22 @@ const ExamPlayer = () => {
         type: 'offer'
       });
     };
+
+    socket.on('request_live_feed', async () => {
+      console.log("[Socket] Proctor requested live feed. Re-initiating...");
+      await initiateCall();
+      // Also re-initiate screen share if needed
+      if (screenStream.current) {
+        const screenOffer = await screenPc.current.createOffer();
+        await screenPc.current.setLocalDescription(screenOffer);
+        socket.emit('webrtc-screen-signal', {
+          room: `${activeExam.examId}_${user.id || user._id}`,
+          userId: user.id || user._id,
+          signal: screenOffer,
+          type: 'offer'
+        });
+      }
+    });
 
     const timer = setTimeout(initiateCall, 2000);
 
@@ -354,7 +397,9 @@ const ExamPlayer = () => {
     };
 
     socket.on('webrtc-screen-signal', async ({ signal, type, userId: signalUserId }) => {
-      if (signalUserId && signalUserId !== (user.id || user._id)) return;
+      if (signalUserId && signalUserId !== (user.id || user._id)) {
+        // console.log("Received screen signal from proctor/other", signalUserId);
+      }
       if (!screenPc.current) await setupScreenPc();
 
       if (type === 'offer') {
@@ -577,6 +622,7 @@ const ExamPlayer = () => {
         try {
           await api.post('/proctor/upload-snapshot', {
             examId: activeExam.examId,
+            attemptId: activeExam.id,
             snapshot: imageSrc
           });
         } catch (error) {
@@ -769,13 +815,57 @@ const ExamPlayer = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-lh-dark p-6 text-center">
         <Shield size={64} className="text-lh-purple mb-8 animate-pulse" />
-        <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Identity Verification</h2>
-        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-12 max-w-sm">
-          Please place your ID card in front of the camera and capture a clear photo to proceed with the examination.
+        <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">KYC Verification</h2>
+        <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-8 max-w-sm">
+          Please provide your identification details and capture a clear photo of your ID card.
         </p>
 
-        <div className="w-full max-w-md bg-[#0a0a0a] border border-white/5 rounded-[2rem] p-8 space-y-8 relative overflow-hidden">
+        <div className="w-full max-w-md bg-[#0a0a0a] border border-white/5 rounded-[2rem] p-8 space-y-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-lh-purple/5 blur-[50px] rounded-full pointer-events-none"></div>
+
+          {/* KYC Form Fields */}
+          {!isWaitingApproval && !isIdVerified && (
+            <div className="space-y-4 text-left">
+              <div>
+                <label className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-lh-purple outline-none transition-all"
+                  value={kycData.fullName}
+                  onChange={(e) => setKycData({ ...kycData, fullName: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5 ml-1">ID Type</label>
+                  <select
+                    className="w-full bg-[#111] border border-white/10 rounded-xl p-3 text-xs text-white focus:border-lh-purple outline-none transition-all"
+                    value={kycData.idType}
+                    onChange={(e) => setKycData({ ...kycData, idType: e.target.value })}
+                  >
+                    <option value="">Select ID Type</option>
+                    <option value="Aadhar Card">Aadhar Card</option>
+                    <option value="PAN Card">PAN Card</option>
+                    <option value="Driving License">Driving License</option>
+                    <option value="Student ID">Student ID</option>
+                    <option value="Passport">Passport</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5 ml-1">ID Number</label>
+                  <input
+                    type="text"
+                    placeholder="Enter ID number"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:border-lh-purple outline-none transition-all"
+                    value={kycData.idNumber}
+                    onChange={(e) => setKycData({ ...kycData, idNumber: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border-2 border-lh-purple/30 group">
             {idPhoto ? (
@@ -830,10 +920,22 @@ const ExamPlayer = () => {
             <button
               onClick={async () => {
                 try {
+                  if (!kycData.fullName || !kycData.idType || !kycData.idNumber) {
+                    setVerificationError("Please fill in all KYC details.");
+                    return;
+                  }
+                  console.log("[ExamPlayer] Uploading ID with payload:", {
+                    examId: activeExam.examId,
+                    attemptId: activeExam.id,
+                    kycData
+                  });
                   await api.post('/proctor/upload-id', {
                     examId: activeExam.examId,
-                    idSnapshot: idPhoto
+                    attemptId: activeExam.id,
+                    idSnapshot: idPhoto,
+                    kycData: kycData
                   });
+                  console.log("[ExamPlayer] ID upload successful");
                   setIsWaitingApproval(true);
                   setVerificationError(null);
                 } catch (error) {
@@ -944,6 +1046,21 @@ const ExamPlayer = () => {
   // --- Main Exam Interface (NTA Style) ---
   return (
     <div className="flex flex-col h-screen bg-[#111] overflow-hidden">
+      {/* Proctor Speaking Indicator */}
+      {isProctorSpeaking && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[60] animate-pulse">
+          <div className="bg-lh-purple text-white px-6 py-2 rounded-full shadow-2xl flex items-center gap-3 border border-lh-purple/50">
+            <Mic size={16} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Proctor is Speaking...</span>
+            <div className="flex gap-1">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-1 h-3 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Proctor Warning Popup */}
       {proctorWarning && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[60] animate-bounce">
@@ -1163,7 +1280,7 @@ const ExamPlayer = () => {
       </div>
       <ChatWidget
         socket={socket}
-        room={`${activeExam?.examId}_${user?.id || user?._id}`}
+        room={`${activeExam.examId}_${user._id || user.id}_${activeExam.id}`}
         currentUser={user}
         role="student"
       />

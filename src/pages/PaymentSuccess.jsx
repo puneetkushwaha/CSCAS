@@ -38,9 +38,9 @@ const PaymentSuccess = () => {
         if (!existingExams.find(e => e.examName === examName && e.date === appointmentDate && e.time === appointmentTime)) {
             const updatedExams = [...existingExams, scheduledExam];
             localStorage.setItem('scheduledExams', JSON.stringify(updatedExams));
-            // Keep activeExam for backward compatibility with existing components until they are updated
-            localStorage.setItem('activeExam', JSON.stringify(scheduledExam));
         }
+        // Always set activeExam to the latest booking
+        localStorage.setItem('activeExam', JSON.stringify(scheduledExam));
     }, [appointmentDate, appointmentTime, examName, examId]);
 
 

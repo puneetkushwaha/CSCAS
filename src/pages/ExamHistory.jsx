@@ -1,7 +1,8 @@
-import React from 'react';
-import { History, CheckCircle, Search, ArrowLeft, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { History, CheckCircle, Search, ArrowLeft, Filter, Loader2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import api from '../utils/api';
 
 const PrecisionPanel = ({ children, className = "" }) => (
     <div className={`relative bg-[#0a0a0a]/70 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] overflow-hidden group transition-all duration-700 ${className}`}>
@@ -13,20 +14,25 @@ const PrecisionPanel = ({ children, className = "" }) => (
 
 const ExamHistory = () => {
     const navigate = useNavigate();
-    const [history, setHistory] = React.useState([]);
+    const [history, setHistory] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    React.useEffect(() => {
-        const savedHistory = JSON.parse(localStorage.getItem('examHistory') || '[]');
-        if (savedHistory.length > 0) {
-            setHistory(savedHistory);
-        } else {
-            // Default static history for visual guidance
-            setHistory([
-                { exam: 'Cybersecurity Architect (CSCA+)', date: '2025_02_15', status: 'Completed', score: 'PASS' },
-                { exam: 'Network Guardian Protocol', date: '2024_11_10', status: 'Completed', score: 'PASS' },
-                { exam: 'Cloud Defense Systems', date: '2024_08_22', status: 'Archive_Verified', score: 'N/A' }
-            ]);
-        }
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                setIsLoading(true);
+                const response = await api.get('/results/my-history');
+                setHistory(response.data);
+            } catch (err) {
+                console.error("Failed to fetch exam history:", err);
+                setError("Failed to synchronize with registry. Please try again later.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchHistory();
     }, []);
 
     return (
@@ -55,30 +61,60 @@ const ExamHistory = () => {
                 </div>
 
                 <PrecisionPanel className="p-8">
-                    <div className="space-y-2">
-                        {history.map((item, i) => (
-                            <div key={i} className="group/row flex flex-col md:flex-row md:items-center justify-between p-8 rounded-[2rem] hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all">
-                                <div className="flex items-center gap-8 mb-4 md:mb-0">
-                                    <div className="w-14 h-14 rounded-2xl bg-lh-purple/10 flex items-center justify-center text-lh-purple group-hover/row:scale-110 transition-transform">
-                                        <History size={24} />
+                    {isLoading ? (
+                        <div className="py-32 flex flex-col items-center justify-center space-y-4">
+                            <Loader2 className="w-12 h-12 text-lh-purple animate-spin" />
+                            <p className="text-[10px] font-black text-white uppercase tracking-[0.5em] animate-pulse">Accessing Encrypted Archives...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="py-32 flex flex-col items-center justify-center space-y-4">
+                            <Info className="w-12 h-12 text-red-500 opacity-50" />
+                            <p className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">{error}</p>
+                        </div>
+                    ) : history.length > 0 ? (
+                        <div className="space-y-2">
+                            {history.map((item, i) => {
+                                const date = new Date(item.completedAt || item.createdAt);
+                                const formattedDate = date.toLocaleDateString('en-GB').replace(/\//g, '_');
+
+                                return (
+                                    <div key={item._id || i} className="group/row flex flex-col md:flex-row md:items-center justify-between p-8 rounded-[2rem] hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all">
+                                        <div className="flex items-center gap-8 mb-4 md:mb-0">
+                                            <div className="w-14 h-14 rounded-2xl bg-lh-purple/10 flex items-center justify-center text-lh-purple group-hover/row:scale-110 transition-transform">
+                                                <History size={24} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-lg font-black text-white uppercase tracking-tighter">{item.examTitle || 'Unknown Exam'}</h4>
+                                                <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest mt-1">
+                                                    Attempt_Timestamp: {formattedDate}_{date.getHours().toString().padStart(2, '0')}{date.getMinutes().toString().padStart(2, '0')}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-12">
+                                            <div className="text-right">
+                                                <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Node_Status</p>
+                                                <p className="text-[11px] text-white font-black uppercase tracking-widest">Operation_Completed</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Final_Metric</p>
+                                                <p className={`text-[11px] font-black uppercase tracking-widest ${item.status === 'Pass' ? 'text-green-500' : 'text-lh-purple'}`}>
+                                                    {item.percentage ? `${item.percentage.toFixed(1)}%` : 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div className={`w-20 text-center p-3 rounded-xl border ${item.status === 'Pass' ? 'bg-green-500/10 border-green-500/30' : 'bg-lh-purple/20 border-lh-purple/30'}`}>
+                                                <span className={`text-[12px] font-black ${item.status === 'Pass' ? 'text-green-500' : 'text-lh-purple'}`}>{item.status ? item.status.toUpperCase() : 'UNKNOWN'}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 className="text-lg font-black text-white uppercase tracking-tighter">{item.exam}</h4>
-                                        <p className="text-[10px] text-gray-500 font-mono uppercase tracking-widest mt-1">{item.date}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-12">
-                                    <div className="text-right">
-                                        <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Node_Status</p>
-                                        <p className="text-[11px] text-white font-black uppercase tracking-widest">{item.status}</p>
-                                    </div>
-                                    <div className={`w-20 text-center p-3 rounded-xl border ${item.score === 'PASS' ? 'bg-green-500/10 border-green-500/30' : 'bg-lh-purple/20 border-lh-purple/30'}`}>
-                                        <span className={`text-[12px] font-black ${item.score === 'PASS' ? 'text-green-500' : 'text-lh-purple'}`}>{item.score}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="py-32 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-black/40">
+                            <History className="w-16 h-16 text-gray-800 mx-auto mb-6 opacity-30" />
+                            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.6em] opacity-60">No archived mission records found</p>
+                        </div>
+                    )}
                 </PrecisionPanel>
             </div>
         </div>

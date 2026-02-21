@@ -28,12 +28,14 @@ const ProctorView = ({ examId }) => {
     const pc = useRef({});
     const screenPc = useRef({}); // Store PeerConnections per user: { userId: pc }
     const localStream = useRef(null);
+    const [proctorMicStream, setProctorMicStream] = useState(null);
     useEffect(() => {
         const newSocket = io(); // Use relative path for proxy support
         setSocket(newSocket);
 
         newSocket.on('noise_alert', ({ level, room }) => {
-            const userId = room.split('_')[1];
+            const parts = room.split('_');
+            const userId = parts[1];
             setNoiseAlerts(prev => ({ ...prev, [userId]: level }));
             // Clear alert after 5 seconds
             setTimeout(() => {
@@ -144,6 +146,23 @@ const ProctorView = ({ examId }) => {
     }, [currentUser]);
 
     useEffect(() => {
+        if (socket && sessions.length > 0) {
+            sessions.forEach(session => {
+                if (session.examId && session.userId?._id && session.attemptId) {
+                    const room = `${session.examId}_${session.userId._id}_${session.attemptId}`;
+                    socket.emit('join_session', {
+                        examId: session.examId,
+                        userId: session.userId._id,
+                        attemptId: session.attemptId
+                    });
+                    // Automatically request live feed when joining
+                    socket.emit('request_live_feed', { room });
+                }
+            });
+        }
+    }, [socket, sessions]);
+
+    useEffect(() => {
         let interval;
         const fetchSessions = async () => {
             try {
@@ -166,67 +185,86 @@ const ProctorView = ({ examId }) => {
             await api.patch('/proctor/verify-id', { sessionId, status });
             // Optionally update local state to show change immediately
             setSessions(prev => prev.map(s => s._id === sessionId ? { ...s, verificationStatus: status } : s));
+            alert(`Student ID ${status} successfully.`);
         } catch (error) {
-            console.error("Failed to verify ID", error);
+            console.error("Verification error:", error);
+            alert("Failed to update verification status. Please try again.");
         }
     };
 
-    const handleStartVoice = async (sessionId, userId, examId) => {
+    const handleStartVoice = async (sessionId, userId, examId, attemptId) => {
         try {
-            const room = `${examId}_${userId}`;
+            const room = `${examId}_${userId}_${attemptId}`;
+            const peer = pc.current[userId];
+
+            if (!peer) {
+                alert("Please connect the video feed first.");
+                return;
+            }
 
             if (activeVoice === userId) {
-                // Stop voice
-                pc.current[userId]?.close();
-                delete pc.current[userId];
+                // Stop proctor voice (send nothing to student)
+                const senders = peer.getSenders();
+                const audioSender = senders.find(s => s.track?.kind === 'audio');
+                if (audioSender) {
+                    peer.removeTrack(audioSender);
+                    // Re-negotiate
+                    const offer = await peer.createOffer();
+                    await peer.setLocalDescription(offer);
+                    socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
+                }
                 setActiveVoice(null);
                 return;
             }
 
-            // Get local audio
-            if (!localStream.current) {
-                localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Start proctor voice (send mic to student)
+            let micStream = proctorMicStream;
+            if (!micStream) {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                setProctorMicStream(micStream);
             }
 
-            const peer = new RTCPeerConnection({
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            // Remove any existing audio tracks first to avoid duplicates
+            const existingSenders = peer.getSenders();
+            const oldAudioSender = existingSenders.find(s => s.track?.kind === 'audio');
+            if (oldAudioSender) peer.removeTrack(oldAudioSender);
+
+            micStream.getAudioTracks().forEach(track => {
+                peer.addTrack(track, micStream);
             });
 
-            pc.current[userId] = peer;
-
-            localStream.current.getTracks().forEach(track => {
-                peer.addTrack(track, localStream.current);
-            });
-
-            peer.onicecandidate = (event) => {
-                if (event.candidate) {
-                    socket.emit('webrtc-signal', { room, signal: event.candidate, type: 'candidate' });
-                }
-            };
-
+            // Re-negotiate
             const offer = await peer.createOffer();
             await peer.setLocalDescription(offer);
-            socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId });
+            socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
 
             setActiveVoice(userId);
 
         } catch (error) {
-            console.error("Voice call error", error);
-            alert("Could not start voice call. Please check microphone permissions.");
+            console.error("Voice communication error", error);
+            alert("Could not start voice communication. Please check microphone permissions.");
         }
     };
 
-    const handleSendWarning = (userId, examId) => {
+    const handleSendWarning = (userId, examId, attemptId) => {
         const message = prompt("Enter warning message:", "Please stay in front of the camera.");
         if (message) {
-            const room = `${examId}_${userId}`;
+            const room = `${examId}_${userId}_${attemptId}`;
+            console.log(`[Socket] Sending warning to room ${room}: ${message}`);
             socket.emit('send_warning', { room, message });
         }
     };
 
-    const handleDisqualify = (userId, examId) => {
+    const handleRequestVideo = (userId, examId, attemptId) => {
+        const room = `${examId}_${userId}_${attemptId}`;
+        console.log(`[Socket] Requesting live feed for room ${room}`);
+        socket?.emit('request_live_feed', { room });
+    };
+
+    const handleDisqualify = (userId, examId, attemptId) => {
         if (window.confirm("Are you sure you want to DISQUALIFY this student? This will end their exam immediately.")) {
-            const room = `${examId}_${userId}`;
+            const room = `${examId}_${userId}_${attemptId}`;
+            console.log(`[Socket] Disqualifying student in room ${room}`);
             socket.emit('disqualify_student', { room, reason: "Manual disqualification by proctor" });
         }
     };
@@ -297,13 +335,22 @@ const ProctorView = ({ examId }) => {
                         {session.idSnapshot && (
                             <div className="p-2 bg-white/5 border-b border-white/5">
                                 <div className="flex justify-between items-center mb-2 px-1">
-                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">ID Verification</span>
+                                    <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">KYC Verification</span>
                                     <span className={`text-[8px] font-black uppercase tracking-widest ${session.verificationStatus === 'verified' ? 'text-emerald-500' :
                                         session.verificationStatus === 'rejected' ? 'text-rose-500' : 'text-amber-500 animate-pulse'
                                         }`}>
                                         {session.verificationStatus}
                                     </span>
                                 </div>
+                                {session.kycData && (
+                                    <div className="mb-2 px-1 space-y-1">
+                                        <p className="text-[10px] font-bold text-white">{session.kycData.fullName}</p>
+                                        <div className="flex justify-between">
+                                            <span className="text-[8px] font-bold text-lh-purple uppercase">{session.kycData.idType}</span>
+                                            <span className="text-[8px] font-mono text-gray-400">{session.kycData.idNumber}</span>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="relative aspect-[4/3] rounded-lg overflow-hidden border border-white/10 mb-2">
                                     <img
                                         src={session.idSnapshot}
@@ -349,35 +396,45 @@ const ProctorView = ({ examId }) => {
                                         setActiveChat({
                                             examId: session.examId,
                                             userId: session.userId?._id,
-                                            userName: session.userId?.firstName
+                                            userName: session.userId?.firstName,
+                                            attemptId: session.attemptId
                                         });
-                                        socket?.emit('join_session', { examId: session.examId, userId: session.userId?._id });
+                                        socket?.emit('join_session', { examId: session.examId, userId: session.userId?._id, attemptId: session.attemptId });
                                     }}
                                     className="py-2 bg-white/5 border border-white/10 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-lh-purple hover:border-lh-purple transition-all flex items-center justify-center gap-2"
                                 >
                                     <MessageSquare size={12} /> Chat
                                 </button>
-                                <button
-                                    onClick={() => handleStartVoice(session._id, session.userId?._id, session.examId)}
-                                    className={`py-2 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeVoice === session.userId?._id
-                                        ? 'bg-rose-500/10 border-rose-500/50 text-rose-500 animate-pulse'
-                                        : 'bg-white/5 border-white/10 text-white hover:bg-emerald-500 hover:border-emerald-500'
-                                        }`}
-                                >
-                                    {activeVoice === session.userId?._id ? <MicOff size={12} /> : <Mic size={12} />}
-                                    {activeVoice === session.userId?._id ? 'Stop' : 'Voice'}
-                                </button>
+                                {!remoteStreams[session.userId?._id] ? (
+                                    <button
+                                        onClick={() => handleRequestVideo(session.userId?._id, session.examId, session.attemptId)}
+                                        className="py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all hover:text-white flex items-center justify-center gap-2"
+                                    >
+                                        <Camera size={12} /> Connect Feed
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleStartVoice(session._id, session.userId?._id, session.examId, session.attemptId)}
+                                        className={`py-2 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeVoice === session.userId?._id
+                                            ? 'bg-rose-500/10 border-rose-500/50 text-rose-500 animate-pulse'
+                                            : 'bg-white/5 border-white/10 text-white hover:bg-emerald-500 hover:border-emerald-500'
+                                            }`}
+                                    >
+                                        {activeVoice === session.userId?._id ? <MicOff size={12} /> : <Mic size={12} />}
+                                        {activeVoice === session.userId?._id ? 'Stop' : 'Voice'}
+                                    </button>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
                                 <button
-                                    onClick={() => handleSendWarning(session.userId?._id, session.examId)}
+                                    onClick={() => handleSendWarning(session.userId?._id, session.examId, session.attemptId)}
                                     className="py-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all flex items-center justify-center gap-2"
                                 >
                                     <ShieldAlert size={12} /> Warning
                                 </button>
                                 <button
-                                    onClick={() => handleDisqualify(session.userId?._id, session.examId)}
+                                    onClick={() => handleDisqualify(session.userId?._id, session.examId, session.attemptId)}
                                     className="py-2 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
                                 >
                                     <Power size={12} /> Block
@@ -396,7 +453,7 @@ const ProctorView = ({ examId }) => {
             {activeChat && (
                 <ChatWidget
                     socket={socket}
-                    room={`${activeChat.examId}_${activeChat.userId}`}
+                    room={`${activeChat.examId}_${activeChat.userId}_${activeChat.attemptId}`}
                     currentUser={currentUser}
                     role="proctor"
                 />

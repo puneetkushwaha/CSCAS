@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
