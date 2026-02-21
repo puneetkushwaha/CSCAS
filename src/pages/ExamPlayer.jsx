@@ -213,7 +213,7 @@ const ExamPlayer = () => {
       pc.current.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit('webrtc-signal', {
-            room: `${activeExam.examId}_${user.id || user._id}`,
+            room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
             userId: user.id || user._id,
             signal: event.candidate,
             type: 'candidate'
@@ -236,7 +236,7 @@ const ExamPlayer = () => {
         const answer = await pc.current.createAnswer();
         await pc.current.setLocalDescription(answer);
         socket.emit('webrtc-signal', {
-          room: `${activeExam.examId}_${user.id || user._id}`,
+          room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
           userId: user.id || user._id,
           signal: answer,
           type: 'answer'
@@ -251,7 +251,7 @@ const ExamPlayer = () => {
       const offer = await pc.current.createOffer();
       await pc.current.setLocalDescription(offer);
       socket.emit('webrtc-signal', {
-        room: `${activeExam.examId}_${user.id || user._id}`,
+        room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
         userId: user.id || user._id,
         signal: offer,
         type: 'offer'
@@ -266,7 +266,7 @@ const ExamPlayer = () => {
         const screenOffer = await screenPc.current.createOffer();
         await screenPc.current.setLocalDescription(screenOffer);
         socket.emit('webrtc-screen-signal', {
-          room: `${activeExam.examId}_${user.id || user._id}`,
+          room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
           userId: user.id || user._id,
           signal: screenOffer,
           type: 'offer'
@@ -322,7 +322,7 @@ const ExamPlayer = () => {
             highVolumeDuration++;
             if (highVolumeDuration > 100) {
               socket.emit('noise_alert', {
-                room: `${activeExam.examId}_${user.id || user._id}`,
+                room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
                 level: Math.round(average)
               });
               highVolumeDuration = 0;
