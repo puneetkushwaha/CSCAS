@@ -59,11 +59,11 @@ const ReviewBooking = () => {
     const handlePayment = async () => {
         try {
             // 0. Get Public Key from backend
-            const keyResponse = await fetch("http://localhost:5000/api/payment/get-key");
+            const keyResponse = await fetch("/api/payment/get-key");
             const { key } = await keyResponse.json();
 
             // 1. Create Order on backend
-            const response = await fetch("http://localhost:5000/api/payment/order", {
+            const response = await fetch("/api/payment/order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: 'include',
@@ -86,7 +86,7 @@ const ReviewBooking = () => {
                 order_id: order.id,
                 handler: async function (response) {
                     // 3. Verify Payment on backend
-                    const verifyResponse = await fetch("http://localhost:5000/api/payment/verify", {
+                    const verifyResponse = await fetch("/api/payment/verify", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         credentials: 'include',
