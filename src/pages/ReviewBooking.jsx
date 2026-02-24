@@ -60,7 +60,8 @@ const ReviewBooking = () => {
         try {
             // 0. Get Public Key from backend
             const keyResponse = await fetch("/api/payment/get-key");
-            const { key } = await keyResponse.json();
+            const keyData = await keyResponse.json();
+            alert("Razorpay Key Status: " + (keyData.key ? "Received" : "MISSING"));
 
             // 1. Create Order on backend
             const response = await fetch("/api/payment/order", {
@@ -74,11 +75,18 @@ const ReviewBooking = () => {
                 })
             });
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                alert("Order Creation Failed: " + response.status + " - " + errorText);
+                return;
+            }
+
             const order = await response.json();
+            alert("Order Status: " + (order.id ? "Created ID: " + order.id : "FAILED"));
 
             // 2. Open Razorpay Checkout
             const options = {
-                key: key,
+                key: keyData.key,
                 amount: order.amount,
                 currency: "INR",
                 name: "CSCA Certification",
