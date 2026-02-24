@@ -43,8 +43,85 @@ const ReviewBooking = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => setIsPageLoading(false), 800);
-        return () => clearTimeout(timer);
+
+        // Load Razorpay script
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        document.body.appendChild(script);
+
+        return () => {
+            clearTimeout(timer);
+            document.body.removeChild(script);
+        };
     }, []);
+
+    const handlePayment = async () => {
+        try {
+            // 0. Get Public Key from backend
+            const keyResponse = await fetch("http://localhost:5000/api/payment/get-key");
+            const { key } = await keyResponse.json();
+
+            // 1. Create Order on backend
+            const response = await fetch("http://localhost:5000/api/payment/order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: 'include',
+                body: JSON.stringify({
+                    amount: totalDue,
+                    currency: "INR",
+                    receipt: `receipt_${Date.now()}`
+                })
+            });
+
+            const order = await response.json();
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: key,
+                amount: order.amount,
+                currency: "INR",
+                name: "CSCA Certification",
+                description: `Payment for ${examName}`,
+                order_id: order.id,
+                handler: async function (response) {
+                    // 3. Verify Payment on backend
+                    const verifyResponse = await fetch("http://localhost:5000/api/payment/verify", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    });
+
+                    const result = await verifyResponse.json();
+                    if (result.status === "success") {
+                        navigate('/dashboard/payment-success', { state: location.state });
+                    } else {
+                        alert("Payment verification failed");
+                    }
+                },
+                prefill: {
+                    name: "CSCA Candidate",
+                    email: "candidate@example.com",
+                    contact: "9999999999"
+                },
+                theme: {
+                    color: "#bc13fe"
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+
+        } catch (error) {
+            console.error("Payment error:", error);
+            alert("Error initiating payment");
+        }
+    };
 
     // Pricing Logic
     const subtotal = 273.00;
@@ -53,7 +130,7 @@ const ReviewBooking = () => {
     const totalDue = subtotal + taxAmount;
 
     const formatCurrency = (amount) => {
-        return amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
     };
 
     const formatDate = (dateString) => {
@@ -174,7 +251,7 @@ const ReviewBooking = () => {
                             </div>
 
                             <button
-                                onClick={() => navigate('/dashboard/payment-success', { state: location.state })}
+                                onClick={handlePayment}
                                 className="w-full py-4 bg-lh-purple text-white rounded-xl text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-lh-purple/30 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
                             >
                                 AUTHORIZE_FUNDS <ArrowRight size={14} className="animate-bounce-x" />
