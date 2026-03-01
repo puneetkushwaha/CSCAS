@@ -86,12 +86,11 @@ const ReviewBooking = () => {
 
         try {
             // 0. Get Public Key from backend
-            const baseURL = import.meta.env.MODE === 'production' ? 'https://csca.onrender.com/api' : '/api';
-            const keyResponse = await fetch(`${baseURL}/payment/get-key`);
+            const keyResponse = await fetch("/api/payment/get-key");
             const { key } = await keyResponse.json();
 
             // 1. Create Order on backend
-            const response = await fetch(`${baseURL}/payment/order`, {
+            const response = await fetch("/api/payment/order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: 'include',
@@ -114,7 +113,7 @@ const ReviewBooking = () => {
                 order_id: order.id,
                 handler: async function (response) {
                     // 3. Verify Payment on backend
-                    const verifyResponse = await fetch(`${baseURL}/payment/verify`, {
+                    const verifyResponse = await fetch("/api/payment/verify", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         credentials: 'include',
