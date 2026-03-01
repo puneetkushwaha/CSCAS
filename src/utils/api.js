@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 const getBaseURL = () => {
-    // Always use relative path to leverage Vercel Rewrites and Vite Proxy
+    // Use absolute path in production to directly hit Render and bypass Vercel's 10s serverless timeout function
+    if (import.meta.env.MODE === 'production') {
+        return 'https://csca.onrender.com/api';
+    }
     return '/api';
 };
 
