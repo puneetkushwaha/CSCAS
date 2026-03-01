@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { History, CheckCircle, Search, ArrowLeft, Filter, Loader2, Info } from 'lucide-react';
+import { History, Search, ArrowLeft, Loader2, Info, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
+import CertificateTemplate from '../components/CertificateTemplate';
 
 const PrecisionPanel = ({ children, className = "" }) => (
     <div className={`relative bg-[#0a0a0a]/70 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] overflow-hidden group transition-all duration-700 ${className}`}>
@@ -18,6 +19,8 @@ const ExamHistory = () => {
     const [history, setHistory] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [certData, setCertData] = useState(null);
+    const [loadingCertId, setLoadingCertId] = useState(null);
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -37,6 +40,18 @@ const ExamHistory = () => {
 
         fetchHistory();
     }, []);
+
+    const handleDownloadCert = async (resultId) => {
+        setLoadingCertId(resultId);
+        try {
+            const res = await api.get(`/results/${resultId}/certificate`);
+            setCertData(res.data);
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Failed to load certificate');
+        } finally {
+            setLoadingCertId(null);
+        }
+    };
 
     return (
         <div className="space-y-12 pb-16 relative">
@@ -79,6 +94,7 @@ const ExamHistory = () => {
                             {history.map((item, i) => {
                                 const date = new Date(item.completedAt || item.createdAt);
                                 const formattedDate = date.toLocaleDateString('en-GB').replace(/\//g, '_');
+                                const isPassed = item.status === 'Pass';
 
                                 return (
                                     <div key={item._id || i} className="group/row flex flex-col md:flex-row md:items-center justify-between p-8 rounded-[2rem] hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all">
@@ -93,20 +109,31 @@ const ExamHistory = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-12">
+                                        <div className="flex items-center gap-6 flex-wrap">
                                             <div className="text-right">
                                                 <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Node_Status</p>
                                                 <p className="text-[11px] text-white font-black uppercase tracking-widest">Operation_Completed</p>
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-1">Final_Metric</p>
-                                                <p className={`text-[11px] font-black uppercase tracking-widest ${item.status === 'Pass' ? 'text-green-500' : 'text-lh-purple'}`}>
+                                                <p className={`text-[11px] font-black uppercase tracking-widest ${isPassed ? 'text-green-500' : 'text-lh-purple'}`}>
                                                     {item.percentage ? `${item.percentage.toFixed(1)}%` : 'N/A'}
                                                 </p>
                                             </div>
-                                            <div className={`w-20 text-center p-3 rounded-xl border ${item.status === 'Pass' ? 'bg-green-500/10 border-green-500/30' : 'bg-lh-purple/20 border-lh-purple/30'}`}>
-                                                <span className={`text-[12px] font-black ${item.status === 'Pass' ? 'text-green-500' : 'text-lh-purple'}`}>{item.status ? item.status.toUpperCase() : 'UNKNOWN'}</span>
+                                            <div className={`w-20 text-center p-3 rounded-xl border ${isPassed ? 'bg-green-500/10 border-green-500/30' : 'bg-lh-purple/20 border-lh-purple/30'}`}>
+                                                <span className={`text-[12px] font-black ${isPassed ? 'text-green-500' : 'text-lh-purple'}`}>{item.status ? item.status.toUpperCase() : 'UNKNOWN'}</span>
                                             </div>
+                                            {/* Download Certificate Button for passed exams */}
+                                            {isPassed && (
+                                                <button
+                                                    onClick={() => handleDownloadCert(item._id)}
+                                                    disabled={loadingCertId === item._id}
+                                                    className="flex items-center gap-2 px-4 py-2.5 bg-lh-purple/10 border border-lh-purple/30 text-lh-purple rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-lh-purple hover:text-white hover:border-lh-purple transition-all disabled:opacity-40 whitespace-nowrap"
+                                                >
+                                                    <Award size={14} />
+                                                    {loadingCertId === item._id ? 'Loading...' : 'Certificate'}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -120,6 +147,13 @@ const ExamHistory = () => {
                     )}
                 </PrecisionPanel>
             </div>
+
+            {/* Certificate Modal */}
+            <AnimatePresence>
+                {certData && (
+                    <CertificateTemplate data={certData} onClose={() => setCertData(null)} />
+                )}
+            </AnimatePresence>
         </div>
     );
 };

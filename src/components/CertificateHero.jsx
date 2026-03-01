@@ -1,8 +1,30 @@
 import React from 'react';
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ChevronRight, Shield, Clock, Database } from "lucide-react";
+import { useAuth } from '../context/AuthContext';
 
 const CertificateHero = ({ cert }) => {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+
+    const handleEnroll = () => {
+        const checkoutData = {
+            examId: cert.id,
+            examName: cert.title,
+            price: cert.price,
+            appointmentDate: new Date().toISOString().split('T')[0], // Default to today
+            appointmentTime: "10:00 AM", // default
+            length: "250 hours Content",
+        };
+
+        if (!user) {
+            localStorage.setItem('pendingCheckout', JSON.stringify(checkoutData));
+            navigate('/login');
+        } else {
+            navigate('/checkout', { state: checkoutData });
+        }
+    };
+
     return (
         /* flex-col aur overflow-y-auto isse scrollable banayega */
         <div className="w-full h-full overflow-y-auto selection:bg-lh-purple selection:text-white bg-[#050505] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -51,12 +73,10 @@ const CertificateHero = ({ cert }) => {
                     </div>
 
                     <div className="flex flex-wrap gap-6 items-center">
-                        <Link to={`/enroll/${cert.id}`}>
-                            <button className="px-10 py-4 bg-lh-purple hover:bg-white hover:text-black text-white font-black uppercase tracking-widest text-xs rounded-full transition-all duration-300 transform hover:scale-105 shadow-[0_0_30px_rgba(188,19,254,0.3)] flex items-center gap-3">
-                                Enroll Now
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-                        </Link>
+                        <button onClick={handleEnroll} className="px-10 py-4 bg-lh-purple hover:bg-white hover:text-black text-white font-black uppercase tracking-widest text-xs rounded-full transition-all duration-300 transform hover:scale-105 shadow-[0_0_30px_rgba(188,19,254,0.3)] flex items-center gap-3">
+                            Enroll Now
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
                         <div className="flex flex-col">
                             <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Starting at</span>
                             <span className="text-2xl font-black text-white">${cert.price}</span>

@@ -4,6 +4,7 @@ import { Shield, Menu, User, MessageSquare, LogOut, ChevronLeft, Calendar, Clock
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { toast } from 'react-toastify';
+import api from '../utils/api';
 
 
 const PrecisionPanel = ({ children, className = "" }) => (
@@ -84,24 +85,20 @@ const ReviewBooking = () => {
             return;
         }
 
+        // ... inside the handlePayment function ...
         try {
             // 0. Get Public Key from backend
-            const keyResponse = await fetch("/api/payment/get-key");
-            const { key } = await keyResponse.json();
+            const keyResponse = await api.get("/payment/get-key");
+            const { key } = keyResponse.data;
 
             // 1. Create Order on backend
-            const response = await fetch("/api/payment/order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: 'include',
-                body: JSON.stringify({
-                    amount: totalDue,
-                    currency: "INR",
-                    receipt: `receipt_${Date.now()}`
-                })
+            const orderResponse = await api.post("/payment/order", {
+                amount: totalDue,
+                currency: "INR",
+                receipt: `receipt_${Date.now()}`
             });
 
-            const order = await response.json();
+            const order = orderResponse.data;
 
             // 2. Open Razorpay Checkout
             const options = {
@@ -113,11 +110,8 @@ const ReviewBooking = () => {
                 order_id: order.id,
                 handler: async function (response) {
                     // 3. Verify Payment on backend
-                    const verifyResponse = await fetch("/api/payment/verify", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: 'include',
-                        body: JSON.stringify({
+                    try {
+                        const verifyResponse = await api.post("/payment/verify", {
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
@@ -126,16 +120,18 @@ const ReviewBooking = () => {
                             items: isExamBooking ? null : cartItems.map(i => ({ id: i.id, type: 'course' })),
                             examId: isExamBooking ? location.state.examId : null,
                             appointmentId: isExamBooking ? location.state.id : null
-                        })
-                    });
+                        });
 
-                    const result = await verifyResponse.json();
-                    if (result.status === "success") {
-                        toast.success("Payment successful!");
-                        if (!isExamBooking) clearCart(); // Clear cart for course purchases
-                        navigate('/dashboard/payment-success', { state: { ...location.state, total: totalDue } });
-                    } else {
-                        toast.error("Payment verification failed");
+                        if (verifyResponse.data.status === "success") {
+                            toast.success("Payment successful!");
+                            if (!isExamBooking) clearCart(); // Clear cart for course purchases
+                            navigate('/dashboard/payment-success', { state: { ...location.state, total: totalDue } });
+                        } else {
+                            toast.error("Payment verification failed");
+                        }
+                    } catch (verifyErr) {
+                        console.error("Payment Verification Error:", verifyErr.response?.data || verifyErr.message);
+                        toast.error(verifyErr.response?.data?.message || "Payment verification failed");
                     }
                 },
                 prefill: {
@@ -149,11 +145,15 @@ const ReviewBooking = () => {
             };
 
             const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                console.error("Razorpay Payment Failed:", response.error);
+                toast.error(`Payment failed: ${response.error.description}`);
+            });
             rzp.open();
 
         } catch (error) {
-            console.error("Payment error:", error);
-            toast.error("Error initiating payment");
+            console.error("Payment Initiation Error:", error.response?.data || error.message);
+            toast.error(error.response?.data?.message || "Error initiating payment. Please try again.");
         }
     };
 

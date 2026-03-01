@@ -2,46 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Database, Eye, Shield, Target, Activity, Cloud, Cpu, ClipboardCheck, Wifi, Zap, Award, Globe } from 'lucide-react';
-import { certifications as certificationsData } from '../data/certificationsData.jsx';
+import { ChevronRight, Database, Eye, Shield, Target, Activity, Cloud, Cpu, ClipboardCheck, Wifi, Zap, Award, Globe, Loader2 } from 'lucide-react';
+import api from '../utils/api';
 import CertificateSlider from '../components/CertificateSlider.jsx';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
 
 const Certifications = () => {
-    const [activeCategory, setActiveCategory] = useState(null); // Changed from 'Overview' to null
-    const [searchQuery, setSearchQuery] = useState(''); // New state for search
-    const [visibleCount, setVisibleCount] = useState(8); // New state for 'Load More'
-
-    // Filter for the "Overview" section (when activeCategory is null)
-    const overviewCertifications = certificationsData.filter(cert =>
-        cert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        cert.code.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    // Filter for the "Category/ID" section (when activeCategory is not null)
-    const categoryFilteredCertifications =
-        activeCategory === null
-            ? [] // Should not be used when activeCategory is null
-            : certificationsData.filter(cert => {
-                const isInId = cert.id === activeCategory;
-                const isInCat = Array.isArray(cert.category)
-                    ? cert.category.includes(activeCategory)
-                    : cert.category === activeCategory;
-                return isInId || isInCat;
-            });
-
-    const categories = [
-        { name: 'Red Team / Offensive Security', key: 'RED TEAM / OFFENSIVE SECURITY', emoji: '🛡️', icon: <Target className="text-white" />, color: 'from-red-600 to-red-800' },
-        { name: 'Blue Team / Defensive Security', key: 'BLUE TEAM / DEFENSIVE SECURITY', emoji: '🔷', icon: <Shield className="text-white" />, color: 'from-blue-600 to-indigo-800' },
-        { name: 'Cloud & DevSecOps', key: 'CLOUD & DEVSECOPS', emoji: '☁️', icon: <Cloud className="text-white" />, color: 'from-cyan-500 to-blue-700' },
-        { name: 'AI & Emerging Tech', key: 'AI & EMERGING TECH', emoji: '🤖', icon: <Cpu className="text-white" />, color: 'from-purple-500 to-pink-700' },
-        { name: 'Governance / ISO', key: 'GOVERNANCE / ISO', emoji: '📜', icon: <ClipboardCheck className="text-white" />, color: 'from-yellow-500 to-orange-600' },
-        { name: 'Network Security', key: 'NETWORK SECURITY', emoji: '🛡️', icon: <Wifi className="text-white" />, color: 'from-green-600 to-emerald-700' },
-        { name: 'Incident Response', key: 'INCIDENT RESPONSE', emoji: '⚡', icon: <Zap className="text-white" />, color: 'from-orange-500 to-red-700' },
-        { name: 'Big Data Engineering', key: 'BIG DATA ENGINEERING', emoji: '🧮', icon: <Database className="text-white" />, color: 'from-pink-500 to-rose-700' },
-    ];
+    const [activeCategory, setActiveCategory] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [visibleCount, setVisibleCount] = useState(8);
+    const [certificationsData, setCertificationsData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -49,7 +22,22 @@ const Certifications = () => {
     const isDashboard = location.pathname.startsWith('/dashboard');
 
     useEffect(() => {
-        if (location.state?.certId) {
+        const fetchCerts = async () => {
+            try {
+                const res = await api.get('/certifications');
+                setCertificationsData(res.data);
+            } catch (error) {
+                console.error("Failed to load certifications:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCerts();
+    }, []);
+
+    useEffect(() => {
+        if (!isLoading && location.state?.certId) {
             const certId = location.state.certId;
             setActiveCategory(certId);
             // Clear state after reading it to avoid re-triggering on manual navigation
@@ -60,7 +48,25 @@ const Certifications = () => {
                 window.scrollTo({ top: 600, behavior: 'smooth' });
             }, 100);
         }
-    }, [location.state, navigate]);
+    }, [location.state, navigate, isLoading]);
+
+    // Filter for the "Overview" section (when activeCategory is null)
+    const overviewCertifications = certificationsData.filter(cert =>
+        cert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cert.code.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Filter for the "Category/ID" section (when activeCategory is not null)
+    const categoryFilteredCertifications =
+        activeCategory === null
+            ? []
+            : certificationsData.filter(cert => {
+                const isInId = cert.id === activeCategory;
+                const isInCat = Array.isArray(cert.category)
+                    ? cert.category.includes(activeCategory)
+                    : cert.category === activeCategory;
+                return isInId || isInCat;
+            });
 
     return (
         <div className={`${isDashboard ? '' : 'bg-[#050505] min-h-screen'} text-white font-plus-jakarta overflow-x-hidden selection:bg-lh-purple selection:text-white`}>
@@ -143,62 +149,54 @@ const Certifications = () => {
                                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-lh-purple animate-pulse">16 Elite Certifications</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {overviewCertifications.slice(0, visibleCount).map((cert, i) => ( // Sliced overviewCertifications
-                                        <motion.button
-                                            key={cert.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            whileInView={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.02 }}
-                                            viewport={{ once: true }}
-                                            onClick={() => {
-                                                setActiveCategory(cert.id);
-                                                window.scrollTo({ top: 600, behavior: 'smooth' });
-                                            }}
-                                            className="group relative p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-lh-purple/30 transition-all duration-500 text-left flex flex-col justify-between h-[300px] overflow-hidden"
-                                        >
-                                            <div className={`absolute inset-0 bg-gradient-to-br ${cert.color} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700`}></div>
+                                {isLoading ? (
+                                    <div className="flex justify-center items-center py-20">
+                                        <Loader2 className="w-12 h-12 text-lh-purple animate-spin" />
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        {overviewCertifications.slice(0, visibleCount).map((cert, i) => (
+                                            <motion.button
+                                                key={cert.id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                whileInView={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.02 }}
+                                                viewport={{ once: true }}
+                                                onClick={() => {
+                                                    setActiveCategory(cert.id);
+                                                    window.scrollTo({ top: 600, behavior: 'smooth' });
+                                                }}
+                                                className="group relative p-8 rounded-[3rem] bg-white/[0.02] border border-white/5 hover:border-lh-purple/30 transition-all duration-500 text-left flex flex-col justify-between h-[300px] overflow-hidden"
+                                            >
+                                                <div className={`absolute inset-0 bg-gradient-to-br ${cert.color} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-700`}></div>
 
-                                            <div className="relative z-10 flex flex-col h-full">
-                                                <div className="flex justify-between items-start mb-6">
-                                                    <div className="p-4 bg-white/5 rounded-2xl text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
-                                                        {React.cloneElement(cert.icon, { size: 28 })}
+                                                <div className="relative z-10 flex flex-col h-full">
+                                                    <div className="flex justify-between items-start mb-6">
+                                                        <div className="p-4 bg-white/5 rounded-2xl text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
+                                                            <Database size={28} />
+                                                        </div>
+                                                        <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] group-hover:text-lh-purple/40 transition-colors">{cert.code}</span>
                                                     </div>
-                                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] group-hover:text-lh-purple/40 transition-colors">{cert.code}</span>
+
+                                                    <div className="space-y-2">
+                                                        <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none group-hover:text-lh-purple transition-colors">
+                                                            {cert.title.split(' – ')[0]}
+                                                        </h3>
+                                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{cert.level} Specialized</p>
+                                                    </div>
+
+                                                    <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-white/30 group-hover:text-white transition-all">Launch Program</span>
+                                                        <ChevronRight size={16} className="text-white/20 group-hover:text-lh-purple group-hover:translate-x-1 transition-all" />
+                                                    </div>
                                                 </div>
 
-                                                <div className="space-y-2">
-                                                    <h3 className="text-xl font-black text-white uppercase tracking-tighter leading-none group-hover:text-lh-purple transition-colors">
-                                                        {cert.title.split(' – ')[0]}
-                                                    </h3>
-                                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{cert.level} Specialized</p>
+                                                {/* Subtle background number/code */}
+                                                <div className="absolute -bottom-10 -right-6 text-[120px] font-black opacity-[0.02] group-hover:opacity-[0.05] pointer-events-none transition-all rotate-12">
+                                                    {cert.code}
                                                 </div>
-
-                                                <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/30 group-hover:text-white transition-all">Launch Program</span>
-                                                    <ChevronRight size={16} className="text-white/20 group-hover:text-lh-purple group-hover:translate-x-1 transition-all" />
-                                                </div>
-                                            </div>
-
-                                            {/* Subtle background number/code */}
-                                            <div className="absolute -bottom-10 -right-6 text-[120px] font-black opacity-[0.02] group-hover:opacity-[0.05] pointer-events-none transition-all rotate-12">
-                                                {cert.code}
-                                            </div>
-                                        </motion.button>
-                                    ))}
-                                </div>
-
-                                {visibleCount < overviewCertifications.length && ( // 'Load More' button logic
-                                    <div className="mt-20 flex justify-center">
-                                        <button
-                                            onClick={() => setVisibleCount(prev => prev + 8)}
-                                            className="group relative px-10 py-4 bg-white/[0.03] border border-white/10 rounded-2xl overflow-hidden transition-all hover:border-lh-purple/50"
-                                        >
-                                            <div className="absolute inset-0 bg-lh-purple/5 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500"></div>
-                                            <span className="relative z-10 text-[11px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-3">
-                                                View More Certifications <Zap size={14} className="text-lh-purple animate-pulse" />
-                                            </span>
-                                        </button>
+                                            </motion.button>
+                                        ))}
                                     </div>
                                 )}
                             </section>

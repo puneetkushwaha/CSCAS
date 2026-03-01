@@ -398,7 +398,7 @@ const ExamPlayer = () => {
         // Handle track ending (user stops sharing via browser bar)
         screenStream.current.getVideoTracks()[0].onended = () => {
           socket.emit('disqualify_student', {
-            room: `${activeExam.examId}_${user.id || user._id}`,
+            room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
             reason: "Screen sharing was stopped."
           });
         };
@@ -413,7 +413,7 @@ const ExamPlayer = () => {
       screenPc.current.onicecandidate = (event) => {
         if (event.candidate) {
           socket.emit('webrtc-screen-signal', {
-            room: `${activeExam.examId}_${user.id || user._id}`,
+            room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
             userId: user.id || user._id,
             signal: event.candidate,
             type: 'candidate'
@@ -433,7 +433,7 @@ const ExamPlayer = () => {
         const answer = await screenPc.current.createAnswer();
         await screenPc.current.setLocalDescription(answer);
         socket.emit('webrtc-screen-signal', {
-          room: `${activeExam.examId}_${user.id || user._id}`,
+          room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
           userId: user.id || user._id,
           signal: answer,
           type: 'answer'
@@ -564,7 +564,13 @@ const ExamPlayer = () => {
         setViolationCount(prev => prev + 1);
         setIsLocked(true);
         setLockReason('tab_switch');
-        // Optional: Auto-submit after N violations
+
+        if (socket && activeExam?.examId && user) {
+          socket.emit('tab_switch_alert', {
+            room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
+            userId: user.id || user._id
+          });
+        }
       }
     };
 

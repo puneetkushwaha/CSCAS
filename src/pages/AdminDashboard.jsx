@@ -13,6 +13,8 @@ import { io } from 'socket.io-client';
 import ChatWidget from '../components/ChatWidget';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import CertificationsManager from '../components/admin/CertificationsManager';
+
 
 const ProctorView = ({ examId }) => {
     const { user: currentUser } = useAuth();
@@ -20,6 +22,7 @@ const ProctorView = ({ examId }) => {
     const [loading, setLoading] = useState(true);
     const [socket, setSocket] = useState(null);
     const [noiseAlerts, setNoiseAlerts] = useState({}); // { userId: level }
+    const [tabSwitchAlerts, setTabSwitchAlerts] = useState({}); // { userId: boolean }
     const [activeChat, setActiveChat] = useState(null); // { examId, userId, userName }
 
     // --- Voice & Video State ---
@@ -41,6 +44,22 @@ const ProctorView = ({ examId }) => {
             // Clear alert after 5 seconds
             setTimeout(() => {
                 setNoiseAlerts(prev => {
+                    const next = { ...prev };
+                    delete next[userId];
+                    return next;
+                });
+            }, 5000);
+        });
+
+        newSocket.on('tab_switch_alert', ({ userId, room }) => {
+            if (!userId) {
+                const parts = room.split('_');
+                userId = parts[1];
+            }
+            setTabSwitchAlerts(prev => ({ ...prev, [userId]: true }));
+            // Clear alert after 5 seconds
+            setTimeout(() => {
+                setTabSwitchAlerts(prev => {
                     const next = { ...prev };
                     delete next[userId];
                     return next;
@@ -313,6 +332,11 @@ const ProctorView = ({ examId }) => {
                                     <Mic size={10} /> NOISE: {noiseAlerts[session.userId?._id]}
                                 </div>
                             )}
+                            {tabSwitchAlerts[session.userId?._id] && (
+                                <div className="absolute bottom-2 left-2 right-2 bg-red-500/90 text-white px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest text-center animate-pulse flex items-center justify-center gap-1 backdrop-blur-sm shadow-xl z-10 border border-red-400">
+                                    <AlertTriangle size={14} /> WARNING: TAB SWITCH DETECTED
+                                </div>
+                            )}
                         </div>
 
                         {/* Screen Feed Section */}
@@ -413,25 +437,30 @@ const ProctorView = ({ examId }) => {
                                 >
                                     <MessageSquare size={12} /> Chat
                                 </button>
-                                {!remoteStreams[session.userId?._id] ? (
-                                    <button
-                                        onClick={() => handleRequestVideo(session.userId?._id, session.examId, session.attemptId)}
-                                        className="py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all hover:text-white flex items-center justify-center gap-2"
-                                    >
-                                        <Camera size={12} /> Connect Feed
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleStartVoice(session._id, session.userId?._id, session.examId, session.attemptId)}
-                                        className={`py-2 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeVoice === session.userId?._id
-                                            ? 'bg-rose-500/10 border-rose-500/50 text-rose-500 animate-pulse'
-                                            : 'bg-white/5 border-white/10 text-white hover:bg-emerald-500 hover:border-emerald-500'
-                                            }`}
-                                    >
-                                        {activeVoice === session.userId?._id ? <Mic size={12} className="text-white animate-pulse" /> : <Mic size={12} />}
-                                        {activeVoice === session.userId?._id ? 'Microphone On' : 'Voice'}
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => handleRequestVideo(session.userId?._id, session.examId, session.attemptId)}
+                                    className={`py-2 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${remoteStreams[session.userId?._id]
+                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                        : 'bg-white/5 border-white/10 text-gray-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400'}`}
+                                >
+                                    <Camera size={12} /> {remoteStreams[session.userId?._id] ? 'Feed Live' : 'Connect Feed'}
+                                </button>
+                            </div>
+
+                            {/* Voice Call Button — always visible */}
+                            <div className="mb-2">
+                                <button
+                                    onClick={() => handleStartVoice(session._id, session.userId?._id, session.examId, session.attemptId)}
+                                    className={`w-full py-2 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeVoice === session.userId?._id
+                                        ? 'bg-rose-500/10 border-rose-500/50 text-rose-400 animate-pulse'
+                                        : 'bg-lh-purple/10 border-lh-purple/30 text-lh-purple hover:bg-lh-purple hover:text-white hover:border-lh-purple'
+                                        }`}
+                                >
+                                    {activeVoice === session.userId?._id
+                                        ? <><MicOff size={12} /> Stop Voice Call</>
+                                        : <><Mic size={12} /> Start Voice Call</>
+                                    }
+                                </button>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
@@ -969,7 +998,8 @@ const AdminDashboard = () => {
                         { id: 'exams', icon: BookOpen, label: 'Exam_Manager' },
                         { id: 'courses', icon: Layers, label: 'Course_Manager' },
                         { id: 'results', icon: Users, label: 'Student_Results' },
-                        { id: 'proctoring', icon: Shield, label: 'Live_Proctor' },
+                        { id: 'certifications', icon: Shield, label: 'Certifications' },
+                        { id: 'proctoring', icon: ShieldAlert, label: 'Live_Proctor' },
                         { id: 'live-classes', icon: Video, label: 'Live_Classes' }
                     ].map((item) => (
                         <button
@@ -1010,6 +1040,7 @@ const AdminDashboard = () => {
                             {activeTab === 'exams' && 'Exam Management'}
                             {activeTab === 'courses' && 'Course Management'}
                             {activeTab === 'results' && 'Student Performance'}
+                            {activeTab === 'certifications' && 'Certification Programs'}
                             {activeTab === 'proctoring' && 'Live Proctoring'}
                             {activeTab === 'live-classes' && 'Live Classes'}
                         </h1>
@@ -1085,6 +1116,11 @@ const AdminDashboard = () => {
                                 <span className="text-xs font-bold uppercase tracking-widest opacity-50">Analytics Module Loading...</span>
                             </div>
                         </motion.div>
+                    )}
+
+                    {/* Certifications Tab */}
+                    {activeTab === 'certifications' && (
+                        <CertificationsManager />
                     )}
 
                     {/* Exams Tab */}

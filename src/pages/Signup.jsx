@@ -61,8 +61,16 @@ const Signup = () => {
                     });
 
                     login(res.data.user);
-                    toast.success("Success! Now redirecting to NEW DASHBOARD...");
-                    navigate('/dashboard');
+
+                    const pendingCheckout = localStorage.getItem('pendingCheckout');
+                    if (pendingCheckout) {
+                        localStorage.removeItem('pendingCheckout');
+                        toast.success("Success! Redirecting to checkout...");
+                        navigate('/checkout', { state: JSON.parse(pendingCheckout) });
+                    } else {
+                        toast.success("Success! Now redirecting to NEW DASHBOARD...");
+                        navigate('/dashboard');
+                    }
                 }
             } catch (error) {
                 console.error("Redirect Result Error:", error);
@@ -111,8 +119,16 @@ const Signup = () => {
                     });
 
                     login(res.data.user);
-                    toast.success("Success! Now redirecting to NEW DASHBOARD...");
-                    navigate('/dashboard');
+
+                    const pendingCheckout = localStorage.getItem('pendingCheckout');
+                    if (pendingCheckout) {
+                        localStorage.removeItem('pendingCheckout');
+                        toast.success("Success! Redirecting to checkout...");
+                        navigate('/checkout', { state: JSON.parse(pendingCheckout) });
+                    } else {
+                        toast.success("Success! Now redirecting to NEW DASHBOARD...");
+                        navigate('/dashboard');
+                    }
                     setIsLoading(false);
                 }
             } catch (error) {

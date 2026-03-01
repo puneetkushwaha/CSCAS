@@ -56,8 +56,12 @@ const Login = () => {
 
                     login(res.data.user);
 
-                    // Redirect based on role
-                    if (res.data.user.role === 'admin') {
+                    // Redirect based on role or pending checkout
+                    const pendingCheckout = localStorage.getItem('pendingCheckout');
+                    if (pendingCheckout) {
+                        localStorage.removeItem('pendingCheckout');
+                        navigate('/checkout', { state: JSON.parse(pendingCheckout) });
+                    } else if (res.data.user.role === 'admin') {
                         navigate('/admin/dashboard');
                     } else {
                         navigate('/');
@@ -126,8 +130,12 @@ const Login = () => {
 
             login(res.data.user);
 
-            // Redirect based on role
-            if (res.data.user.role === 'admin') {
+            // Redirect based on role or pending checkout
+            const pendingCheckout = localStorage.getItem('pendingCheckout');
+            if (pendingCheckout) {
+                localStorage.removeItem('pendingCheckout');
+                navigate('/checkout', { state: JSON.parse(pendingCheckout) });
+            } else if (res.data.user.role === 'admin') {
                 navigate('/admin/dashboard');
             } else {
                 navigate('/');
@@ -170,8 +178,12 @@ const Login = () => {
 
                     login(res.data.user);
 
-                    // Redirect based on role
-                    if (res.data.user.role === 'admin') {
+                    // Redirect based on role or pending checkout
+                    const pendingCheckout = localStorage.getItem('pendingCheckout');
+                    if (pendingCheckout) {
+                        localStorage.removeItem('pendingCheckout');
+                        navigate('/checkout', { state: JSON.parse(pendingCheckout) });
+                    } else if (res.data.user.role === 'admin') {
                         navigate('/admin/dashboard');
                     } else {
                         navigate('/');
