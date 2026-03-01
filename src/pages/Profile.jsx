@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import api from '../utils/api';
+import { toast } from 'react-toastify';
 
 import {
     Eye,
@@ -87,10 +88,10 @@ const Profile = () => {
                 name: `${profile.firstName} ${profile.lastName}`.trim()
             });
 
-            alert('Profile updated successfully');
+            toast.success('Profile updated successfully');
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Server error');
+            toast.error(err.response?.data?.message || 'Server error');
         } finally {
             setIsLoading(false);
         }
@@ -100,7 +101,7 @@ const Profile = () => {
         e.preventDefault();
 
         if (passwords.newPassword !== passwords.confirmPassword) {
-            alert('Passwords do not match');
+            toast.warn('Passwords do not match');
             return;
         }
 
@@ -112,11 +113,11 @@ const Profile = () => {
                 newPassword: passwords.newPassword,
             });
 
-            alert('Password updated successfully');
+            toast.success('Password updated successfully');
             setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Password update failed');
+            toast.error(err.response?.data?.message || 'Password update failed');
         } finally {
             setIsPasswordLoading(false);
         }
@@ -149,10 +150,10 @@ const Profile = () => {
                 avatar: imageUrl,
             });
 
-            alert('Profile image uploaded successfully');
+            toast.success('Profile image uploaded successfully');
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Upload failed');
+            toast.error(err.response?.data?.message || 'Upload failed');
         }
     };
 
@@ -166,10 +167,10 @@ const Profile = () => {
                 avatar: null,
             });
 
-            alert('Profile image removed');
+            toast.success('Profile image removed');
         } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || 'Failed to remove image');
+            toast.error(err.response?.data?.message || 'Failed to remove image');
         }
     };
 

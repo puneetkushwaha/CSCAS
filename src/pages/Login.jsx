@@ -9,6 +9,7 @@ import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase
 import { auth, googleProvider } from '../firebase';
 
 import api from '../utils/api';
+import { toast } from 'react-toastify';
 
 const Login = () => {
     const { login } = useAuth();
@@ -67,7 +68,7 @@ const Login = () => {
                 console.error("Redirect Result Error:", error);
                 if (error.code !== 'auth/popup-closed-by-user') {
                     const message = error.response?.data?.message || error.message || 'Login failed';
-                    alert(message);
+                    toast.error(message);
                 }
             } finally {
                 setIsLoading(false); // Ensure loading stops
@@ -99,7 +100,7 @@ const Login = () => {
         e.preventDefault();
         setIsLoading(true);
         if (!identifier || !password) {
-            alert("All fields are required");
+            toast.warn("All fields are required");
             setIsLoading(false);
             return;
         }
@@ -109,7 +110,7 @@ const Login = () => {
         if (!isEmail) {
             const phoneRegex = /^[0-9]+$/;
             if (!phoneRegex.test(identifier)) {
-                alert("Invalid format. Please enter a valid Email or Phone Number (only digits allowed).");
+                toast.warn("Invalid format. Please enter a valid Email or Phone Number (only digits allowed).");
                 setIsLoading(false);
                 return;
             }
@@ -135,7 +136,7 @@ const Login = () => {
         } catch (error) {
             console.error(error);
             const message = error.response?.data?.message || 'Invalid credentials';
-            alert(message);
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }
@@ -183,7 +184,7 @@ const Login = () => {
                 // Don't show error if user closed popup intentionally
                 if (error.code !== 'auth/popup-closed-by-user') {
                     const message = error.response?.data?.message || error.message || 'Google Login Failed';
-                    alert(message);
+                    toast.error(message);
                 }
                 setIsLoading(false);
             }

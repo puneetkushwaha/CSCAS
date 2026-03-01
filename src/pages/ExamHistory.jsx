@@ -3,6 +3,7 @@ import { History, CheckCircle, Search, ArrowLeft, Filter, Loader2, Info } from '
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../utils/api';
+import { toast } from 'react-toastify';
 
 const PrecisionPanel = ({ children, className = "" }) => (
     <div className={`relative bg-[#0a0a0a]/70 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] overflow-hidden group transition-all duration-700 ${className}`}>
@@ -26,7 +27,9 @@ const ExamHistory = () => {
                 setHistory(response.data);
             } catch (err) {
                 console.error("Failed to fetch exam history:", err);
-                setError("Failed to synchronize with registry. Please try again later.");
+                const msg = "Failed to synchronize with registry. Please try again later.";
+                setError(msg);
+                toast.error(msg);
             } finally {
                 setIsLoading(false);
             }

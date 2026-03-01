@@ -35,6 +35,7 @@ const ProvideAdditionalInfo = () => {
     const location = useLocation();
     const examName = location.state?.examName || "CSCA Certification Exam";
     const examId = location.state?.examId;
+    const price = location.state?.price;
 
     const selectedLanguage = location.state?.selectedLanguage;
     const selectedOption = location.state?.selectedOption;
@@ -179,7 +180,7 @@ const ProvideAdditionalInfo = () => {
                         </button>
                         <button
                             disabled={!temporaryCountry || (temporaryCountry === 'yes' && !hasAuthorization)}
-                            onClick={() => navigate('/dashboard/testing-policies', { state: { examName, examId, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption } })}
+                            onClick={() => navigate('/dashboard/testing-policies', { state: { examName, examId, price, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption } })}
 
                             className={`px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all font-mono flex items-center gap-3 active:scale-95 ${(temporaryCountry && (temporaryCountry === 'no' || hasAuthorization))
                                 ? 'bg-lh-purple text-white shadow-[0_10px_30px_rgba(188,19,254,0.3)] hover:scale-105'

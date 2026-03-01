@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, ChevronRight, HelpCircle, ArrowRight, Info } from 'lucide-react';
+import { Shield, ChevronRight, HelpCircle, ArrowRight, Info, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ngdPic from '../assets/images/ngd-pic.png';
@@ -149,6 +149,59 @@ const DashboardHome = () => {
                             <p className="text-[12px] text-gray-500 font-bold leading-relaxed tracking-wide opacity-80">
                                 Registration keys are generated post-order approval. For bulk enrollments or enterprise deployment, please contact the <button className="text-lh-purple hover:text-white transition-colors underline decoration-lh-purple/30 underline-offset-4">Command Center</button>.
                             </p>
+                        </div>
+                    </PrecisionPanel>
+
+                    <PrecisionPanel className="p-6 md:p-10 border-white/5 shadow-[0_30px_100px_rgba(0,0,0,0.6)]">
+                        <div className="flex flex-col md:flex-row justify-between items-center md:items-start mb-8 gap-6">
+                            <div className="space-y-3 text-center md:text-left">
+                                <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase leading-none">
+                                    Academy<span className="text-lh-purple">Hub</span>
+                                </h2>
+                                <p className="text-gray-400 font-bold text-xs leading-relaxed max-w-sm opacity-80 mx-auto md:mx-0">
+                                    Access your highly specialized mission protocols and technical training modules.
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <Link to="/dashboard/my-courses">
+                                    <button className="px-6 py-3 bg-lh-purple/10 border border-lh-purple/20 text-lh-purple rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-lh-purple hover:text-white transition-all">
+                                        My Academy
+                                    </button>
+                                </Link>
+                                <Link to="/courses">
+                                    <button className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+                                        Browse Modules
+                                    </button>
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Link to="/dashboard/my-courses" className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl group hover:border-lh-purple/30 transition-all">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-10 h-10 rounded-lg bg-lh-purple/10 flex items-center justify-center text-lh-purple group-hover:scale-110 transition-transform">
+                                        <BookOpen size={20} />
+                                    </div>
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Active Training</h4>
+                                </div>
+                                <p className="text-[9px] text-gray-500 font-bold uppercase leading-relaxed mb-4">Resume your current certification mission protocols.</p>
+                                <div className="flex items-center gap-2 text-[8px] font-black text-lh-purple uppercase tracking-widest">
+                                    Open Modules <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </Link>
+
+                            <Link to="/courses" className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl group hover:border-lh-purple/30 transition-all">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-10 h-10 rounded-lg bg-lh-purple/10 flex items-center justify-center text-lh-purple group-hover:scale-110 transition-transform">
+                                        <ArrowRight size={20} />
+                                    </div>
+                                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest leading-none">New Missions</h4>
+                                </div>
+                                <p className="text-[9px] text-gray-500 font-bold uppercase leading-relaxed mb-4">Deploy into specialized security environments and labs.</p>
+                                <div className="flex items-center gap-2 text-[8px] font-black text-lh-purple uppercase tracking-widest">
+                                    Explore Catalog <ArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </Link>
                         </div>
                     </PrecisionPanel>
                 </div>

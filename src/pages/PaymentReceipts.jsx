@@ -51,9 +51,9 @@ const PaymentReceipts = () => {
                             </thead>
                             <tbody className="divide-y divide-white/[0.03]">
                                 {[
-                                    { id: 'TX-99021', item: 'CSCA+ Professional Certification', amount: '$349.00', status: 'VERIFIED' },
-                                    { id: 'TX-98745', item: 'Registry Maintenance Unit', amount: '$120.00', status: 'VERIFIED' },
-                                    { id: 'TX-98441', item: 'NetGuardian Protocol Entry', amount: '$299.00', status: 'VERIFIED' }
+                                    { id: 'TX-99021', item: 'CSCA+ Professional Certification', amount: '₹349.00', status: 'VERIFIED' },
+                                    { id: 'TX-98745', item: 'Registry Maintenance Unit', amount: '₹120.00', status: 'VERIFIED' },
+                                    { id: 'TX-98441', item: 'NetGuardian Protocol Entry', amount: '₹299.00', status: 'VERIFIED' }
                                 ].map((tx, i) => (
                                     <tr key={i} className="group/row hover:bg-white/[0.01] transition-colors">
                                         <td className="py-8 text-[11px] font-mono text-lh-purple font-black tracking-widest uppercase">{tx.id}</td>

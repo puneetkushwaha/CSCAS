@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart, Bell, UserCircle2, ChevronDown, ChevronRight, Target, Shield, Cloud, Cpu, ClipboardCheck, Wifi, Zap, Database, Monitor, Search, Activity, Lock, Laptop, Skull, ShieldCheck, ShieldAlert, Award, Globe } from 'lucide-react';
+import { Menu, X, ShoppingCart, Bell, UserCircle2, ChevronDown, ChevronRight, Target, Shield, BookOpen, Cloud, Cpu, ClipboardCheck, Wifi, Zap, Database, Monitor, Search, Activity, Lock, Laptop, Skull, ShieldCheck, ShieldAlert, Award, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -32,6 +32,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Certifications', path: '/certifications' },
+    { name: 'Courses', path: '/courses' },
     { name: 'Careers', path: '/careers' },
     { name: 'Partners', path: '/partners' },
     { name: 'Academic', path: '/academic' },
@@ -113,7 +114,7 @@ export default function Navbar() {
                         Master the Cyber Battlefield
                       </p>
                       <Link
-                        to="/certifications"
+                        to="/courses"
                         onClick={() => setShowMegaMenu(false)}
                         className="flex items-center gap-2 text-[10px] font-black text-lh-purple hover:text-white transition-colors"
                       >
@@ -224,6 +225,9 @@ export default function Navbar() {
                       <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-lh-purple hover:bg-white/[0.03] rounded-xl transition-all">
                         <Activity size={16} /> Dashboard
                       </Link>
+                      <Link to="/dashboard/my-courses" className="flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-lh-purple hover:bg-white/[0.03] rounded-xl transition-all">
+                        <BookOpen size={16} /> My Academy
+                      </Link>
 
                       {/* Admin Link - Only for Admins */}
                       {user && user.role === 'admin' && (
@@ -269,6 +273,7 @@ export default function Navbar() {
               >
                 <nav className="flex flex-col gap-6 text-[14px] font-bold uppercase tracking-widest pr-2">
                   <Link to="/" className="text-lh-purple border-b border-white/5 pb-4" onClick={() => setIsOpen(false)}>Home</Link>
+                  <Link to="/courses" className="hover:text-lh-purple transition border-b border-white/5 pb-4" onClick={() => setIsOpen(false)}>Courses</Link>
 
                   {/* Mobile Certifications Accordion */}
                   <div className="border-b border-white/5">
@@ -335,6 +340,9 @@ export default function Navbar() {
                       </Link>
                       <Link to="/dashboard" className="bg-lh-purple text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full" onClick={() => setIsOpen(false)}>
                         <Activity size={16} /> DASHBOARD
+                      </Link>
+                      <Link to="/dashboard/my-courses" className="bg-white/[0.05] border border-white/10 text-white px-6 py-4 rounded-full text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 w-full" onClick={() => setIsOpen(false)}>
+                        <BookOpen size={16} /> MY ACADEMY
                       </Link>
                       {/* Admin Mobile */}
                       {user && user.role === 'admin' && (

@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Users, BookOpen, Activity, Play, Plus, Trash2, Edit, Search,
+    Users, BookOpen, Activity, Play, Plus, Trash2, Edit, Search, Layers,
     BarChart2, Save, X, Check, AlertCircle, LayoutDashboard, FileText,
     TrendingUp, Shield, Zap, MoreVertical, LogOut, Home,
     AlertTriangle, Code, MessageSquare, Mic, MicOff, Phone,
-    Monitor, ShieldAlert, Power, Camera, Clock, CheckCircle2
+    Monitor, ShieldAlert, Power, Camera, Clock, CheckCircle2, Video, Radio, CalendarClock
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { io } from 'socket.io-client';
 import ChatWidget from '../components/ChatWidget';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const ProctorView = ({ examId }) => {
     const { user: currentUser } = useAuth();
@@ -153,10 +154,10 @@ const ProctorView = ({ examId }) => {
         if (socket && sessions.length > 0) {
             sessions.forEach(session => {
                 if (session.examId && session.userId?._id && session.attemptId) {
-                    const room = `${session.examId}_${session.userId._id}_${session.attemptId}`;
+                    const room = `${session.examId}_${session.userId?._id || session.userId}_${session.attemptId}`;
                     socket.emit('join_session', {
                         examId: session.examId,
-                        userId: session.userId._id,
+                        userId: session.userId?._id || session.userId,
                         attemptId: session.attemptId
                     });
                     // Automatically request live feed when joining
@@ -189,10 +190,10 @@ const ProctorView = ({ examId }) => {
             await api.patch('/proctor/verify-id', { sessionId, status });
             // Optionally update local state to show change immediately
             setSessions(prev => prev.map(s => s._id === sessionId ? { ...s, verificationStatus: status } : s));
-            alert(`Student ID ${status} successfully.`);
+            toast.success(`Student ID ${status} successfully.`);
         } catch (error) {
             console.error("Verification error:", error);
-            alert("Failed to update verification status. Please try again.");
+            toast.error("Failed to update verification status. Please try again.");
         }
     };
 
@@ -203,7 +204,7 @@ const ProctorView = ({ examId }) => {
             const peer = pc.current[userId];
 
             if (!peer) {
-                alert("Please connect the video feed first.");
+                toast.warn("Please connect the video feed first.");
                 return;
             }
 
@@ -249,7 +250,7 @@ const ProctorView = ({ examId }) => {
 
         } catch (error) {
             console.error("Voice communication error", error);
-            alert("Could not start voice communication. Please check microphone permissions.");
+            toast.error("Could not start voice communication. Please check microphone permissions.");
         }
     };
 
@@ -508,6 +509,41 @@ const AdminDashboard = () => {
     const [editingExamId, setEditingExamId] = useState(null);
     const [isExamModalOpen, setIsExamModalOpen] = useState(false);
 
+    // --- Course Management State ---
+    const [courses, setCourses] = useState([]);
+    const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+    const [editingCourseId, setEditingCourseId] = useState(null);
+    const [newCourse, setNewCourse] = useState({
+        title: '',
+        description: '',
+        thumbnail: '',
+        price: 0,
+        category: 'Cybersecurity',
+        level: 'Beginner',
+        chapters: []
+    });
+
+    // --- Live Class State ---
+    const [liveClasses, setLiveClasses] = useState([]);
+    const [isLiveClassModalOpen, setIsLiveClassModalOpen] = useState(false);
+    const [newLiveClass, setNewLiveClass] = useState({
+        course: '',
+        title: '',
+        instructor: '',
+        scheduledAt: ''
+    });
+
+    const [currentChapter, setCurrentChapter] = useState({
+        title: '',
+        description: '',
+        videoUrl: '',
+        pdfUrl: '',
+        isPreview: false
+    });
+    const [editingChapterIndex, setEditingChapterIndex] = useState(null);
+    const [chapterEditMode, setChapterEditMode] = useState('all'); // 'all', 'details', 'video', 'pdf'
+    const [uploading, setUploading] = useState(null); // 'thumbnail', 'video', 'pdf' or null
+
     useEffect(() => {
         fetchData();
     }, [activeTab]);
@@ -515,19 +551,24 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [examsRes, resultsRes] = await Promise.all([
+            const [examsRes, resultsRes, coursesRes, liveClassesRes] = await Promise.all([
                 api.get('/exams'),
-                api.get('/results/all')
+                api.get('/results/all'),
+                api.get('/courses'),
+                api.get('/live-class/all')
             ]);
 
             setExams(examsRes.data);
             setResults(resultsRes.data);
+            setCourses(coursesRes.data);
+            setLiveClasses(liveClassesRes.data);
 
             // Calculate Stats
             const distinctUsers = new Set(resultsRes.data.map(r => r.user?._id)).size;
             setStats({
                 totalExams: examsRes.data.length,
                 totalResults: resultsRes.data.length,
+                totalCourses: coursesRes.data.length,
                 distinctUsers
             });
 
@@ -538,13 +579,170 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleFileUpload = async (e, type, target = 'chapter') => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(type);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await api.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            const url = res.data.url;
+            if (target === 'course') {
+                setNewCourse(prev => ({ ...prev, thumbnail: url }));
+            } else {
+                setCurrentChapter(prev => ({ ...prev, [type === 'video' ? 'videoUrl' : 'pdfUrl']: url }));
+                // Immediate sync if editing to prevent data loss on mode switching
+                if (editingChapterIndex !== null) {
+                    setNewCourse(prev => {
+                        const updatedChapters = [...prev.chapters];
+                        updatedChapters[editingChapterIndex] = {
+                            ...updatedChapters[editingChapterIndex],
+                            [type === 'video' ? 'videoUrl' : 'pdfUrl']: url
+                        };
+                        return { ...prev, chapters: updatedChapters };
+                    });
+                }
+            }
+            toast.success('File uploaded successfully!');
+        } catch (error) {
+            console.error("Upload error:", error);
+            toast.error('Upload failed. Please try again.');
+        } finally {
+            setUploading(null);
+            if (e.target) e.target.value = null; // Reset input so same file can be selected again
+        }
+    };
+
+    const handleAddChapter = () => {
+        if (!currentChapter.title) {
+            toast.warn('Chapter title is required');
+            return;
+        }
+
+        if (editingChapterIndex !== null) {
+            const updatedChapters = [...newCourse.chapters];
+            // Merge only the fields currently being edited, keep the rest intact from the original chapter state
+            const originalChapter = updatedChapters[editingChapterIndex];
+
+            let mergedChapter = { ...originalChapter };
+            if (chapterEditMode === 'all' || chapterEditMode === 'details') {
+                mergedChapter.title = currentChapter.title;
+                mergedChapter.description = currentChapter.description;
+                mergedChapter.isPreview = currentChapter.isPreview;
+            }
+            if (chapterEditMode === 'all' || chapterEditMode === 'video') mergedChapter.videoUrl = currentChapter.videoUrl;
+            if (chapterEditMode === 'all' || chapterEditMode === 'pdf') mergedChapter.pdfUrl = currentChapter.pdfUrl;
+
+            updatedChapters[editingChapterIndex] = mergedChapter;
+            setNewCourse({ ...newCourse, chapters: updatedChapters });
+            setEditingChapterIndex(null);
+            setChapterEditMode('all');
+        } else {
+            setNewCourse({ ...newCourse, chapters: [...newCourse.chapters, currentChapter] });
+        }
+        setCurrentChapter({ title: '', description: '', videoUrl: '', pdfUrl: '', isPreview: false });
+    };
+
+    const handleEditChapterStart = (idx, mode) => {
+        // If we are already editing this chapter, don't reset currentChapter state
+        // to avoid losing unsaved changes (like a newly uploaded video/pdf)
+        if (editingChapterIndex !== idx) {
+            setCurrentChapter({ ...newCourse.chapters[idx] });
+        }
+        setEditingChapterIndex(idx);
+        setChapterEditMode(mode);
+    };
+
+    const cancelChapterEdit = () => {
+        setEditingChapterIndex(null);
+        setChapterEditMode('all');
+        setCurrentChapter({ title: '', description: '', videoUrl: '', pdfUrl: '', isPreview: false });
+    };
+
+    const handleCreateCourse = async (e) => {
+        e.preventDefault();
+
+        // Check for unsaved chapter in progress
+        if (currentChapter.title && !window.confirm(`You have a chapter "${currentChapter.title}" that hasn't been added to the course list yet. Do you want to continue without adding it?`)) {
+            return;
+        }
+
+        try {
+            if (editingCourseId) {
+                await api.put(`/courses/${editingCourseId}`, newCourse);
+                toast.success('Course Updated Successfully!');
+            } else {
+                await api.post('/courses', newCourse);
+                toast.success('Course Created Successfully!');
+            }
+            setIsCourseModalOpen(false);
+            setNewCourse({ title: '', description: '', thumbnail: '', price: 0, category: 'Cybersecurity', level: 'Beginner', chapters: [] });
+            setEditingCourseId(null);
+            fetchData();
+        } catch (error) {
+            toast.error('Failed to save course: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleDeleteCourse = async (id) => {
+        if (window.confirm('Are you sure you want to delete this course?')) {
+            try {
+                await api.delete(`/courses/${id}`);
+                fetchData();
+            } catch (error) {
+                toast.error('Failed to delete course');
+            }
+        }
+    };
+
+    const handleEditCourse = async (course) => {
+        // IMPORTANT: Load from the full content endpoint (which includes videoUrl/pdfUrl)
+        // The public courses list strips these fields, so using it would wipe content on save.
+        try {
+            toast.info('Loading course content...');
+            const res = await api.get(`/courses/${course._id}/content`);
+            const fullCourse = res.data;
+            setNewCourse({
+                title: fullCourse.title,
+                description: fullCourse.description,
+                thumbnail: fullCourse.thumbnail,
+                price: fullCourse.price,
+                category: fullCourse.category,
+                level: fullCourse.level,
+                isActive: fullCourse.isActive,
+                chapters: fullCourse.chapters || []
+            });
+        } catch (error) {
+            // Fallback: use the stripped public data but warn
+            console.error('Could not load full course content, using public data:', error);
+            toast.warn('Loading limited course data. Chapter video/PDF URLs may not be visible.');
+            setNewCourse({
+                title: course.title,
+                description: course.description,
+                thumbnail: course.thumbnail,
+                price: course.price,
+                category: course.category,
+                level: course.level,
+                chapters: course.chapters || []
+            });
+        }
+        setEditingCourseId(course._id);
+        setIsCourseModalOpen(true);
+    };
+
     const handleDeleteExam = async (id) => {
         if (window.confirm('jb: Are you sure you want to delete this exam?')) {
             try {
                 await api.delete(`/exams/${id}`);
                 fetchData();
             } catch (error) {
-                alert('Failed to delete exam');
+                toast.error('Failed to delete exam');
             }
         }
     };
@@ -554,10 +752,10 @@ const AdminDashboard = () => {
             try {
                 await api.delete(`/results/${id}`);
                 fetchData(); // Refresh list
-                alert('Result deleted successfully');
+                toast.success('Result deleted successfully');
             } catch (error) {
                 console.error(error);
-                alert('Failed to delete result');
+                toast.error('Failed to delete result');
             }
         }
     };
@@ -575,19 +773,19 @@ const AdminDashboard = () => {
                 totalMarks: editingResult.totalMarks,
                 status: editingResult.status
             });
-            alert('Result updated successfully');
+            toast.success('Result updated successfully');
             setIsResultModalOpen(false);
             setEditingResult(null);
             fetchData();
         } catch (error) {
             console.error(error);
-            alert('Failed to update result');
+            toast.error('Failed to update result');
         }
     };
 
     const handleAddQuestion = () => {
         if (!currentQuestion.questionText || currentQuestion.options.some(opt => !opt) || !currentQuestion.correctAnswer) {
-            alert('jb: Please fill all question fields and select a correct answer.');
+            toast.warn('Please fill all question fields and select a correct answer.');
             return;
         }
 
@@ -625,6 +823,18 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleDeleteChapter = (index) => {
+        if (window.confirm("Delete this chapter?")) {
+            const updatedChapters = newCourse.chapters.filter((_, i) => i !== index);
+            setNewCourse({ ...newCourse, chapters: updatedChapters });
+        }
+    };
+
+    const handleEditChapter = (index) => {
+        setCurrentChapter(newCourse.chapters[index]);
+        setEditingChapterIndex(index);
+    };
+
     const handleEditExam = (exam) => {
         setNewExam({
             title: exam.title,
@@ -650,10 +860,10 @@ const AdminDashboard = () => {
 
             if (editingExamId) {
                 await api.put(`/exams/${editingExamId}`, payload);
-                alert('Exam Updated Successfully!');
+                toast.success('Exam Updated Successfully!');
             } else {
                 await api.post('/exams', payload);
-                alert('Exam Created Successfully!');
+                toast.success('Exam Created Successfully!');
             }
 
             setIsExamModalOpen(false);
@@ -663,9 +873,9 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error(error);
             if (error.response && error.response.status === 403) {
-                alert('Permission Denied: You must be an Admin to manage exams.');
+                toast.error('Permission Denied: You must be an Admin to manage exams.');
             } else {
-                alert(`Failed to ${editingExamId ? 'update' : 'create'} exam: ` + (error.response?.data?.message || error.message));
+                toast.error(`Failed to ${editingExamId ? 'update' : 'create'} exam: ` + (error.response?.data?.message || error.message));
             }
         }
     };
@@ -675,6 +885,42 @@ const AdminDashboard = () => {
         glassHover: "hover:bg-white/[0.05] hover:border-lh-purple/30 transition-all duration-300",
         input: "w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:border-lh-purple focus:ring-1 focus:ring-lh-purple outline-none transition-all placeholder:text-gray-600 hover:bg-white/10",
         label: "block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1"
+    };
+
+    // --- Live Class Handlers ---
+    const handleCreateLiveClass = async (e) => {
+        e.preventDefault();
+        try {
+            await api.post('/live-class', newLiveClass);
+            toast.success('Live class scheduled!');
+            setIsLiveClassModalOpen(false);
+            setNewLiveClass({ course: '', title: '', instructor: '', scheduledAt: '' });
+            fetchData();
+        } catch (error) {
+            toast.error('Failed to schedule: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleLiveClassStatus = async (id, status) => {
+        try {
+            await api.patch(`/live-class/${id}/status`, { status });
+            toast.success(`Class ${status === 'live' ? 'started' : 'ended'}!`);
+            fetchData();
+        } catch (error) {
+            toast.error('Failed to update status');
+        }
+    };
+
+    const handleDeleteLiveClass = async (id) => {
+        if (window.confirm('Delete this live class?')) {
+            try {
+                await api.delete(`/live-class/${id}`);
+                toast.success('Live class deleted');
+                fetchData();
+            } catch (error) {
+                toast.error('Failed to delete');
+            }
+        }
     };
 
     const handleToggleStatus = async (exam) => {
@@ -721,8 +967,10 @@ const AdminDashboard = () => {
                     {[
                         { id: 'overview', icon: Activity, label: 'Overview' },
                         { id: 'exams', icon: BookOpen, label: 'Exam_Manager' },
+                        { id: 'courses', icon: Layers, label: 'Course_Manager' },
                         { id: 'results', icon: Users, label: 'Student_Results' },
-                        { id: 'proctoring', icon: Shield, label: 'Live_Proctor' }
+                        { id: 'proctoring', icon: Shield, label: 'Live_Proctor' },
+                        { id: 'live-classes', icon: Video, label: 'Live_Classes' }
                     ].map((item) => (
                         <button
                             key={item.id}
@@ -760,8 +1008,10 @@ const AdminDashboard = () => {
                         <h1 className="text-3xl font-[1000] uppercase tracking-tighter mb-1">
                             {activeTab === 'overview' && 'System Overview'}
                             {activeTab === 'exams' && 'Exam Management'}
+                            {activeTab === 'courses' && 'Course Management'}
                             {activeTab === 'results' && 'Student Performance'}
                             {activeTab === 'proctoring' && 'Live Proctoring'}
+                            {activeTab === 'live-classes' && 'Live Classes'}
                         </h1>
                         <p className="text-gray-500 text-sm font-medium">Welcome back to the command center.</p>
                     </div>
@@ -804,10 +1054,11 @@ const AdminDashboard = () => {
                             exit={{ opacity: 0, y: -20 }}
                             className="space-y-8"
                         >
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {[
                                     { label: 'Total Exams', value: stats.totalExams, icon: BookOpen, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-                                    { label: 'Total Attempts', value: stats.totalResults, icon: Activity, color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+                                    { label: 'Active Courses', value: courses.length, icon: Layers, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+                                    { label: 'Total Attempts', value: stats.totalResults, icon: Activity, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
                                     { label: 'Active Students', value: stats.distinctUsers, icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' }
                                 ].map((stat, idx) => (
                                     <div key={idx} className={`relative overflow-hidden p-6 rounded-[24px] bg-white/[0.02] backdrop-blur-md border ${stat.border} group hover:-translate-y-1 transition-all duration-300 shadow-lg`}>
@@ -989,6 +1240,104 @@ const AdminDashboard = () => {
                         </motion.div>
                     )}
 
+                    {/* Courses Tab */}
+                    {activeTab === 'courses' && (
+                        <motion.div
+                            key="courses"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="space-y-6"
+                        >
+                            <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded-2xl border border-white/5">
+                                <span className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    {courses.length} Active Courses
+                                </span>
+                                <button
+                                    onClick={() => {
+                                        setEditingCourseId(null);
+                                        setNewCourse({ title: '', description: '', thumbnail: '', price: 0, category: 'Cybersecurity', level: 'Beginner', chapters: [] });
+                                        setIsCourseModalOpen(true);
+                                    }}
+                                    className="px-6 py-3 bg-white text-black hover:bg-lh-purple hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95"
+                                >
+                                    <Plus size={16} /> Create Course
+                                </button>
+                            </div>
+
+                            <div className={`rounded-[32px] overflow-hidden ${SX.glass}`}>
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-white/[0.02] border-b border-white/5 text-[10px] text-gray-400 uppercase tracking-[0.2em]">
+                                            <th className="p-6 font-bold">Protocol Info</th>
+                                            <th className="p-6 font-bold">Difficulty</th>
+                                            <th className="p-6 font-bold">Category</th>
+                                            <th className="p-6 font-bold">Modules</th>
+                                            <th className="p-6 font-bold">Fee</th>
+                                            <th className="p-6 font-bold text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {courses.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase())).map(course => (
+                                            <tr key={course._id} className="hover:bg-white/[0.02] transition-colors group border-b border-white/[0.02]">
+                                                <td className="p-6 flex items-center gap-4">
+                                                    <div className="relative">
+                                                        <img src={course.thumbnail} className="w-14 h-14 rounded-xl object-cover border border-white/10 group-hover:scale-105 transition-transform" alt="" />
+                                                        <div className="absolute -bottom-1 -right-1 p-1 bg-lh-purple rounded-md text-[8px] text-white">
+                                                            <Layers size={10} />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-[900] text-sm text-white group-hover:text-lh-purple transition-colors uppercase tracking-tight">{course.title || 'Untitled_Module'}</div>
+                                                        <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">ID: {course._id.slice(-8)}</div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-6">
+                                                    <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-wider rounded-full border ${course.level === 'Beginner' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                                        course.level === 'Intermediate' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                                                            'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                                                        }`}>
+                                                        {course.level}
+                                                    </span>
+                                                </td>
+                                                <td className="p-6">
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                                                        {course.category}
+                                                    </span>
+                                                </td>
+                                                <td className="p-6">
+                                                    <div className="flex flex-col gap-2">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-sm font-black text-white">{course.chapters?.length || 0}</span>
+                                                            <span className="text-[8px] text-gray-600 font-bold uppercase tracking-tighter mt-1">Units_Safe</span>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            {course.chapters?.some(ch => ch.videoUrl) && (
+                                                                <span className="px-1.5 py-0.5 bg-lh-purple/10 text-lh-purple text-[7px] font-black uppercase rounded border border-lh-purple/20 flex items-center gap-1">
+                                                                    <Monitor size={8} /> Video
+                                                                </span>
+                                                            )}
+                                                            {course.chapters?.some(ch => ch.pdfUrl) && (
+                                                                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 text-[7px] font-black uppercase rounded border border-blue-500/20 flex items-center gap-1">
+                                                                    <FileText size={8} /> PDF
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-6 font-black text-sm text-lh-purple">₹{course.price}</td>
+                                                <td className="p-6 text-right space-x-1">
+                                                    <button onClick={() => handleEditCourse(course)} className="p-2.5 text-gray-500 hover:text-white hover:bg-white/5 rounded-xl transition-all border border-transparent hover:border-white/10"><Edit size={16} /></button>
+                                                    <button onClick={() => handleDeleteCourse(course._id)} className="p-2.5 text-gray-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20"><Trash2 size={16} /></button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </motion.div>
+                    )}
+
                     {/* Proctoring Tab */}
                     {activeTab === 'proctoring' && (
                         <motion.div
@@ -1002,7 +1351,7 @@ const AdminDashboard = () => {
                                 <h3 className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Live Monitoring</h3>
                                 <div className="relative">
                                     <select
-                                        className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-purpul/5 transition-all min-w-[200px]"
+                                        className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-widest text-white outline-none focus:border-lh-purple appearance-none pr-10 cursor-pointer hover:bg-white/5 transition-all min-w-[200px]"
                                         value={selectedProctorExamFilter}
                                         onChange={(e) => setSelectedProctorExamFilter(e.target.value)}
                                     >
@@ -1027,12 +1376,77 @@ const AdminDashboard = () => {
                             )}
                         </motion.div>
                     )}
+
+                    {/* Live Classes Tab */}
+                    {activeTab === 'live-classes' && (
+                        <motion.div
+                            key="live-classes"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="space-y-6"
+                        >
+                            <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded-2xl border border-white/5">
+                                <h3 className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    {liveClasses.filter(c => c.status === 'live').length} Live Now · {liveClasses.length} Total
+                                </h3>
+                                <button
+                                    onClick={() => setIsLiveClassModalOpen(true)}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-lh-purple to-purple-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-all"
+                                >
+                                    <Plus size={14} /> Schedule Class
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {liveClasses.length === 0 && (
+                                    <div className="flex flex-col items-center justify-center p-16 text-gray-600 gap-4 border border-dashed border-white/10 rounded-3xl">
+                                        <Video size={40} className="opacity-20" />
+                                        <p className="text-xs font-bold uppercase tracking-widest">No live classes scheduled yet</p>
+                                    </div>
+                                )}
+                                {liveClasses.map((cls) => (
+                                    <div key={cls._id} className={`p-6 rounded-2xl border flex items-center justify-between gap-6 transition-all ${cls.status === 'live' ? 'bg-lh-purple/5 border-lh-purple/20' : cls.status === 'ended' ? 'border-white/5 opacity-60' : 'bg-white/[0.02] border-white/5'}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-xl ${cls.status === 'live' ? 'bg-lh-purple/20' : 'bg-white/5'}`}>
+                                                {cls.status === 'live' ? <Radio size={20} className="text-lh-purple animate-pulse" /> : <CalendarClock size={20} className="text-gray-500" />}
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-black uppercase text-white">{cls.title}</h4>
+                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">
+                                                    {cls.course?.title || 'Unknown Course'} · {new Date(cls.scheduledAt).toLocaleString()}
+                                                </p>
+                                                <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${cls.status === 'live' ? 'bg-lh-purple/20 text-lh-purple border-lh-purple/30' : cls.status === 'ended' ? 'bg-white/5 text-gray-500 border-white/10' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                                                    {cls.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {cls.status === 'scheduled' && (
+                                                <button onClick={() => handleLiveClassStatus(cls._id, 'live')} className="px-4 py-2 bg-lh-purple text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2">
+                                                    <Radio size={12} /> Start
+                                                </button>
+                                            )}
+                                            {cls.status === 'live' && (
+                                                <button onClick={() => handleLiveClassStatus(cls._id, 'ended')} className="px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all flex items-center gap-2">
+                                                    <X size={12} /> End
+                                                </button>
+                                            )}
+                                            <button onClick={() => handleDeleteLiveClass(cls._id)} className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
                 </AnimatePresence>
 
                 {/* Edit Result Modal */}
                 <AnimatePresence>
                     {isResultModalOpen && editingResult && (
-                        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-md p-4">
+                        <div className="fixed inset-0 z-[110] bg-black/80 flex items-center justify-center backdrop-blur-md p-4">
                             <motion.div
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
@@ -1083,190 +1497,476 @@ const AdminDashboard = () => {
                         </div>
                     )}
                 </AnimatePresence>
+            </main>
 
-                {/* Create Exam Modal */}
-                <AnimatePresence>
-                    {isExamModalOpen && (
-                        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md overflow-y-auto custom-scrollbar">
-                            <motion.div
-                                initial={{ opacity: 0, y: 50 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 50 }}
-                                className="w-full min-h-screen p-4 md:p-8 max-w-5xl mx-auto space-y-6"
-                            >
-                                <div className="flex justify-between items-center sticky top-0 bg-black/50 backdrop-blur-md z-20 pb-4 border-b border-white/5 pt-4 rounded-b-2xl px-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-lh-purple rounded-lg text-white"><BookOpen size={20} /></div>
-                                        <h3 className="text-xl font-[1000] uppercase tracking-tight text-white">{editingExamId ? 'Modify Exam' : 'Initialize New Exam'}</h3>
-                                    </div>
-                                    <button onClick={() => { setIsExamModalOpen(false); setEditingExamId(null); setNewExam({ title: '', description: '', duration: 60, price: 0, category: 'Certification', questions: [] }); }} className="p-2 bg-white/5 rounded-full hover:bg-white/20 text-white transition-all"><X size={20} /></button>
+            {/* --- Modals (Rendered outside main for correct z-index stacking) --- */}
+
+            {/* Create Exam Modal */}
+            <AnimatePresence>
+                {isExamModalOpen && (
+                    <div className="fixed inset-0 z-[999] bg-black/90 backdrop-blur-md overflow-y-auto custom-scrollbar">
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 50 }}
+                            className="w-full min-h-screen p-4 md:p-8 max-w-5xl mx-auto space-y-6"
+                        >
+                            <div className="flex justify-between items-center sticky top-0 bg-black/50 backdrop-blur-md z-20 pb-4 border-b border-white/5 pt-4 rounded-b-2xl px-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-lh-purple rounded-lg text-white"><BookOpen size={20} /></div>
+                                    <h3 className="text-xl font-[1000] uppercase tracking-tight text-white">{editingExamId ? 'Modify Exam' : 'Initialize New Exam'}</h3>
                                 </div>
+                                <button onClick={() => { setIsExamModalOpen(false); setEditingExamId(null); setNewExam({ title: '', description: '', duration: 60, price: 0, category: 'Certification', questions: [] }); }} className="p-2 bg-white/5 rounded-full hover:bg-white/20 text-white transition-all"><X size={20} /></button>
+                            </div>
 
-                                <form onSubmit={handleCreateExam} className="h-full">
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                            <form onSubmit={handleCreateExam} className="h-full">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
 
-                                        {/* Left Column: Exam Details */}
-                                        <div className="space-y-6">
-                                            <div className={`bg-[#0a0a0a] p-8 rounded-[32px] border border-white/10 space-y-6 shadow-2xl relative overflow-hidden`}>
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full pointer-events-none"></div>
-                                                <h4 className="text-sm font-black uppercase tracking-widest text-lh-purple border-b border-white/5 pb-4">Exam Configuration</h4>
+                                    {/* Left Column: Exam Details */}
+                                    <div className="space-y-6">
+                                        <div className={`bg-[#0a0a0a] p-8 rounded-[32px] border border-white/10 space-y-6 shadow-2xl relative overflow-hidden`}>
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full pointer-events-none"></div>
+                                            <h4 className="text-sm font-black uppercase tracking-widest text-lh-purple border-b border-white/5 pb-4">Exam Configuration</h4>
 
+                                            <div>
+                                                <label className={SX.label}>Exam Title</label>
+                                                <input
+                                                    type="text"
+                                                    className={SX.input}
+                                                    placeholder="e.g. Certified Ethical Hacker v12"
+                                                    value={newExam.title}
+                                                    onChange={e => setNewExam({ ...newExam, title: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className={SX.label}>Exam Title</label>
-                                                    <input
-                                                        type="text"
-                                                        className={SX.input}
-                                                        placeholder="e.g. Certified Ethical Hacker v12"
-                                                        value={newExam.title}
-                                                        onChange={e => setNewExam({ ...newExam, title: e.target.value })}
-                                                        required
+                                                    <label className={SX.label}>Duration (min)</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            className={SX.input}
+                                                            value={newExam.duration}
+                                                            onChange={e => setNewExam({ ...newExam, duration: parseInt(e.target.value) })}
+                                                        />
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-bold">MIN</div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className={SX.label}>Pricing (₹)</label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-bold">₹</span>
+                                                        <input
+                                                            type="number"
+                                                            className={`${SX.input} pl-6`}
+                                                            value={newExam.price}
+                                                            onChange={e => setNewExam({ ...newExam, price: parseInt(e.target.value) })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className={SX.label}>Description</label>
+                                                <textarea
+                                                    className={`${SX.input} h-32 resize-none`}
+                                                    placeholder="Provide a comprehensive overview of the exam..."
+                                                    value={newExam.description}
+                                                    onChange={e => setNewExam({ ...newExam, description: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" className="w-full py-5 bg-gradient-to-r from-lh-purple to-purple-800 rounded-2xl text-sm font-black uppercase tracking-widest text-white hover:from-purple-600 hover:to-purple-800 transition-all shadow-[0_0_30px_rgba(188,19,254,0.3)] active:scale-95 group flex items-center justify-center gap-2">
+                                            <Save size={18} className="group-hover:scale-110 transition-transform" />
+                                            {editingExamId ? 'Save Changes' : 'Publish Exam'}
+                                        </button>
+                                    </div>
+
+                                    {/*RrRight Column: Question Manager */}
+                                    <div className="space-y-6 h-full flex flex-col">
+                                        <div className="bg-[#0a0a0a] p-8 rounded-[32px] border border-white/10 flex-1 flex flex-col shadow-2xl relative overflow-hidden">
+                                            <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none"></div>
+                                            <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
+                                                <h4 className="text-sm font-black uppercase tracking-widest text-lh-purple">Question Bank</h4>
+                                                <span className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-gray-400 border border-white/5">{newExam.questions.length} Items</span>
+                                            </div>
+
+                                            <div className="space-y-5 mb-8">
+                                                <div className="relative">
+                                                    <div className="absolute top-3 left-3 text-gray-500"><Code size={16} /></div>
+                                                    <div className="absolute top-3 right-3 text-[10px] font-mono text-gray-600">MARKDOWN SUPPORTED</div>
+                                                    <textarea
+                                                        placeholder="Enter question text here..."
+                                                        className={`${SX.input} pl-10 pt-3 h-28 resize-none`}
+                                                        value={currentQuestion.questionText}
+                                                        onChange={e => setCurrentQuestion({ ...currentQuestion, questionText: e.target.value })}
                                                     />
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className={SX.label}>Duration (min)</label>
-                                                        <div className="relative">
+                                                    {currentQuestion.options.map((opt, idx) => (
+                                                        <div key={idx} className="relative group">
+                                                            <span className="absolute left-3 top-3 text-[10px] font-black text-gray-600 uppercase">Opt {idx + 1}</span>
                                                             <input
-                                                                type="number"
-                                                                className={SX.input}
-                                                                value={newExam.duration}
-                                                                onChange={e => setNewExam({ ...newExam, duration: parseInt(e.target.value) })}
-                                                            />
-                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-bold">MIN</div>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <label className={SX.label}>Pricing ($)</label>
-                                                        <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs font-bold">$</span>
-                                                            <input
-                                                                type="number"
-                                                                className={`${SX.input} pl-6`}
-                                                                value={newExam.price}
-                                                                onChange={e => setNewExam({ ...newExam, price: parseInt(e.target.value) })}
+                                                                type="text"
+                                                                className={`${SX.input} pl-12 pr-4 ${currentQuestion.correctAnswer === opt && opt !== '' ? 'border-green-500/50 bg-green-500/10' : ''}`}
+                                                                value={opt}
+                                                                onChange={e => {
+                                                                    const newOptions = [...currentQuestion.options];
+                                                                    newOptions[idx] = e.target.value;
+                                                                    setCurrentQuestion({ ...currentQuestion, options: newOptions });
+                                                                }}
                                                             />
                                                         </div>
-                                                    </div>
+                                                    ))}
                                                 </div>
 
-                                                <div>
-                                                    <label className={SX.label}>Description</label>
-                                                    <textarea
-                                                        className={`${SX.input} h-32 resize-none`}
-                                                        placeholder="Provide a comprehensive overview of the exam..."
-                                                        value={newExam.description}
-                                                        onChange={e => setNewExam({ ...newExam, description: e.target.value })}
-                                                    />
+                                                <div className="flex gap-3">
+                                                    <select
+                                                        className={`${SX.input} flex-1 appearance-none cursor-pointer`}
+                                                        value={currentQuestion.correctAnswer}
+                                                        onChange={e => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
+                                                    >
+                                                        <option value="">Select Correct Answer</option>
+                                                        {currentQuestion.options.map((opt, idx) => (
+                                                            opt && <option key={idx} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAddQuestion}
+                                                        className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 shrink-0 border border-dashed border-emerald-500/30 ${editingIndex !== null ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}
+                                                    >
+                                                        {editingIndex !== null ? 'Update Item' : 'Add Item'}
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            <button type="submit" className="w-full py-5 bg-gradient-to-r from-lh-purple to-purple-800 rounded-2xl text-sm font-black uppercase tracking-widest text-white hover:from-purple-600 hover:to-purple-800 transition-all shadow-[0_0_30px_rgba(188,19,254,0.3)] active:scale-95 group flex items-center justify-center gap-2">
-                                                <Save size={18} className="group-hover:scale-110 transition-transform" />
-                                                {editingExamId ? 'Save Changes' : 'Publish Exam'}
-                                            </button>
-                                        </div>
-
-                                        {/*RrRight Column: Question Manager */}
-                                        <div className="space-y-6 h-full flex flex-col">
-                                            <div className="bg-[#0a0a0a] p-8 rounded-[32px] border border-white/10 flex-1 flex flex-col shadow-2xl relative overflow-hidden">
-                                                <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none"></div>
-                                                <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
-                                                    <h4 className="text-sm font-black uppercase tracking-widest text-lh-purple">Question Bank</h4>
-                                                    <span className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-bold text-gray-400 border border-white/5">{newExam.questions.length} Items</span>
-                                                </div>
-
-                                                <div className="space-y-5 mb-8">
-                                                    <div className="relative">
-                                                        <div className="absolute top-3 left-3 text-gray-500"><Code size={16} /></div>
-                                                        <div className="absolute top-3 right-3 text-[10px] font-mono text-gray-600">MARKDOWN SUPPORTED</div>
-                                                        <textarea
-                                                            placeholder="Enter question text here..."
-                                                            className={`${SX.input} pl-10 pt-3 h-28 resize-none`}
-                                                            value={currentQuestion.questionText}
-                                                            onChange={e => setCurrentQuestion({ ...currentQuestion, questionText: e.target.value })}
-                                                        />
+                                            {/* Questions List */}
+                                            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2 min-h-[300px] bg-black/20 rounded-2xl p-4 border border-white/5 inner-shadow">
+                                                {newExam.questions.length === 0 ? (
+                                                    <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-4 opacity-50">
+                                                        <FileText size={48} className="animate-pulse" />
+                                                        <span className="text-xs font-bold uppercase tracking-widest">Question Bank Empty</span>
                                                     </div>
-
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        {currentQuestion.options.map((opt, idx) => (
-                                                            <div key={idx} className="relative group">
-                                                                <span className="absolute left-3 top-3 text-[10px] font-black text-gray-600 uppercase">Opt {idx + 1}</span>
-                                                                <input
-                                                                    type="text"
-                                                                    className={`${SX.input} pl-12 pr-4 ${currentQuestion.correctAnswer === opt && opt !== '' ? 'border-green-500/50 bg-green-500/10' : ''}`}
-                                                                    value={opt}
-                                                                    onChange={e => {
-                                                                        const newOptions = [...currentQuestion.options];
-                                                                        newOptions[idx] = e.target.value;
-                                                                        setCurrentQuestion({ ...currentQuestion, options: newOptions });
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                    <div className="flex gap-3">
-                                                        <select
-                                                            className={`${SX.input} flex-1 appearance-none cursor-pointer`}
-                                                            value={currentQuestion.correctAnswer}
-                                                            onChange={e => setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })}
-                                                        >
-                                                            <option value="">Select Correct Answer</option>
-                                                            {currentQuestion.options.map((opt, idx) => (
-                                                                opt && <option key={idx} value={opt}>{opt}</option>
-                                                            ))}
-                                                        </select>
-                                                        <button
-                                                            type="button"
-                                                            onClick={handleAddQuestion}
-                                                            className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 shrink-0 border border-dashed border-emerald-500/30 ${editingIndex !== null ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'}`}
-                                                        >
-                                                            {editingIndex !== null ? 'Update Item' : 'Add Item'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {/* Questions List */}
-                                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2 min-h-[300px] bg-black/20 rounded-2xl p-4 border border-white/5 inner-shadow">
-                                                    {newExam.questions.length === 0 ? (
-                                                        <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-4 opacity-50">
-                                                            <FileText size={48} className="animate-pulse" />
-                                                            <span className="text-xs font-bold uppercase tracking-widest">Question Bank Empty</span>
-                                                        </div>
-                                                    ) : (
-                                                        newExam.questions.map((q, idx) => (
-                                                            <div key={idx} className={`p-4 rounded-xl border transition-all group hover:bg-white/5 ${editingIndex === idx ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-black/40 border-white/5'}`}>
-                                                                <div className="flex justify-between items-start gap-4">
-                                                                    <div className="flex-1">
-                                                                        <div className="flex items-start gap-3 mb-2">
-                                                                            <span className="px-2 py-1 bg-white/10 rounded-md text-[10px] font-black text-gray-400 mt-0.5">#{idx + 1}</span>
-                                                                            <span className="text-sm font-bold text-gray-200 line-clamp-2">{q.questionText}</span>
-                                                                        </div>
-                                                                        <div className="text-xs text-emerald-500 font-mono pl-10 flex items-center gap-2">
-                                                                            <Check size={12} /> {q.correctAnswer}
-                                                                        </div>
+                                                ) : (
+                                                    newExam.questions.map((q, idx) => (
+                                                        <div key={idx} className={`p-4 rounded-xl border transition-all group hover:bg-white/5 ${editingIndex === idx ? 'bg-yellow-500/5 border-yellow-500/30' : 'bg-black/40 border-white/5'}`}>
+                                                            <div className="flex justify-between items-start gap-4">
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-start gap-3 mb-2">
+                                                                        <span className="px-2 py-1 bg-white/10 rounded-md text-[10px] font-black text-gray-400 mt-0.5">#{idx + 1}</span>
+                                                                        <span className="text-sm font-bold text-gray-200 line-clamp-2">{q.questionText}</span>
                                                                     </div>
-                                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                        <button type="button" onClick={() => handleEditQuestion(idx)} className="p-2 bg-yellow-500/10 text-yellow-500 rounded-lg hover:bg-yellow-500/20 transition-all"><Edit size={14} /></button>
-                                                                        <button type="button" onClick={() => handleDeleteQuestion(idx)} className="p-2 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500/20 transition-all"><Trash2 size={14} /></button>
+                                                                    <div className="text-xs text-emerald-500 font-mono pl-10 flex items-center gap-2">
+                                                                        <Check size={12} /> {q.correctAnswer}
                                                                     </div>
                                                                 </div>
+                                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button type="button" onClick={() => handleEditQuestion(idx)} className="p-2 bg-yellow-500/10 text-yellow-500 rounded-lg hover:bg-yellow-500/20 transition-all"><Edit size={14} /></button>
+                                                                    <button type="button" onClick={() => handleDeleteQuestion(idx)} className="p-2 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500/20 transition-all"><Trash2 size={14} /></button>
+                                                                </div>
                                                             </div>
-                                                        ))
-                                                    )}
-                                                </div>
+                                                        </div>
+                                                    ))
+                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                </form>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
-            </main>
-        </div >
+            {/* Course Management Modal */}
+            <AnimatePresence>
+                {isCourseModalOpen && (
+                    <div className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-md overflow-y-auto custom-scrollbar">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full min-h-screen p-4 md:p-8 max-w-6xl mx-auto space-y-6"
+                        >
+                            <div className="flex justify-between items-center sticky top-0 bg-black/50 backdrop-blur-md z-20 pb-4 border-b border-white/5 pt-4 rounded-b-2xl px-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-lh-purple rounded-lg text-white"><Layers size={20} /></div>
+                                    <h3 className="text-xl font-[1000] uppercase tracking-tight text-white">{editingCourseId ? 'Upgrade Course Architecture' : 'Initialize New Selection Way'}</h3>
+                                </div>
+                                <button onClick={() => setIsCourseModalOpen(false)} className="p-2 bg-white/5 rounded-full hover:bg-white/20 text-white transition-all"><X size={20} /></button>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-20">
+                                {/* Left: Metadata */}
+                                <div className="space-y-6">
+                                    <div className={`${SX.glass} p-8 rounded-[32px] space-y-6`}>
+                                        <h4 className="text-sm font-black uppercase tracking-widest text-lh-purple border-b border-white/5 pb-4">General Protocol</h4>
+
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className={SX.label}>Course Title</label>
+                                                <input type="text" className={SX.input} value={newCourse.title} onChange={e => setNewCourse({ ...newCourse, title: e.target.value })} placeholder="Mastering Web Security" />
+                                            </div>
+                                            <div>
+                                                <label className={SX.label}>Thumbnail Asset</label>
+                                                <div className="flex gap-4 items-center">
+                                                    <div className="w-24 h-24 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                                                        {newCourse.thumbnail ? <img src={newCourse.thumbnail} className="w-full h-full object-cover" /> : <Camera className="text-gray-700" size={24} />}
+                                                    </div>
+                                                    <label className="flex-1 cursor-pointer">
+                                                        <div className="py-3 px-6 bg-white/5 border border-dashed border-white/20 text-xs font-bold uppercase tracking-widest text-center rounded-xl hover:bg-lh-purple/10 transition-all">
+                                                            {uploading === 'thumbnail' ? 'Processing_Link...' : 'Upload Core Image'}
+                                                        </div>
+                                                        <input type="file" className="hidden" accept="image/*" onChange={e => handleFileUpload(e, 'thumbnail', 'course')} disabled={!!uploading} />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className={SX.label}>Premium Fee (₹)</label>
+                                                    <input type="number" className={SX.input} value={newCourse.price} onChange={e => setNewCourse({ ...newCourse, price: parseInt(e.target.value) })} />
+                                                </div>
+                                                <div>
+                                                    <label className={SX.label}>Catalog Category</label>
+                                                    <input type="text" className={SX.input} value={newCourse.category} onChange={e => setNewCourse({ ...newCourse, category: e.target.value })} />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className={SX.label}>Difficulty Vector</label>
+                                                <select className={SX.input} value={newCourse.level} onChange={e => setNewCourse({ ...newCourse, level: e.target.value })}>
+                                                    {['Beginner', 'Intermediate', 'Advanced', 'Expert'].map(l => <option key={l} value={l}>{l}</option>)}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className={SX.label}>Abstract</label>
+                                                <textarea className={`${SX.input} h-32 resize-none`} value={newCourse.description} onChange={e => setNewCourse({ ...newCourse, description: e.target.value })} placeholder="Detailed course brief..." />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={handleCreateCourse} className="w-full py-5 bg-lh-purple rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl active:scale-95 transition-all">
+                                        {editingCourseId ? 'Commit Changes' : 'Publish to Catalog'}
+                                    </button>
+                                </div>
+
+                                {/* Right: Chapter Manager */}
+                                <div className="space-y-6">
+                                    <h4 className="text-sm font-black uppercase tracking-widest text-lh-purple border-b border-white/5 pb-4 flex justify-between items-center">
+                                        <span>Curriculum Structure</span>
+                                        {editingChapterIndex !== null && (
+                                            <span className="text-[10px] bg-lh-purple/20 text-lh-purple px-2 py-1 rounded-full border border-lh-purple/30">
+                                                EDITING: {chapterEditMode.toUpperCase()}
+                                            </span>
+                                        )}
+                                    </h4>
+
+                                    <div className="space-y-4 bg-white/[0.03] p-6 rounded-2xl border border-white/5 relative">
+                                        {(chapterEditMode === 'all' || chapterEditMode === 'details') && (
+                                            <>
+                                                <input type="text" className={SX.input} placeholder="Chapter Title" value={currentChapter.title} onChange={e => setCurrentChapter({ ...currentChapter, title: e.target.value })} />
+                                                <textarea className={`${SX.input} h-20 text-xs`} placeholder="Chapter Summary" value={currentChapter.description} onChange={e => setCurrentChapter({ ...currentChapter, description: e.target.value })} />
+
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="isPreview"
+                                                        checked={currentChapter.isPreview || false}
+                                                        onChange={e => setCurrentChapter({ ...currentChapter, isPreview: e.target.checked })}
+                                                        className="w-4 h-4 rounded bg-white/5 border-white/10 text-lh-purple focus:ring-lh-purple cursor-pointer"
+                                                    />
+                                                    <label htmlFor="isPreview" className="text-[10px] font-bold text-gray-400 uppercase tracking-widest cursor-pointer">
+                                                        Mark as Free Demo/Preview Lecture
+                                                    </label>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {(chapterEditMode === 'all' || chapterEditMode === 'video') && (
+                                                <div className="col-span-2 space-y-3">
+                                                    {/* YouTube Link Input */}
+                                                    <div>
+                                                        <label className="block text-[9px] font-black text-red-400 uppercase tracking-widest mb-1.5 ml-1 flex items-center gap-1.5">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+                                                            YouTube Link Paste Karen
+                                                        </label>
+                                                        <input
+                                                            type="url"
+                                                            className={`${SX.input} text-xs`}
+                                                            placeholder="https://www.youtube.com/watch?v=... ya https://youtu.be/..."
+                                                            value={currentChapter.videoUrl && (currentChapter.videoUrl.includes('youtube.com') || currentChapter.videoUrl.includes('youtu.be')) ? currentChapter.videoUrl : ''}
+                                                            onChange={e => setCurrentChapter({ ...currentChapter, videoUrl: e.target.value })}
+                                                        />
+                                                        {currentChapter.videoUrl && (currentChapter.videoUrl.includes('youtube.com') || currentChapter.videoUrl.includes('youtu.be')) && (
+                                                            <p className="text-[9px] text-emerald-400 font-bold mt-1 ml-1">✓ YouTube Link detect hua — direct play hoga!</p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* OR divider */}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex-1 h-px bg-white/10"></div>
+                                                        <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Ya Video File Upload Karen</span>
+                                                        <div className="flex-1 h-px bg-white/10"></div>
+                                                    </div>
+
+                                                    {/* File Upload Button */}
+                                                    <label className="cursor-pointer block">
+                                                        <div className={`p-4 rounded-xl border border-dashed flex flex-col items-center gap-2 transition-all ${currentChapter.videoUrl && !currentChapter.videoUrl.includes('youtube.com') && !currentChapter.videoUrl.includes('youtu.be') ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                                                            <Monitor size={18} className={uploading === 'video' ? 'animate-bounce text-lh-purple' : ''} />
+                                                            <span className="text-[9px] font-black uppercase text-center leading-none mt-1">
+                                                                {uploading === 'video' ? 'Uploading...' : (currentChapter.videoUrl && !currentChapter.videoUrl.includes('youtube') && !currentChapter.videoUrl.includes('youtu.be')) ? 'Video File Uploaded ✓' : 'Video File Upload Karen'}
+                                                            </span>
+                                                        </div>
+                                                        <input type="file" className="hidden" accept="video/*" onChange={e => handleFileUpload(e, 'video')} disabled={!!uploading} />
+                                                    </label>
+                                                </div>
+                                            )}
+
+                                            {(chapterEditMode === 'all' || chapterEditMode === 'pdf') && (
+                                                <label className="cursor-pointer col-span-2 md:col-span-1">
+                                                    <div className={`p-4 rounded-xl border border-dashed flex flex-col items-center gap-2 transition-all ${currentChapter.pdfUrl ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-500' : 'bg-white/5 border-white/10 text-gray-400'}`}>
+                                                        <FileText size={18} className={uploading === 'pdf' ? 'animate-pulse text-blue-500' : ''} />
+                                                        <span className="text-[9px] font-black uppercase text-center leading-none mt-1">
+                                                            {uploading === 'pdf' ? 'Uploading...' : currentChapter.pdfUrl ? 'PDF Uploaded ✓' : 'Add Study Notes PDF'}
+                                                        </span>
+                                                    </div>
+                                                    <input type="file" className="hidden" accept=".pdf" onChange={e => handleFileUpload(e, 'pdf')} disabled={!!uploading} />
+                                                </label>
+                                            )}
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            {editingChapterIndex !== null && (
+                                                <button onClick={cancelChapterEdit} className="w-1/3 py-3 bg-white/5 text-gray-400 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+                                                    Cancel
+                                                </button>
+                                            )}
+                                            <button onClick={handleAddChapter} className="flex-1 py-3 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-lh-purple hover:text-white transition-all">
+                                                {editingChapterIndex !== null ? `Save ${chapterEditMode}` : 'Add Module'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 min-h-[300px]">
+                                        {newCourse.chapters.map((ch, idx) => (
+                                            <div key={idx} className="p-4 bg-white/[0.03] border border-white/5 rounded-xl group hover:border-lh-purple/40 transition-all flex justify-between items-center">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-xl font-black text-white/10 group-hover:text-lh-purple transition-colors">{(idx + 1).toString().padStart(2, '0')}</span>
+                                                    <div>
+                                                        <h5 className="text-[11px] font-black uppercase tracking-tight">
+                                                            {ch.title}
+                                                            {ch.isPreview && <span className="ml-2 px-1.5 py-0.5 bg-emerald-500/20 text-emerald-500 rounded text-[8px]">DEMO</span>}
+                                                        </h5>
+                                                        <div className="flex gap-3 mt-1.5">
+                                                            {ch.videoUrl && (
+                                                                <a href={ch.videoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] font-black uppercase text-lh-purple hover:underline">
+                                                                    <Zap size={10} /> Play_Stream
+                                                                </a>
+                                                            )}
+                                                            {ch.pdfUrl && (
+                                                                <a href={ch.pdfUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] font-black uppercase text-blue-500 hover:underline">
+                                                                    <FileText size={10} /> View_Vault
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-1 items-end">
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
+                                                        <button onClick={() => handleEditChapterStart(idx, 'details')} className="px-2 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white rounded text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">Edit Details</button>
+                                                        <button onClick={() => handleEditChapterStart(idx, 'video')} className="px-2 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-emerald-400 rounded text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">Upload Video</button>
+                                                        <button onClick={() => handleEditChapterStart(idx, 'pdf')} className="px-2 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-blue-400 rounded text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">Upload PDF</button>
+                                                    </div>
+                                                    <button onClick={() => handleDeleteChapter(idx)} className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-rose-500/10 text-gray-500 hover:text-rose-500 rounded-lg transition-opacity"><Trash2 size={12} /></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Schedule Live Class Modal */}
+            <AnimatePresence>
+                {isLiveClassModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                        onClick={() => setIsLiveClassModalOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 space-y-6"
+                        >
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-black uppercase tracking-tighter">Schedule Live Class</h3>
+                                <button onClick={() => setIsLiveClassModalOpen(false)} className="p-2 rounded-xl hover:bg-white/5 text-gray-500 hover:text-white transition-all"><X size={20} /></button>
+                            </div>
+                            <form onSubmit={handleCreateLiveClass} className="space-y-4">
+                                <div>
+                                    <label className={SX.label}>Class Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="e.g. Chapter 1 Revision"
+                                        className={SX.input}
+                                        value={newLiveClass.title}
+                                        onChange={(e) => setNewLiveClass({ ...newLiveClass, title: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className={SX.label}>Select Course</label>
+                                    <select
+                                        required
+                                        className={SX.input}
+                                        value={newLiveClass.course}
+                                        onChange={(e) => setNewLiveClass({ ...newLiveClass, course: e.target.value })}
+                                    >
+                                        <option value="">-- Select Course --</option>
+                                        {courses.map(c => <option key={c._id} value={c._id}>{c.title}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={SX.label}>Instructor Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Instructor name"
+                                        className={SX.input}
+                                        value={newLiveClass.instructor}
+                                        onChange={(e) => setNewLiveClass({ ...newLiveClass, instructor: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className={SX.label}>Scheduled Date & Time</label>
+                                    <input
+                                        type="datetime-local"
+                                        required
+                                        className={SX.input}
+                                        value={newLiveClass.scheduledAt}
+                                        onChange={(e) => setNewLiveClass({ ...newLiveClass, scheduledAt: e.target.value })}
+                                    />
+                                </div>
+                                <button type="submit" className="w-full py-4 bg-gradient-to-r from-lh-purple to-purple-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.01] active:scale-95 transition-all">
+                                    Schedule Class
+                                </button>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 

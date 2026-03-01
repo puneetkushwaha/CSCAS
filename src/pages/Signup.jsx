@@ -9,6 +9,7 @@ import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase
 import { auth, googleProvider } from '../firebase';
 
 import api from '../utils/api';
+import { toast } from 'react-toastify';
 
 const Signup = () => {
     // Parallax logic
@@ -60,14 +61,14 @@ const Signup = () => {
                     });
 
                     login(res.data.user);
-                    alert("Success! Now redirecting to NEW DASHBOARD...");
+                    toast.success("Success! Now redirecting to NEW DASHBOARD...");
                     navigate('/dashboard');
                 }
             } catch (error) {
                 console.error("Redirect Result Error:", error);
                 if (error.code !== 'auth/popup-closed-by-user') {
                     const message = error.response?.data?.message || error.message || 'Login failed';
-                    alert(message);
+                    toast.error(message);
                 }
             }
         };
@@ -110,7 +111,7 @@ const Signup = () => {
                     });
 
                     login(res.data.user);
-                    alert("Success! Now redirecting to NEW DASHBOARD...");
+                    toast.success("Success! Now redirecting to NEW DASHBOARD...");
                     navigate('/dashboard');
                     setIsLoading(false);
                 }
@@ -119,7 +120,7 @@ const Signup = () => {
                 // Don't show error if user closed popup intentionally
                 if (error.code !== 'auth/popup-closed-by-user') {
                     const message = error.response?.data?.message || error.message || 'Google Login Failed';
-                    alert(message);
+                    toast.error(message);
                 }
                 setIsLoading(false);
             }
@@ -130,7 +131,7 @@ const Signup = () => {
         e.preventDefault();
 
         if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone || !formData.password) {
-            alert("All fields are required");
+            toast.warn("All fields are required");
             return;
         }
 
@@ -139,17 +140,17 @@ const Signup = () => {
         const phoneRegex = /^[0-9]+$/;
 
         if (!nameRegex.test(formData.firstName)) {
-            alert("First Name cannot contain special characters or numbers.");
+            toast.warn("First Name cannot contain special characters or numbers.");
             return;
         }
 
         if (!nameRegex.test(formData.lastName)) {
-            alert("Last Name cannot contain special characters or numbers.");
+            toast.warn("Last Name cannot contain special characters or numbers.");
             return;
         }
 
         if (!phoneRegex.test(formData.phone)) {
-            alert("Phone Number cannot contain special characters. Only digits are allowed.");
+            toast.warn("Phone Number cannot contain special characters. Only digits are allowed.");
             return;
         }
 
@@ -166,12 +167,12 @@ const Signup = () => {
         try {
             const res = await api.post('/auth/register', payload);
 
-            alert("Registration Successful!");
+            toast.success("Registration Successful!");
             navigate('/login');
         } catch (error) {
             console.error("Signup error:", error);
             const message = error.response?.data?.message || "Registration failed";
-            alert(message);
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }

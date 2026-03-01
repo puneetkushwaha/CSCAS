@@ -34,6 +34,7 @@ const TestingPolicies = () => {
     const location = useLocation();
     const examName = location.state?.examName || "CSCA Certification Exam";
     const examId = location.state?.examId;
+    const price = location.state?.price;
 
     const temporaryCountry = location.state?.temporaryCountry;
     const hasAuthorization = location.state?.hasAuthorization;
@@ -165,7 +166,7 @@ const TestingPolicies = () => {
                         </button>
                         <button
                             disabled={!agreedOnlinePolicy || !agreedCSCAPolicy}
-                            onClick={() => navigate('/dashboard/select-proctor-language', { state: { examName, examId, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption } })}
+                            onClick={() => navigate('/dashboard/select-proctor-language', { state: { examName, examId, price, temporaryCountry, hasAuthorization, selectedLanguage, selectedOption } })}
 
                             className={`px-8 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all font-mono flex items-center gap-3 active:scale-95 ${(agreedOnlinePolicy && agreedCSCAPolicy)
                                 ? 'bg-lh-purple text-white shadow-[0_10px_30px_rgba(188,19,254,0.3)] hover:scale-105'

@@ -10,6 +10,7 @@ import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
 import ChatWidget from '../components/ChatWidget';
+import { toast } from 'react-toastify';
 
 const ExamPlayer = () => {
   const navigate = useNavigate();
@@ -123,17 +124,20 @@ const ExamPlayer = () => {
         if (status === 'verified') {
           setIsIdVerified(true);
           setIsWaitingApproval(false);
+          toast.success("Identity Verified! You may now begin.");
         } else if (status === 'rejected') {
           setIsWaitingApproval(false);
           setIsIdVerified(false);
           setIdPhoto(null);
           setVerificationError("Identity verification rejected. Please retake photo.");
+          toast.error("Verification rejected. Please try again.");
         }
       });
 
       newSocket.on('proctor_warning', ({ message }) => {
         console.log("[Socket] Received warning:", message);
         setProctorWarning(message);
+        toast.info(`Proctor Message: ${message}`, { autoClose: 10000 });
         // Clear warning after 10 seconds
         setTimeout(() => setProctorWarning(null), 10000);
       });
@@ -146,31 +150,41 @@ const ExamPlayer = () => {
 
       return () => newSocket.disconnect();
     }
-  }, [user, activeExam?.examId]);
+  }, [user, activeExam?.examId, activeExam?.id]);
 
-  // --- Fetch Session Status ---
-  useEffect(() => {
-    const fetchStatus = async () => {
-      if (user && activeExam?.examId) {
-        try {
-          console.log(`[ExamPlayer] Fetching session status for Exam: ${activeExam.examId}, Attempt: ${activeExam.id}`);
-          const res = await api.get(`/proctor/my-session/${activeExam.examId}/${activeExam.id}`);
-          console.log("[ExamPlayer] Session status response:", res.data);
-          if (res.data) {
-            if (res.data.verificationStatus === 'verified') {
-              setIsIdVerified(true);
-            } else if (res.data.verificationStatus === 'pending') {
-              setIsWaitingApproval(true);
-              setIdPhoto(res.data.idSnapshot);
-            }
+  // --- Fetch Session Status (Initial & Critical Updates) ---
+  const fetchStatus = useCallback(async () => {
+    if (user && activeExam?.examId && activeExam?.id) {
+      try {
+        const res = await api.get(`/proctor/my-session/${activeExam.examId}/${activeExam.id}`);
+        if (res.data) {
+          if (res.data.verificationStatus === 'verified') {
+            setIsIdVerified(true);
+            setIsWaitingApproval(false);
+          } else if (res.data.verificationStatus === 'pending') {
+            setIsWaitingApproval(true);
+            setIdPhoto(res.data.idSnapshot);
+          } else if (res.data.verificationStatus === 'rejected') {
+            setIsWaitingApproval(false);
+            setIsIdVerified(false);
           }
-        } catch (error) {
-          console.error("Failed to fetch session status", error);
         }
+      } catch (error) {
+        console.error("Failed to fetch session status", error);
       }
-    };
+    }
+  }, [user, activeExam?.examId, activeExam?.id]);
+
+  useEffect(() => {
     fetchStatus();
-  }, [user, activeExam?.examId]);
+
+    // Fallback polling only when waiting for approval
+    let interval;
+    if (isWaitingApproval && !isIdVerified) {
+      interval = setInterval(fetchStatus, 10000); // Check every 10s as fallback
+    }
+    return () => clearInterval(interval);
+  }, [fetchStatus, isWaitingApproval, isIdVerified]);
 
   // --- WebRTC Logic ---
   useEffect(() => {
@@ -434,7 +448,7 @@ const ExamPlayer = () => {
       const offer = await screenPc.current.createOffer();
       await screenPc.current.setLocalDescription(offer);
       socket.emit('webrtc-screen-signal', {
-        room: `${activeExam.examId}_${user.id || user._id}`,
+        room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
         userId: user.id || user._id,
         signal: offer,
         type: 'offer'
@@ -569,7 +583,7 @@ const ExamPlayer = () => {
         (e.metaKey && e.key === 'r')
       ) {
         e.preventDefault();
-        alert("Reloading is disabled during the exam.");
+        toast.warn("Reloading is disabled during the exam.");
         return false;
       }
 
@@ -757,7 +771,7 @@ const ExamPlayer = () => {
 
     } catch (error) {
       console.error("Submission Failed:", error);
-      alert("Submission failed. Please try again.");
+      toast.error("Submission failed. Please try again.");
     }
   };
 
@@ -961,9 +975,17 @@ const ExamPlayer = () => {
           )}
 
           {isWaitingApproval && (
-            <div className="mt-8 p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-pulse">
-              <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-2">Awaiting Proctor Approval</p>
-              <p className="text-gray-500 text-[8px] font-bold uppercase">Your identity is being verified by a live proctor. Please wait.</p>
+            <div className="mt-8 space-y-4">
+              <div className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-2xl animate-pulse">
+                <p className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-2">Awaiting Proctor Approval</p>
+                <p className="text-gray-500 text-[8px] font-bold uppercase">Your identity is being verified by a live proctor. Please wait.</p>
+              </div>
+              <button
+                onClick={fetchStatus}
+                className="w-full py-3 bg-white/5 border border-white/5 text-[8px] font-black text-gray-500 hover:text-white uppercase tracking-widest rounded-xl transition-all"
+              >
+                Refresh Approval Status
+              </button>
             </div>
           )}
 

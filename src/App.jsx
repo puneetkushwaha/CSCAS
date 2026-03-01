@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import CartDrawer from './components/CartDrawer';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -40,6 +42,10 @@ import ScoreReports from './pages/ScoreReports';
 import PaymentReceipts from './pages/PaymentReceipts';
 import AdminDashboard from './pages/AdminDashboard'; // Import Admin Dashboard
 import AdminRoute from './components/AdminRoute';
+import Courses from './pages/Courses';
+import CourseDetail from './pages/CourseDetail';
+import CourseView from './pages/CourseView';
+import MyCourses from './pages/MyCourses';
 
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -47,8 +53,9 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <CartDrawer /> {/* CartDrawer is now a direct child of CartProvider, outside Router */}
         <Router>
+          <ToastContainer theme="dark" position="bottom-right" />
+          <CartDrawer />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -60,6 +67,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />}>
                 <Route index element={<DashboardHome />} />
                 <Route path="certifications" element={<Certifications />} />
+                <Route path="my-courses" element={<MyCourses />} />
                 <Route path="exam" element={<Exam />} />
                 <Route path="exam-player" element={<ExamPlayer />} />
 
@@ -95,10 +103,18 @@ function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="/certifications" element={<Certifications />} />
             <Route path="/why-choose-csca" element={<WhyChooseCSCA />} />
+            <Route path="/courses" element={<Courses />} />
+            <Route path="/courses/:id" element={<CourseDetail />} />
+            <Route path="/courses/:id/view" element={<ProtectedRoute />}>
+              <Route index element={<CourseView />} />
+            </Route>
 
             {/* Other Dashboard-linked routes outside nested structure if needed */}
             <Route path="/exam" element={<Exam />} />
             <Route path="/exam-player" element={<ExamPlayer />} />
+            <Route path="/checkout" element={<ProtectedRoute />}>
+              <Route index element={<ReviewBooking />} />
+            </Route>
 
 
             {/* Admin Route - Protected */}

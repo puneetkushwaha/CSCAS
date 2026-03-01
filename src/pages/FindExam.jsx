@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
+import { toast } from 'react-toastify';
 
 
 const PrecisionPanel = ({ children, className = "" }) => (
@@ -50,6 +51,7 @@ const FindExam = () => {
                 setExams(response.data);
             } catch (error) {
                 console.error("Failed to fetch exams:", error);
+                toast.error("Failed to load exams list.");
             } finally {
                 setIsPageLoading(false);
             }
@@ -113,13 +115,16 @@ const FindExam = () => {
                                         {filteredExams.map((exam, idx) => (
                                             <button
                                                 key={exam._id}
-                                                onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam.title, examId: exam._id } })}
+                                                onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam.title, examId: exam._id, price: exam.price } })}
 
                                                 className="w-full text-left p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-lh-purple/30 hover:bg-lh-purple/10 transition-all group/item flex items-center justify-between"
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-2 h-2 bg-lh-purple rounded-full group-hover/item:scale-150 transition-transform"></div>
                                                     <span className="text-[11px] font-black text-gray-400 group-hover/item:text-white uppercase tracking-widest transition-colors">{exam.title}</span>
+                                                    <span className="text-[10px] font-bold text-lh-purple uppercase ml-auto px-3 py-1 bg-lh-purple/10 rounded-full border border-lh-purple/20">
+                                                        {exam.price > 0 ? `₹${exam.price}` : 'FREE'}
+                                                    </span>
 
                                                 </div>
                                                 <ArrowRight size={14} className="text-lh-purple opacity-0 group-hover/item:opacity-100 group-hover/item:translate-x-2 transition-all" />
@@ -183,8 +188,10 @@ const FindExam = () => {
                                                 </div>
                                                 <div>
                                                     <span className="text-[13px] md:text-[14px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] font-mono block mb-1 leading-tight">{exam.title}</span>
-
-                                                    <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block opacity-70">Certification_Node_Active</span>
+                                                    <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest block opacity-70 mb-1">Certification_Node_Active</span>
+                                                    <span className="inline-block text-[10px] font-bold text-lh-purple uppercase px-3 py-1 bg-lh-purple/10 rounded-full border border-lh-purple/20">
+                                                        {exam.price > 0 ? `₹${exam.price}` : 'FREE_ACCESS'}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className={`p-2 rounded-full transition-all duration-500 ${activeGroup === idx ? 'bg-lh-purple text-white rotate-180' : 'bg-white/5 text-gray-700 group-hover:text-lh-purple group-hover:bg-white/10'}`}>
@@ -206,7 +213,7 @@ const FindExam = () => {
                                                             initial={{ x: -20, opacity: 0 }}
                                                             animate={{ x: 0, opacity: 1 }}
                                                             transition={{ delay: 0.1 }}
-                                                            onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam.title, examId: exam._id } })}
+                                                            onClick={() => navigate('/dashboard/select-exam-options', { state: { examName: exam.title, examId: exam._id, price: exam.price } })}
 
                                                             className="w-full text-left p-4 md:p-6 rounded-[1.5rem] bg-white/[0.03] hover:bg-lh-purple/20 border border-white/10 hover:border-lh-purple/40 transition-all group/action flex flex-col md:flex-row items-center md:justify-between shadow-lg gap-6 md:gap-0"
                                                         >

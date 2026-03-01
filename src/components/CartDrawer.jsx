@@ -121,7 +121,7 @@ const CartDrawer = () => {
                                                     <Plus className="w-3 h-3" />
                                                 </button>
                                             </div>
-                                            <span className="font-bold text-white">${(item.price * item.quantity).toLocaleString()}</span>
+                                            <span className="font-bold text-white">₹{(item.price * item.quantity).toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -135,7 +135,7 @@ const CartDrawer = () => {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm text-gray-400">
                                     <span>Subtotal</span>
-                                    <span>${cartTotal.toLocaleString()}</span>
+                                    <span>₹{cartTotal.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-gray-400">
                                     <span>Taxes (Est.)</span>
@@ -143,7 +143,7 @@ const CartDrawer = () => {
                                 </div>
                                 <div className="flex justify-between text-lg font-black text-white pt-2 border-t border-white/10">
                                     <span>Total</span>
-                                    <span>${cartTotal.toLocaleString()}</span>
+                                    <span>₹{cartTotal.toLocaleString()}</span>
                                 </div>
                             </div>
 

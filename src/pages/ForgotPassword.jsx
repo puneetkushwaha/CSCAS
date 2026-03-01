@@ -5,6 +5,7 @@ import { Mail, ArrowLeft, Loader2, Zap } from 'lucide-react';
 import ngdPic from '../assets/images/ngd-pic.png';
 import Navbar from '../components/Navbar';
 import api from '../utils/api';
+import { toast } from 'react-toastify';
 
 const ForgotPassword = () => {
     // Parallax logic
@@ -41,7 +42,7 @@ const ForgotPassword = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!identifier) {
-            alert("Please enter your email or phone number");
+            toast.warn("Please enter your email or phone number");
             return;
         }
 
@@ -51,7 +52,7 @@ const ForgotPassword = () => {
         if (!isEmail) {
             const phoneRegex = /^[0-9]+$/;
             if (!phoneRegex.test(identifier)) {
-                alert("Please enter a valid phone number (digits only) or email address. Special characters are not allowed in phone numbers.");
+                toast.warn("Please enter a valid phone number (digits only) or email address.");
                 return;
             }
         }
@@ -63,11 +64,11 @@ const ForgotPassword = () => {
 
         try {
             const res = await api.post('/auth/forgot-password', payload);
-            alert(res.data.message || "Password sent successfully! Check your inbox/messages.");
+            toast.success(res.data.message || "Password reset link sent successfully!");
         } catch (error) {
             console.error("Forgot Password Error:", error);
             const message = error.response?.data?.message || "Failed to process request.";
-            alert(message);
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }
