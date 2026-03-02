@@ -279,12 +279,6 @@ const Login = () => {
                                 </p>
                             </motion.div>
 
-                            <div className="bg-red-900/10 border border-red-900/30 p-4 rounded-lg">
-                                <div className="flex gap-3">
-                                    <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                                </div>
-                            </div>
-
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="space-y-4">
                                     <motion.div variants={itemVariants} className="relative group/input">
