@@ -1,32 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../utils/api';
+import { Loader2 } from 'lucide-react';
 
 const Certifications = () => {
-  const certifications = [
-    {
-      id: "CJDE",
-      name: "Certified Junior Detection Engineer",
-      desc: "Build foundational skills in detection engineering, alert creation, event analysis, and malicious pattern identification.",
-      pic: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-      id: "CSA",
-      name: "Certified SOC Analyst",
-      desc: "Learn SOC operations, SIEM analysis, IR workflows, and threat investigation techniques.",
-      pic: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-      id: "CTH",
-      name: "Certified Threat Hunter",
-      desc: "Master hypothesis-based hunting, ATT&CK mapping, log correlation, and adversarial behavior analysis.",
-      pic: "https://images.unsplash.com/photo-1558494949-ef010cbdcc51?auto=format&fit=crop&q=80&w=800"
-    },
-    {
-      id: "CCSP",
-      name: "Certified Cloud Security Professional",
-      desc: "Advanced cloud architecture security, identity governance, and cloud threat detection.",
-      pic: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800"
-    }
-  ];
+  const [certifications, setCertifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCerts = async () => {
+      try {
+        const res = await api.get('/certifications');
+        // Filter for popular or just show first 4 for home page
+        setCertifications(res.data.slice(0, 4));
+      } catch (error) {
+        console.error("Error fetching certifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCerts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-32 bg-[#050505]">
+        <Loader2 className="w-12 h-12 text-lh-purple animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <section className="relative bg-[#050505] py-32 px-6 md:px-12 border-t border-white/5">
@@ -51,17 +52,17 @@ const Certifications = () => {
             <div key={cert.id} className="group bg-[#0a0a0a] border border-white/5 rounded-[40px] overflow-hidden hover:border-lh-purple/50 transition-all">
               <div className="h-64 relative overflow-hidden">
                 <img
-                  src={cert.pic}
-                  alt={cert.name}
+                  src={cert.image}
+                  alt={cert.title}
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                 />
                 <div className="absolute top-6 left-6 bg-lh-purple text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                  {cert.id}
+                  {cert.code}
                 </div>
               </div>
               <div className="p-8 space-y-4">
                 <h3 className="text-xl font-black text-white leading-tight group-hover:text-lh-purple transition-colors">
-                  {cert.name}
+                  {cert.title}
                 </h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
                   {cert.desc}

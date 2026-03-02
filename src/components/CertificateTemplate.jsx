@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, Award, Shield, CheckCircle } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
+import { toast } from 'react-toastify';
 
 const CertificateTemplate = ({ data, onClose }) => {
     const certRef = useRef(null);
@@ -12,18 +13,23 @@ const CertificateTemplate = ({ data, onClose }) => {
         if (!element) return;
 
         try {
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
+            const dataUrl = await toPng(element, {
+                quality: 1,
+                pixelRatio: 2,
                 backgroundColor: '#0a0a0a',
             });
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [element.offsetWidth, element.offsetHeight]
+            });
+
+            pdf.addImage(dataUrl, 'PNG', 0, 0, element.offsetWidth, element.offsetHeight);
             pdf.save(`CSCA_Certificate_${data.certificateId}.pdf`);
         } catch (err) {
             console.error('PDF generation failed', err);
+            toast.error('Failed to generate PDF. Please try again.');
         }
     };
 
@@ -75,15 +81,17 @@ const CertificateTemplate = ({ data, onClose }) => {
                 >
                     {/* Background Decorations */}
                     <div className="absolute inset-0 pointer-events-none">
-                        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-lh-purple/15 blur-[120px] rounded-full" />
-                        <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full" />
+                        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full"
+                            style={{ backgroundColor: 'rgba(188, 19, 254, 0.15)', filter: 'blur(120px)' }} />
+                        <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full"
+                            style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', filter: 'blur(100px)' }} />
                         {/* Grid Pattern */}
                         <div className="absolute inset-0 opacity-[0.03]"
-                            style={{ backgroundImage: 'repeating-linear-gradient(0deg, white 0px, white 1px, transparent 1px, transparent 50px), repeating-linear-gradient(90deg, white 0px, white 1px, transparent 1px, transparent 50px)' }}
+                            style={{ backgroundImage: 'repeating-linear-gradient(0deg, #ffffff 0px, #ffffff 1px, transparent 1px, transparent 50px), repeating-linear-gradient(90deg, #ffffff 0px, #ffffff 1px, transparent 1px, transparent 50px)' }}
                         />
                         {/* Outer Border Glow */}
-                        <div className="absolute inset-3 rounded-[1.5rem] border border-lh-purple/20" />
-                        <div className="absolute inset-[14px] rounded-[1.4rem] border border-white/5" />
+                        <div className="absolute inset-3 rounded-[1.5rem] border" style={{ borderColor: 'rgba(188, 19, 254, 0.2)' }} />
+                        <div className="absolute inset-[14px] rounded-[1.4rem] border" style={{ borderColor: 'rgba(255, 255, 255, 0.05)' }} />
                     </div>
 
                     {/* Content */}
@@ -108,9 +116,9 @@ const CertificateTemplate = ({ data, onClose }) => {
                         {/* Center — Main Content */}
                         <div className="text-center space-y-4 flex-1 flex flex-col items-center justify-center">
                             <div className="flex items-center justify-center gap-3 mb-2">
-                                <div className="h-[1px] w-16 bg-gradient-to-r from-transparent to-lh-purple/60" />
+                                <div className="h-[1px] w-16" style={{ background: 'linear-gradient(to right, transparent, rgba(188, 19, 254, 0.6))' }} />
                                 <p className="text-[10px] font-black uppercase tracking-[0.5em] text-lh-purple">Certificate of Achievement</p>
-                                <div className="h-[1px] w-16 bg-gradient-to-l from-transparent to-lh-purple/60" />
+                                <div className="h-[1px] w-16" style={{ background: 'linear-gradient(to left, transparent, rgba(188, 19, 254, 0.6))' }} />
                             </div>
 
                             <p className="text-sm font-medium text-gray-400 uppercase tracking-[0.3em]">This certifies that</p>
@@ -128,7 +136,7 @@ const CertificateTemplate = ({ data, onClose }) => {
                             </h2>
 
                             <div className="flex items-center gap-6 mt-2">
-                                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                                     <CheckCircle size={14} className="text-emerald-400" />
                                     <span className="text-[11px] font-black uppercase tracking-widest text-emerald-400">Passed</span>
                                 </div>

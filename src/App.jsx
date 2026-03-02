@@ -37,6 +37,7 @@ import Profile from './pages/Profile';
 import AccountIntel from './pages/AccountIntel';
 import AdditionalInfo from './pages/AdditionalInfo';
 import RegistryPreferences from './pages/RegistryPreferences';
+import SupportHub from './pages/SupportHub';
 import ExamHistory from './pages/ExamHistory';
 import ScoreReports from './pages/ScoreReports';
 import PaymentReceipts from './pages/PaymentReceipts';
@@ -84,6 +85,7 @@ function App() {
                 <Route path="account-intel" element={<AccountIntel />} />
                 <Route path="additional-info" element={<AdditionalInfo />} />
                 <Route path="registry-preferences" element={<RegistryPreferences />} />
+                <Route path="support" element={<SupportHub />} />
                 <Route path="exam-history" element={<ExamHistory />} />
                 <Route path="score-reports" element={<ScoreReports />} />
                 <Route path="payment-receipts" element={<PaymentReceipts />} />
@@ -105,9 +107,11 @@ function App() {
             <Route path="/why-choose-csca" element={<WhyChooseCSCA />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
+            <Route path="/course/:id" element={<Navigate to="/courses/:id" replace />} />
             <Route path="/courses/:id/view" element={<ProtectedRoute />}>
               <Route index element={<CourseView />} />
             </Route>
+            <Route path="/certificate/:id" element={<Navigate to="/dashboard/score-reports" replace />} />
 
             {/* Other Dashboard-linked routes outside nested structure if needed */}
             <Route path="/exam" element={<Exam />} />

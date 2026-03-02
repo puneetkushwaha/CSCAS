@@ -1,7 +1,23 @@
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, ShieldCheck, Database, Eye } from 'lucide-react';
+import api from '../utils/api';
 
 const Careers = () => {
+  const [industries, setIndustries] = useState([]);
+
+  useEffect(() => {
+    const fetchIndustries = async () => {
+      try {
+        const res = await api.get('/industries');
+        setIndustries(res.data.slice(0, 3)); // Only show 3 for home section
+      } catch (error) {
+        console.error("Error fetching industries:", error);
+      }
+    };
+    fetchIndustries();
+  }, []);
+
   // Animated Arcs Data
   const arcs = [
     { d: "M 200 400 Q 350 150 500 400", duration: 3, delay: 0 },
@@ -9,31 +25,6 @@ const Careers = () => {
     { d: "M 600 380 Q 750 100 900 380", duration: 3.5, delay: 0.5 },
     { d: "M 800 420 Q 950 250 1100 420", duration: 4.5, delay: 1.5 },
     { d: "M 300 350 Q 450 50 600 350", duration: 5, delay: 2 },
-  ];
-
-  const industries = [
-    // ... existing industries data
-    {
-      name: "Finance & Banking",
-      roles: "SOC Analyst, Detection Engineer, Fraud Investigator",
-      risks: "Financial fraud, transactional abuse, APT threats",
-      rec: "CJDE, CSA, CTI",
-      id: "001"
-    },
-    {
-      name: "Healthcare",
-      roles: "IR Analyst, Forensics Analyst",
-      risks: "Ransomware, PHI breaches, critical systems compromise",
-      rec: "CIRA, CDFP",
-      id: "002"
-    },
-    {
-      name: "E-Commerce / Retail",
-      roles: "Vulnerability Analyst",
-      risks: "Payment fraud, API threats",
-      rec: "CVA, CJDE",
-      id: "003"
-    }
   ];
 
   return (
@@ -140,7 +131,7 @@ const Careers = () => {
             >
               <div className="space-y-4">
                 <span className={`text-4xl font-black ${i === 1 ? "text-white/20" : "text-white/10"}`}>{ind.id}/</span>
-                <h3 className="text-2xl font-black text-white">{ind.name}</h3>
+                <h3 className="text-2xl font-black text-white">{ind.title}</h3>
                 <div className="space-y-4 pt-4">
                   <div>
                     <p className="text-[10px] uppercase tracking-widest text-lh-purple font-black">Roles</p>

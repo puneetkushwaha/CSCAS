@@ -1,81 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Globe, Landmark, Activity, Rocket, ShoppingCart, Factory, Wifi, Globe2, ArrowRight, Eye, Scan, Zap, Database } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
+import api from '../utils/api';
 
 const IndustrySectors = () => {
+    const [industries, setIndustries] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
+    const [loading, setLoading] = useState(true);
     const ITEMS_PER_PAGE = 8;
 
-    const sectorIndustries = [
-        {
-            id: "cyber-infra",
-            title: "Critical Infrastructure",
-            tagline: "Energy & Utilities",
-            desc: "Securing smart grids, nuclear facilities, and water treatment plants from state-sponsored threats and ransomware.",
-            icon: <Shield size={24} />,
-            color: "from-red-600/10 to-transparent"
-        },
-        {
-            id: "bfsi",
-            title: "BFSI Sector",
-            tagline: "Banking & Finance",
-            desc: "Protecting global financial transactions, preventing fraud in digital banking, and ensuring compliance with PCI-DSS standards.",
-            icon: <Landmark size={24} />,
-            color: "from-blue-600/10 to-transparent"
-        },
-        {
-            id: "healthcare",
-            title: "Healthcare & Pharma",
-            tagline: "Medical Security",
-            desc: "Safeguarding sensitive patient data (HIPAA) and protecting connected medical devices from critical vulnerabilities.",
-            icon: <Activity size={24} />,
-            color: "from-emerald-600/10 to-transparent"
-        },
-        {
-            id: "gov-defense",
-            title: "Gov & Defense",
-            tagline: "National Security",
-            desc: "Building resilient systems for government agencies and military contractors to defend against cyber espionage.",
-            icon: <Shield size={24} />,
-            color: "from-purple-600/10 to-transparent"
-        },
-        {
-            id: "ecommerce",
-            title: "eCommerce & Retail",
-            tagline: "Digital Commerce",
-            desc: "Ensuring secure checkout experiences, protecting customer identities, and preventing large-scale data breaches.",
-            icon: <ShoppingCart size={24} />,
-            color: "from-amber-600/10 to-transparent"
-        },
-        {
-            id: "manufacturing",
-            title: "Manufacturing",
-            tagline: "Industry 4.0",
-            desc: "Securing Operational Technology (OT) and IoT devices on the factory floor to prevent production downtime.",
-            icon: <Factory size={24} />,
-            color: "from-cyan-600/10 to-transparent"
-        },
-        {
-            id: "telecom-cloud",
-            title: "Telecom & Cloud",
-            tagline: "Connectivity",
-            desc: "Protecting 5G networks and hyperscale cloud environments from infrastructure-level attacks.",
-            icon: <Wifi size={24} />,
-            color: "from-lh-purple/10 to-transparent"
-        },
-        {
-            id: "ai-data",
-            title: "AI & Data Strategy",
-            tagline: "Intelligence",
-            desc: "Securing the modern data pipeline and protecting machine learning models from adversarial attacks.",
-            icon: <Database size={24} />,
-            color: "from-pink-600/10 to-transparent"
-        }
-    ];
+    useEffect(() => {
+        const fetchIndustries = async () => {
+            try {
+                const res = await api.get('/industries');
+                setIndustries(res.data);
+            } catch (error) {
+                console.error("Error fetching industries:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchIndustries();
+    }, []);
+
+    const DynamicIcon = ({ name, ...props }) => {
+        const IconComponent = LucideIcons[name] || LucideIcons.Shield;
+        return <IconComponent {...props} />;
+    };
+
+    const sectorIndustries = industries.map(sector => ({
+        ...sector,
+        icon: <DynamicIcon name={sector.icon} size={24} />
+    }));
 
     const totalPages = Math.ceil(sectorIndustries.length / ITEMS_PER_PAGE);
     const currentSectors = sectorIndustries.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);

@@ -28,14 +28,69 @@ import {
     MessageSquare,
     Zap,
     MapPin,
-    Users
+    Users,
+    Activity
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
+import api from '../utils/api';
+import { toast } from 'react-toastify';
 
 const PartnersEcosystem = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
+        organizationName: '',
+        websiteUrl: '',
+        country: '',
+        partnerType: '',
+        yearsInBusiness: '',
+        estimatedStudentsPerYear: '',
+        contactPersonName: '',
+        officialEmail: '',
+        phoneNumber: '',
+        message: ''
+    });
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // Basic Validation
+        if (!formData.organizationName || !formData.country || !formData.partnerType || !formData.contactPersonName || !formData.officialEmail || !formData.phoneNumber) {
+            toast.error('Please fill in all required fields');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const response = await api.post('/partnerships', formData);
+            if (response.data.success) {
+                toast.success('Application submitted successfully!');
+                setIsFormOpen(false);
+                setFormData({
+                    organizationName: '',
+                    websiteUrl: '',
+                    country: '',
+                    partnerType: '',
+                    yearsInBusiness: '',
+                    estimatedStudentsPerYear: '',
+                    contactPersonName: '',
+                    officialEmail: '',
+                    phoneNumber: '',
+                    message: ''
+                });
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to submit application');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const partnershipBenefits = [
         {
@@ -118,8 +173,9 @@ const PartnersEcosystem = () => {
             {/* Modal Logic */}
             <AnimatePresence>
                 {isFormOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div key="partnership-modal" className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div
+                            key="backdrop"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -127,6 +183,7 @@ const PartnersEcosystem = () => {
                             className="absolute inset-0 bg-black/80 backdrop-blur-md"
                         ></motion.div>
                         <motion.div
+                            key="modal-content"
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -144,13 +201,21 @@ const PartnersEcosystem = () => {
                                 <p className="text-gray-400 mt-2">Become a CSCA authorized partner and lead the change.</p>
                             </div>
 
-                            <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={(e) => e.preventDefault()}>
+                            <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={handleSubmit}>
                                 {/* Org Name */}
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Organization Name</label>
                                     <div className="relative">
                                         <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="text" placeholder="Your University/Academy" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="organizationName"
+                                            value={formData.organizationName}
+                                            onChange={handleChange}
+                                            type="text"
+                                            placeholder="Your University/Academy"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                            required
+                                        />
                                     </div>
                                 </div>
                                 {/* Website */}
@@ -158,7 +223,14 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Website URL</label>
                                     <div className="relative">
                                         <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="url" placeholder="https://example.com" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="websiteUrl"
+                                            value={formData.websiteUrl}
+                                            onChange={handleChange}
+                                            type="url"
+                                            placeholder="https://example.com"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                        />
                                     </div>
                                 </div>
                                 {/* Country */}
@@ -166,7 +238,15 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Country</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="text" placeholder="e.g. India" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="country"
+                                            value={formData.country}
+                                            onChange={handleChange}
+                                            type="text"
+                                            placeholder="e.g. India"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                            required
+                                        />
                                     </div>
                                 </div>
                                 {/* Partner Type */}
@@ -174,11 +254,17 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Partner Type</label>
                                     <div className="relative">
                                         <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <select className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm appearance-none cursor-pointer">
-                                            <option className="bg-[#0f0f0f]">Select Type</option>
-                                            <option className="bg-[#0f0f0f]">Academic Partner</option>
-                                            <option className="bg-[#0f0f0f]">Training Partner</option>
-                                            <option className="bg-[#0f0f0f]">Technology Partner</option>
+                                        <select
+                                            name="partnerType"
+                                            value={formData.partnerType}
+                                            onChange={handleChange}
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm appearance-none cursor-pointer"
+                                            required
+                                        >
+                                            <option value="" className="bg-[#0f0f0f]">Select Type</option>
+                                            <option value="Academic Partner" className="bg-[#0f0f0f]">Academic Partner</option>
+                                            <option value="Training Partner" className="bg-[#0f0f0f]">Training Partner</option>
+                                            <option value="Technology Partner" className="bg-[#0f0f0f]">Technology Partner</option>
                                         </select>
                                     </div>
                                 </div>
@@ -187,7 +273,14 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Years in Business</label>
                                     <div className="relative">
                                         <Activity className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="number" placeholder="e.g. 5" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="yearsInBusiness"
+                                            value={formData.yearsInBusiness}
+                                            onChange={handleChange}
+                                            type="number"
+                                            placeholder="e.g. 5"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                        />
                                     </div>
                                 </div>
                                 {/* Estimated Students */}
@@ -195,7 +288,14 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Est. Students / Year</label>
                                     <div className="relative">
                                         <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="number" placeholder="e.g. 500" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="estimatedStudentsPerYear"
+                                            value={formData.estimatedStudentsPerYear}
+                                            onChange={handleChange}
+                                            type="number"
+                                            placeholder="e.g. 500"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                        />
                                     </div>
                                 </div>
                                 {/* Contact Person */}
@@ -203,7 +303,15 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Contact Person Name</label>
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="text" placeholder="John Doe" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="contactPersonName"
+                                            value={formData.contactPersonName}
+                                            onChange={handleChange}
+                                            type="text"
+                                            placeholder="John Doe"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                            required
+                                        />
                                     </div>
                                 </div>
                                 {/* Email */}
@@ -211,7 +319,15 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Official Email</label>
                                     <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="email" placeholder="john@company.com" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="officialEmail"
+                                            value={formData.officialEmail}
+                                            onChange={handleChange}
+                                            type="email"
+                                            placeholder="john@company.com"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                            required
+                                        />
                                     </div>
                                 </div>
                                 {/* Phone */}
@@ -219,7 +335,15 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Phone Number</label>
                                     <div className="relative">
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                                        <input type="tel" placeholder="+1 (555) 000-0000" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm" />
+                                        <input
+                                            name="phoneNumber"
+                                            value={formData.phoneNumber}
+                                            onChange={handleChange}
+                                            type="tel"
+                                            placeholder="+1 (555) 000-0000"
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm"
+                                            required
+                                        />
                                     </div>
                                 </div>
                                 {/* Message */}
@@ -227,7 +351,14 @@ const PartnersEcosystem = () => {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-lh-purple px-1">Message / Business Model</label>
                                     <div className="relative">
                                         <MessageSquare className="absolute left-4 top-4 text-white/30" size={18} />
-                                        <textarea rows="4" placeholder="Briefly describe your business model..." className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm resize-none"></textarea>
+                                        <textarea
+                                            name="message"
+                                            value={formData.message}
+                                            onChange={handleChange}
+                                            rows="4"
+                                            placeholder="Briefly describe your business model..."
+                                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 outline-none focus:border-lh-purple/50 transition-all text-sm resize-none"
+                                        ></textarea>
                                     </div>
                                 </div>
 
@@ -236,8 +367,11 @@ const PartnersEcosystem = () => {
                                     <label htmlFor="terms" className="text-xs text-gray-400 cursor-pointer">I agree to the <span className="text-lh-purple font-bold">CSCA partnership terms & conditions</span>.</label>
                                 </div>
 
-                                <button className="md:col-span-2 w-full py-5 bg-white text-black font-[1000] uppercase tracking-[0.3em] text-xs rounded-2xl hover:bg-lh-purple hover:text-white transition-all duration-300 shadow-[0_0_50px_rgba(255,255,255,0.1)]">
-                                    Submit Application
+                                <button
+                                    className={`md:col-span-2 w-full py-5 font-[1000] uppercase tracking-[0.3em] text-xs rounded-2xl transition-all duration-300 shadow-[0_0_50px_rgba(255,255,255,0.1)] ${isSubmitting ? 'bg-gray-500 cursor-not-allowed text-white' : 'bg-white text-black hover:bg-lh-purple hover:text-white'}`}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
                                 </button>
                             </form>
                         </motion.div>
@@ -317,7 +451,7 @@ const PartnersEcosystem = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                         {partnershipBenefits.map((benefit, idx) => (
                             <motion.div
-                                key={idx}
+                                key={`benefit-${idx}`}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
@@ -348,7 +482,7 @@ const PartnersEcosystem = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {detailedPartnershipTypes.map((type, idx) => (
                             <motion.div
-                                key={idx}
+                                key={`type-${idx}`}
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: idx * 0.1 }}
@@ -372,7 +506,7 @@ const PartnersEcosystem = () => {
                                         </div>
                                         <div className="pt-4 space-y-3">
                                             {type.benefits.map((benefit, i) => (
-                                                <div key={i} className="flex items-center gap-3 text-xs text-gray-400">
+                                                <div key={`type-benefit-${idx}-${i}`} className="flex items-center gap-3 text-xs text-gray-400">
                                                     <CheckCircle2 size={14} className={type.iconColor} />
                                                     <span className="font-medium">{benefit}</span>
                                                 </div>
@@ -397,7 +531,7 @@ const PartnersEcosystem = () => {
 
                         {howItWorks.map((step, idx) => (
                             <motion.div
-                                key={idx}
+                                key={`step-${step.id}`}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}

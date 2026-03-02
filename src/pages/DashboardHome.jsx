@@ -147,7 +147,7 @@ const DashboardHome = () => {
                                 Operational Information Node
                             </div>
                             <p className="text-[12px] text-gray-500 font-bold leading-relaxed tracking-wide opacity-80">
-                                Registration keys are generated post-order approval. For bulk enrollments or enterprise deployment, please contact the <button className="text-lh-purple hover:text-white transition-colors underline decoration-lh-purple/30 underline-offset-4">Command Center</button>.
+                                Registration keys are generated post-order approval. For bulk enrollments or enterprise deployment, please contact the <Link to="/dashboard/additional-info" className="text-lh-purple hover:text-white transition-colors underline decoration-lh-purple/30 underline-offset-4">Command Center</Link>.
                             </p>
                         </div>
                     </PrecisionPanel>
@@ -250,21 +250,23 @@ const DashboardHome = () => {
                     </PrecisionPanel>
 
                     {/* HUD Toggle Floating */}
-                    <motion.div
-                        whileHover={{ scale: 1.02, y: -3 }}
-                        className="p-6 bg-lh-purple/10 border border-lh-purple/20 rounded-[1.5rem] flex items-center justify-between group cursor-pointer hover:bg-lh-purple/20 transition-all shadow-xl shadow-lh-purple/5"
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-11 h-11 rounded-xl bg-lh-purple flex items-center justify-center shadow-2xl shadow-lh-purple/40 group-hover:rotate-6 transition-transform duration-500">
-                                <HelpCircle className="w-5 h-5 text-white" />
+                    <Link to="/dashboard/support" className="block outline-none">
+                        <motion.div
+                            whileHover={{ scale: 1.02, y: -3 }}
+                            className="p-6 bg-lh-purple/10 border border-lh-purple/20 rounded-[1.5rem] flex items-center justify-between group cursor-pointer hover:bg-lh-purple/20 transition-all shadow-xl shadow-lh-purple/5"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-11 h-11 rounded-xl bg-lh-purple flex items-center justify-center shadow-2xl shadow-lh-purple/40 group-hover:rotate-6 transition-transform duration-500">
+                                    <HelpCircle className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase text-white mb-1 tracking-widest">Support HUD</h4>
+                                    <p className="text-[8px] font-bold text-gray-500 uppercase tracking-[0.2em]">Active_Session_Relay</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="text-[10px] font-black uppercase text-white mb-1 tracking-widest">Support HUD</h4>
-                                <p className="text-[8px] font-bold text-gray-500 uppercase tracking-[0.2em]">Active_Session_Relay</p>
-                            </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-lh-purple group-hover:translate-x-1 transition-transform" />
-                    </motion.div>
+                            <ChevronRight className="w-4 h-4 text-lh-purple group-hover:translate-x-1 transition-transform" />
+                        </motion.div>
+                    </Link>
                 </div>
             </div>
         </div>

@@ -1,15 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Cpu, Search, Terminal, Scan, ArrowRight } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ngdPic from '../assets/images/ngd-pic.png';
-import { careerData } from '../data/careerData';
+import api from '../utils/api';
 
 const TechCareers = () => {
-    const [currentPage, setCurrentPage] = React.useState(0);
+    const [careers, setCareers] = useState([]);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [loading, setLoading] = useState(true);
     const ITEMS_PER_PAGE = 8;
+
+    useEffect(() => {
+        const fetchCareers = async () => {
+            try {
+                const res = await api.get('/careers');
+                setCareers(res.data);
+            } catch (error) {
+                console.error("Error fetching careers:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCareers();
+    }, []);
+
+    const DynamicIcon = ({ name, ...props }) => {
+        const IconComponent = LucideIcons[name] || LucideIcons.Shield;
+        return <IconComponent {...props} />;
+    };
 
     const getBentoProps = (career, idx) => {
         const colors = [
@@ -28,11 +49,11 @@ const TechCareers = () => {
         };
     };
 
-    const techCareers = careerData.map((career, idx) => {
+    const techCareers = careers.map((career, idx) => {
         const { size, color } = getBentoProps(career, idx);
         return {
             ...career,
-            tagline: career.categories.join(' & '),
+            tagline: career.categories?.join(' & ') || '',
             desc: career.description,
             size,
             color
@@ -144,7 +165,7 @@ const TechCareers = () => {
                                     <div className="relative z-10 flex flex-col h-full">
                                         <div className="flex justify-between items-start mb-8">
                                             <div className="p-4 bg-white/5 rounded-2xl text-white group-hover:text-lh-purple group-hover:bg-lh-purple/10 transition-all duration-500">
-                                                {career.icon}
+                                                <DynamicIcon name={career.icon} size={24} />
                                             </div>
                                             <ArrowRight size={20} className="text-lh-purple opacity-0 group-hover:opacity-100 transition-all duration-500" />
                                         </div>

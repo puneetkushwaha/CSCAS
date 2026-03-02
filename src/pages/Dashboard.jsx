@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, ChevronRight, ChevronLeft, ShoppingCart, Activity, LayoutDashboard, FileText, Globe2, LogOut, BookOpen } from 'lucide-react';
+import { Shield, ChevronRight, ChevronLeft, ShoppingCart, Activity, LayoutDashboard, FileText, Globe2, LogOut, BookOpen, LifeBuoy } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -22,6 +22,7 @@ const Dashboard = () => {
         { icon: <BookOpen size={18} />, label: 'My Academy', path: '/dashboard/my-courses' },
         { icon: <Globe2 size={18} />, label: 'Browse Training', path: '/courses' },
         { icon: <FileText size={18} />, label: 'My Exams', path: '/dashboard/pearson' },
+        { icon: <LifeBuoy size={18} />, label: 'Support Hub', path: '/dashboard/support' },
     ];
 
     const isActive = (path) => {

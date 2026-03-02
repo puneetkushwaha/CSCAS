@@ -5,7 +5,7 @@ import {
     BarChart2, Save, X, Check, AlertCircle, LayoutDashboard, FileText,
     TrendingUp, Shield, Zap, MoreVertical, LogOut, Home,
     AlertTriangle, Code, MessageSquare, Mic, MicOff, Phone,
-    Monitor, ShieldAlert, Power, Camera, Clock, CheckCircle2, Video, Radio, CalendarClock
+    Monitor, ShieldAlert, Power, Camera, Clock, CheckCircle2, Video, Radio, CalendarClock, Briefcase, Globe
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
@@ -14,6 +14,9 @@ import ChatWidget from '../components/ChatWidget';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import CertificationsManager from '../components/admin/CertificationsManager';
+import CareersManager from '../components/admin/CareersManager';
+import IndustrySectorsManager from '../components/admin/IndustrySectorsManager';
+import ResourceManager from '../components/admin/ResourceManager';
 
 
 const ProctorView = ({ examId }) => {
@@ -992,15 +995,18 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                <nav className="space-y-2 flex-1">
+                <nav className="space-y-2 flex-1 overflow-y-auto custom-scrollbar pr-2 mb-4">
                     {[
                         { id: 'overview', icon: Activity, label: 'Overview' },
                         { id: 'exams', icon: BookOpen, label: 'Exam_Manager' },
                         { id: 'courses', icon: Layers, label: 'Course_Manager' },
                         { id: 'results', icon: Users, label: 'Student_Results' },
                         { id: 'certifications', icon: Shield, label: 'Certifications' },
+                        { id: 'careers', icon: Briefcase, label: 'Careers' },
+                        { id: 'industries', icon: Globe, label: 'Industry_Sectors' },
                         { id: 'proctoring', icon: ShieldAlert, label: 'Live_Proctor' },
-                        { id: 'live-classes', icon: Video, label: 'Live_Classes' }
+                        { id: 'live-classes', icon: Video, label: 'Live_Classes' },
+                        { id: 'resources', icon: FileText, label: 'Knowledge_Resources' }
                     ].map((item) => (
                         <button
                             key={item.id}
@@ -1041,8 +1047,11 @@ const AdminDashboard = () => {
                             {activeTab === 'courses' && 'Course Management'}
                             {activeTab === 'results' && 'Student Performance'}
                             {activeTab === 'certifications' && 'Certification Programs'}
+                            {activeTab === 'careers' && 'Career Path Manager'}
+                            {activeTab === 'industries' && 'Industry Market Segments'}
                             {activeTab === 'proctoring' && 'Live Proctoring'}
                             {activeTab === 'live-classes' && 'Live Classes'}
+                            {activeTab === 'resources' && 'Resource Center'}
                         </h1>
                         <p className="text-gray-500 text-sm font-medium">Welcome back to the command center.</p>
                     </div>
@@ -1121,6 +1130,16 @@ const AdminDashboard = () => {
                     {/* Certifications Tab */}
                     {activeTab === 'certifications' && (
                         <CertificationsManager />
+                    )}
+
+                    {/* Careers Tab */}
+                    {activeTab === 'careers' && (
+                        <CareersManager />
+                    )}
+
+                    {/* Industries Tab */}
+                    {activeTab === 'industries' && (
+                        <IndustrySectorsManager />
                     )}
 
                     {/* Exams Tab */}
@@ -1476,6 +1495,11 @@ const AdminDashboard = () => {
                                 ))}
                             </div>
                         </motion.div>
+                    )}
+
+                    {/* Resources Tab */}
+                    {activeTab === 'resources' && (
+                        <ResourceManager />
                     )}
                 </AnimatePresence>
 
