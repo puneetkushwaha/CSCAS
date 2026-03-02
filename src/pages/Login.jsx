@@ -282,9 +282,6 @@ const Login = () => {
                             <div className="bg-red-900/10 border border-red-900/30 p-4 rounded-lg">
                                 <div className="flex gap-3">
                                     <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                                    <p className="text-[10px] text-gray-400 leading-relaxed font-bold uppercase tracking-wider">
-                                        If you recently received an email with a temporary password, it is part of our new site launch. Ensure the sender is Verified.
-                                    </p>
                                 </div>
                             </div>
 
