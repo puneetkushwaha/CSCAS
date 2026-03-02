@@ -658,7 +658,10 @@ const ExamPlayer = () => {
             snapshot: imageSrc
           });
         } catch (error) {
-          console.error("Proctor upload failed", error);
+          console.error("Proctor snapshot upload failed:", {
+            error: error.message,
+            response: error.response?.data
+          });
         }
       }
     }
@@ -971,7 +974,11 @@ const ExamPlayer = () => {
                   setIsWaitingApproval(true);
                   setVerificationError(null);
                 } catch (error) {
-                  setVerificationError("Failed to upload ID. Please try again.");
+                  console.error("ID upload failed detailed error:", {
+                    error: error.message,
+                    response: error.response?.data
+                  });
+                  setVerificationError(`Failed to upload ID: ${error.response?.data?.message || error.message}`);
                 }
               }}
               className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/10 hover:scale-105 active:scale-95 transition-all"
