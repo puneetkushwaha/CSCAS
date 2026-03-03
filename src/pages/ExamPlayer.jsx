@@ -42,6 +42,7 @@ const ExamPlayer = () => {
   const [idPhoto, setIdPhoto] = useState(null);
   const [isIdVerified, setIsIdVerified] = useState(false);
   const [isWaitingApproval, setIsWaitingApproval] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationError, setVerificationError] = useState(null);
   const [proctorWarning, setProctorWarning] = useState(null);
   const [isProctorSpeaking, setIsProctorSpeaking] = useState(false);
@@ -897,7 +898,7 @@ const ExamPlayer = () => {
 
           {!isWaitingApproval && (
             <button
-              disabled={!idPhoto}
+              disabled={!idPhoto || isSubmitting}
               onClick={async () => {
                 try {
                   if (!kycData.fullName || !kycData.idType || !kycData.idNumber) {
@@ -908,20 +909,25 @@ const ExamPlayer = () => {
                     setVerificationError("Please capture an ID photo first.");
                     return;
                   }
+
+                  setIsSubmitting(true);
+                  setVerificationError(null);
+
                   console.log("[ExamPlayer] Initiating ID upload...", {
                     examId: activeExam.examId,
                     userId: user._id || user.id,
                     attemptId: activeExam.id
                   });
+
                   await api.post('/proctor/upload-id', {
                     examId: activeExam.examId,
                     attemptId: activeExam.id,
                     idSnapshot: idPhoto,
                     kycData: kycData
                   });
+
                   console.log("[ExamPlayer] ID upload successful");
                   setIsWaitingApproval(true);
-                  setVerificationError(null);
                   toast.success("Verification request sent successfully!");
                 } catch (error) {
                   console.error("ID upload failed detailed error:", {
@@ -929,14 +935,25 @@ const ExamPlayer = () => {
                     response: error.response?.data
                   });
                   setVerificationError(`Failed to upload ID: ${error.response?.data?.message || error.message}`);
+                } finally {
+                  setIsSubmitting(false);
                 }
               }}
-              className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all ${idPhoto
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/10 hover:scale-[1.02] active:scale-95"
-                : "bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
+              className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all ${idPhoto && !isSubmitting
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/10 hover:scale-[1.02] active:scale-95"
+                  : "bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
                 }`}
             >
-              {idPhoto ? "Confirm and Request Approval" : "Capture ID to Continue"}
+              {isSubmitting ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                  <div className="w-2 h-2 bg-white/50 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                idPhoto ? "Confirm and Request Approval" : "Capture ID to Continue"
+              )}
             </button>
           )}
 
