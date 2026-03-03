@@ -32,11 +32,6 @@ const ExamPlayer = () => {
   // Result State
   const [examResult, setExamResult] = useState(null);
 
-  // --- Anti-Cheating State ---
-  const [violationCount, setViolationCount] = useState(0);
-  const [isLocked, setIsLocked] = useState(false); // True if tab switch detected
-  const [lockReason, setLockReason] = useState(null);
-
   // --- Real-time State ---
   const [socket, setSocket] = useState(null);
   const [idPhoto, setIdPhoto] = useState(null);
@@ -524,13 +519,7 @@ const ExamPlayer = () => {
     };
   }, [socket, activeExam?.examId, user, phase]);
 
-  // --- Auto-Disqualification Logic ---
-  useEffect(() => {
-    if (violationCount >= 3) {
-      setIsDisqualified(true);
-      setDisqualificationReason("Multiple proctoring violations detected (3 warnings).");
-    }
-  }, [violationCount]);
+  // --- Auto-Disqualification Logic Removed ---
 
   // --- Fetch Questions Component ---
   useEffect(() => {
@@ -709,11 +698,6 @@ const ExamPlayer = () => {
   };
 
   const handleFinalSubmit = async () => {
-    // Exit fullscreen on submit
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(err => console.log(err));
-    }
-
     const timeTaken = 3600 - examTimer; // roughly calculated
 
     try {
@@ -766,29 +750,7 @@ const ExamPlayer = () => {
     );
   }
 
-  // --- LOCKDOWN OVERLAY RENDER ---
-  if (phase === 'active' && isLocked) {
-    return (
-      <div className="fixed inset-0 z-50 bg-[#000] flex flex-col items-center justify-center text-center p-6">
-        <ShieldAlert size={80} className="text-red-500 mb-6 animate-pulse" />
-        <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Exam Paused</h1>
-
-        <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg mb-8">
-          <h3 className="text-xl font-bold text-red-500 mb-2">Security Violation Detected</h3>
-          <p className="text-gray-400 text-sm mb-4">
-            Security lock triggered. Please review the violation.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setIsLocked(false)}
-          className="px-8 py-4 bg-white text-black rounded-xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-3"
-        >
-          Resume Exam
-        </button>
-      </div>
-    )
-  }
+  // --- LOCKDOWN OVERLAY REMOVED ---
 
   // --- ID Verification Phase ---
   if ((phase === 'active' || phase === 'waiting') && !isIdVerified) {
@@ -940,8 +902,8 @@ const ExamPlayer = () => {
                 }
               }}
               className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all ${idPhoto && !isSubmitting
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/10 hover:scale-[1.02] active:scale-95"
-                  : "bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
+                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/10 hover:scale-[1.02] active:scale-95"
+                : "bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
                 }`}
             >
               {isSubmitting ? (
@@ -1060,40 +1022,7 @@ const ExamPlayer = () => {
     );
   }
 
-  // --- LOCKDOWN OVERLAY RENDER ---
-  if (phase === 'active' && (!isFullscreen || isLocked)) {
-    return (
-      <div className="fixed inset-0 z-50 bg-[#000] flex flex-col items-center justify-center text-center p-6">
-        <ShieldAlert size={80} className="text-red-500 mb-6 animate-pulse" />
-        <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Exam Paused</h1>
-
-        {lockReason === 'tab_switch' ? (
-          <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg mb-8">
-            <h3 className="text-xl font-bold text-red-500 mb-2">Security Violation Detected</h3>
-            <p className="text-gray-400 text-sm mb-4">
-              You attempted to switch tabs or minimize the browser. This action has been recorded.
-              Repeated violations will result in automatic disqualification.
-            </p>
-            <div className="text-white font-mono text-2xl font-bold">
-              Violation Count: <span className="text-red-500">{violationCount}</span>
-            </div>
-          </div>
-        ) : (
-          <p className="text-gray-400 max-w-md mb-8 text-lg">
-            Full-screen mode is required to continue this assessment.
-            Please do not exit full-screen or switch windows.
-          </p>
-        )}
-
-        <button
-          onClick={enterFullscreen}
-          className="px-8 py-4 bg-white text-black rounded-xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-3"
-        >
-          <Maximize2 size={20} /> Resume Exam
-        </button>
-      </div>
-    )
-  }
+  // --- LOCKDOWN OVERLAY REMOVED ---
   return (
     <div className="flex flex-col h-screen bg-[#111] overflow-hidden">
       {/* Proctor Speaking Indicator */}
