@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { io } from 'socket.io-client';
+import { createSocket } from '../utils/socketClient';
 import ChatWidget from '../components/ChatWidget';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -37,7 +37,7 @@ const ProctorView = ({ examId }) => {
     const localStream = useRef(null);
     const [proctorMicStream, setProctorMicStream] = useState(null);
     useEffect(() => {
-        const newSocket = io(); // Use relative path for proxy support
+        const newSocket = createSocket();
         setSocket(newSocket);
 
         newSocket.on('noise_alert', ({ level, room }) => {

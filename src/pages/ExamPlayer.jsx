@@ -8,7 +8,7 @@ import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { io } from 'socket.io-client';
+import { createSocket } from '../utils/socketClient';
 import ChatWidget from '../components/ChatWidget';
 import { toast } from 'react-toastify';
 
@@ -110,7 +110,7 @@ const ExamPlayer = () => {
   // --- Socket Initialization ---
   useEffect(() => {
     if (user && activeExam?.examId) {
-      const newSocket = io(); // Use relative path for proxy support
+      const newSocket = createSocket();
       setSocket(newSocket);
 
       newSocket.emit('join_session', {
