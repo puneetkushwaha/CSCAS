@@ -15,18 +15,22 @@ const PaymentSuccess = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { appointmentDate, appointmentTime, examName, examId } = location.state || {
-
         examName: "CSCA Certification Exam",
         appointmentDate: "2026-02-24",
-        appointmentTime: "10:00 AM"
+        appointmentTime: "10:00 AM",
+        examId: "FALLBACK_ID"
     };
 
     // Store the "scheduled" exam in localStorage for the timer/notifications to pick up
     useEffect(() => {
+        if (!examId || examId === "undefined") {
+            console.warn("PaymentSuccess: Received invalid examId, skipping storage");
+            return;
+        }
+
         const scheduledExam = {
             id: Math.random().toString(36).substring(7).toUpperCase(),
             examId, // Store real backend ID
-
             examName,
             date: appointmentDate,
             time: appointmentTime,

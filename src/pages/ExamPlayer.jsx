@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Shield, Clock, AlertTriangle, ArrowRight, CheckCircle2,
   ShieldAlert, Activity, Lock, Laptop, Menu, X, ChevronRight, Power,
-  User, Bookmark, RotateCcw, Save, LayoutGrid, Camera, Maximize2
+  User, Bookmark, RotateCcw, Save, LayoutGrid, Camera, Maximize2, Mic
 } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +33,6 @@ const ExamPlayer = () => {
   const [examResult, setExamResult] = useState(null);
 
   // --- Anti-Cheating State ---
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [violationCount, setViolationCount] = useState(0);
   const [isLocked, setIsLocked] = useState(false); // True if tab switch detected
   const [lockReason, setLockReason] = useState(null);
@@ -63,6 +62,10 @@ const ExamPlayer = () => {
   const screenStream = useRef(null);
   const remoteStream = useRef(new MediaStream());
   const audioRef = useRef(null);
+
+  // --- Signaling Buffers ---
+  const pendingCandidates = useRef([]);
+  const pendingScreenCandidates = useRef([]);
 
   // --- Initial Sync & Data Fetching ---
   useEffect(() => {
@@ -250,6 +253,15 @@ const ExamPlayer = () => {
           });
         }
       };
+
+      // Drain pending candidates
+      if (pendingCandidates.current.length > 0) {
+        console.log(`[ExamPlayer] Draining ${pendingCandidates.current.length} buffered ICE candidates`);
+        for (const cand of pendingCandidates.current) {
+          await pc.current.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.error(e));
+        }
+        pendingCandidates.current = [];
+      }
     };
 
     socket.on('webrtc-signal', async ({ signal, type, userId: signalUserId }) => {
@@ -271,8 +283,15 @@ const ExamPlayer = () => {
           signal: answer,
           type: 'answer'
         });
-      } else if (type === 'candidate' && pc.current) {
-        await pc.current.addIceCandidate(new RTCIceCandidate(signal));
+      } else if (type === 'answer' && pc.current) {
+        await pc.current.setRemoteDescription(new RTCSessionDescription(signal));
+      } else if (type === 'candidate') {
+        if (pc.current && pc.current.remoteDescription) {
+          await pc.current.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.error(e));
+        } else {
+          console.log("[ExamPlayer] Buffering ICE candidate (remoteDescription not yet set)");
+          pendingCandidates.current.push(signal);
+        }
       }
     });
 
@@ -432,6 +451,15 @@ const ExamPlayer = () => {
           });
         }
       };
+
+      // Drain pending screen candidates
+      if (pendingScreenCandidates.current.length > 0) {
+        console.log(`[ExamPlayer] Draining ${pendingScreenCandidates.current.length} buffered screen ICE candidates`);
+        for (const cand of pendingScreenCandidates.current) {
+          await screenPc.current.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.error(e));
+        }
+        pendingScreenCandidates.current = [];
+      }
     };
 
     socket.on('webrtc-screen-signal', async ({ signal, type, userId: signalUserId }) => {
@@ -450,8 +478,15 @@ const ExamPlayer = () => {
           signal: answer,
           type: 'answer'
         });
-      } else if (type === 'candidate' && screenPc.current) {
-        await screenPc.current.addIceCandidate(new RTCIceCandidate(signal));
+      } else if (type === 'answer' && screenPc.current) {
+        await screenPc.current.setRemoteDescription(new RTCSessionDescription(signal));
+      } else if (type === 'candidate') {
+        if (screenPc.current && screenPc.current.remoteDescription) {
+          await screenPc.current.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.error(e));
+        } else {
+          console.log("[ExamPlayer] Buffering screen ICE candidate (remoteDescription not yet set)");
+          pendingScreenCandidates.current.push(signal);
+        }
       }
     });
 
@@ -498,11 +533,19 @@ const ExamPlayer = () => {
   // --- Fetch Questions Component ---
   useEffect(() => {
     const fetchQuestions = async () => {
-      if (!activeExam?.examId) return;
+      if (!activeExam) return; // Silent return if still initializing
 
+      const eId = activeExam.examId;
+      if (!eId || eId === "undefined" || eId === "null") {
+        console.warn("ExamPlayer: Missing examId in active exam record:", activeExam);
+        return;
+      }
+
+      console.log(`ExamPlayer: Fetching questions for examId: ${eId}`);
       setLoadingQuestions(true);
       try {
-        const response = await api.get(`/exams/${activeExam.examId}`);
+        const response = await api.get(`/exams/${eId}`);
+        console.log("ExamPlayer: Fetch Response:", response.data);
 
         if (response.data && response.data.questions) {
           const fetchedQuestions = response.data.questions;
@@ -520,9 +563,14 @@ const ExamPlayer = () => {
           initialStatus[0] = 'not_answered';
           setQuestionStatus(initialStatus);
 
+        } else {
+          console.error("ExamPlayer: No questions found in response for examId:", eId);
         }
       } catch (error) {
-        console.error("Failed to fetch exam questions:", error);
+        console.error("Failed to fetch exam questions for examId:", eId, error);
+        if (error.response?.status === 404) {
+          console.error("404 Error: The exam ID might be invalid or the backend route is missing.");
+        }
       } finally {
         setLoadingQuestions(false);
       }
@@ -543,127 +591,12 @@ const ExamPlayer = () => {
 
   // --- Anti-Cheat Measures ---
 
-  // Fullscreen Enforcer
-  const enterFullscreen = async () => {
-    try {
-      await document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-      setIsLocked(false);
-    } catch (err) {
-      console.error("Error attempting to enable fullscreen:", err);
-    }
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isFs = !!document.fullscreenElement;
-      setIsFullscreen(isFs);
-      if (!isFs && phase === 'active') {
-        setIsLocked(true);
-        setLockReason('fullscreen_exit');
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, [phase]);
+  // Fullscreen Enforcer removed as requested.
 
 
-  useEffect(() => {
-    if (phase !== 'active') return;
 
-    // 1. Prevent Page Reload/Close
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = 'Your exam is in progress. Leaving will forfeit your submission.';
-      return e.returnValue;
-    };
+  // Anti-cheat event listeners (tab switch, reload, inspect, etc.) have been removed as requested.
 
-    // 2. Detect Tab Switching (Aggressive Lockdown)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setViolationCount(prev => prev + 1);
-        setIsLocked(true);
-        setLockReason('tab_switch');
-
-        if (socket && activeExam?.examId && user) {
-          socket.emit('tab_switch_alert', {
-            room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
-            userId: user.id || user._id
-          });
-        }
-      }
-    };
-
-    // 3. Disable Right-Click Context Menu
-    const handleContextMenu = (e) => {
-      e.preventDefault();
-      return false;
-    };
-
-    // 4. Disable Keyboard Shortcuts (F5, Ctrl+R, F12, etc.)
-    const handleKeyDown = (e) => {
-      // Prevent F5, Ctrl+R, Command+R
-      if (
-        e.key === 'F5' ||
-        (e.ctrlKey && e.key === 'r') ||
-        (e.metaKey && e.key === 'r')
-      ) {
-        e.preventDefault();
-        toast.warn("Reloading is disabled during the exam.");
-        return false;
-      }
-
-      // Prevent Inspect Element and Source View
-      if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && e.key === 'I') || // Ctrl+Shift+I
-        (e.ctrlKey && e.shiftKey && e.key === 'C') || // Ctrl+Shift+C
-        (e.ctrlKey && e.shiftKey && e.key === 'J') || // Ctrl+Shift+J
-        (e.ctrlKey && e.key === 'u') // Ctrl+U
-      ) {
-        e.preventDefault();
-        return false;
-      }
-
-      // Prevent Alt+Tab (Detection only, cannot block OS level)
-      if (e.altKey && e.key === 'Tab') {
-        // This usually triggers blur/visibilitychange anyway
-      }
-    };
-
-    // 5. Disable Copy/Cut/Paste
-    const handleCopyCutPaste = (e) => {
-      e.preventDefault();
-      return false;
-    };
-
-    // Attach all listeners
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('copy', handleCopyCutPaste);
-    document.addEventListener('cut', handleCopyCutPaste);
-    document.addEventListener('paste', handleCopyCutPaste);
-
-    // Initial check for fullscreen
-    if (!document.fullscreenElement) {
-      // setIsLocked(true); 
-      // We don't lock immediately on mount, wait for user to start
-    }
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.removeEventListener('contextmenu', handleContextMenu);
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('copy', handleCopyCutPaste);
-      document.removeEventListener('cut', handleCopyCutPaste);
-      document.removeEventListener('paste', handleCopyCutPaste);
-    };
-  }, [phase]);
 
   // --- Proctoring Logic ---
   const webcamRef = useRef(null);
@@ -832,35 +765,24 @@ const ExamPlayer = () => {
   }
 
   // --- LOCKDOWN OVERLAY RENDER ---
-  if (phase === 'active' && (!isFullscreen || isLocked)) {
+  if (phase === 'active' && isLocked) {
     return (
       <div className="fixed inset-0 z-50 bg-[#000] flex flex-col items-center justify-center text-center p-6">
         <ShieldAlert size={80} className="text-red-500 mb-6 animate-pulse" />
         <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Exam Paused</h1>
 
-        {lockReason === 'tab_switch' ? (
-          <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg mb-8">
-            <h3 className="text-xl font-bold text-red-500 mb-2">Security Violation Detected</h3>
-            <p className="text-gray-400 text-sm mb-4">
-              You attempted to switch tabs or minimize the browser. This action has been recorded.
-              Repeated violations will result in automatic disqualification.
-            </p>
-            <div className="text-white font-mono text-2xl font-bold">
-              Violation Count: <span className="text-red-500">{violationCount}</span>
-            </div>
-          </div>
-        ) : (
-          <p className="text-gray-400 max-w-md mb-8 text-lg">
-            Full-screen mode is required to continue this assessment.
-            Please do not exit full-screen or switch windows.
+        <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg mb-8">
+          <h3 className="text-xl font-bold text-red-500 mb-2">Security Violation Detected</h3>
+          <p className="text-gray-400 text-sm mb-4">
+            Security lock triggered. Please review the violation.
           </p>
-        )}
+        </div>
 
         <button
-          onClick={enterFullscreen}
+          onClick={() => setIsLocked(false)}
           className="px-8 py-4 bg-white text-black rounded-xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-3"
         >
-          <Maximize2 size={20} /> Resume Exam
+          Resume Exam
         </button>
       </div>
     )

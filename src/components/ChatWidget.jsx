@@ -33,7 +33,7 @@ const ChatWidget = ({ socket, room, currentUser, role }) => {
         };
 
         socket.emit('send_message', { ...messageData, room });
-        setMessages((prev) => [...prev, messageData]);
+        // Removed setMessages optimistic update here because the server broadcasts to everyone in the room (including sender)
         setInput('');
     };
 
@@ -66,8 +66,8 @@ const ChatWidget = ({ socket, room, currentUser, role }) => {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col ${msg.sender === role ? 'items-end' : 'items-start'}`}>
                         <div className={`max-w-[80%] p-3 rounded-xl text-xs ${msg.sender === role
-                                ? 'bg-lh-purple text-white rounded-tr-none'
-                                : 'bg-white/5 text-gray-300 rounded-tl-none'
+                            ? 'bg-lh-purple text-white rounded-tr-none'
+                            : 'bg-white/5 text-gray-300 rounded-tl-none'
                             }`}>
                             {msg.text}
                         </div>

@@ -35,10 +35,23 @@ const ProctorView = ({ examId }) => {
     const pc = useRef({});
     const screenPc = useRef({}); // Store PeerConnections per user: { userId: pc }
     const localStream = useRef(null);
-    const [proctorMicStream, setProctorMicStream] = useState(null);
+    const proctorMicStream = useRef(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    // --- Signaling Buffers ---
+    const pendingCandidates = useRef({}); // { userId: [candidates] }
+    const pendingScreenCandidates = useRef({}); // { userId: [candidates] }
+    const requestedRooms = useRef(new Set());
+
     useEffect(() => {
         const newSocket = createSocket();
         setSocket(newSocket);
+
+        newSocket.on('new_id_verification', (data) => {
+            console.log("[ProctorView] New ID verification request received:", data);
+            toast.info(`New ID verification request from ${data.studentName || 'Student'}`);
+            setRefreshTrigger(prev => prev + 1);
+        });
 
         newSocket.on('noise_alert', ({ level, room }) => {
             const parts = room.split('_');
@@ -91,11 +104,24 @@ const ProctorView = ({ examId }) => {
                         [id]: event.streams[0]
                     }));
                 };
+
+                // Drain pending candidates
+                if (pendingCandidates.current[id]) {
+                    console.log(`[ProctorView] Draining ${pendingCandidates.current[id].length} buffered ICE candidates for user ${id}`);
+                    for (const cand of pendingCandidates.current[id]) {
+                        await peer.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.error(e));
+                    }
+                    delete pendingCandidates.current[id];
+                }
+
                 return peer;
             };
 
             if (type === 'offer') {
-                const peer = await setupPeer(signalUserId);
+                let peer = pc.current[signalUserId];
+                if (!peer || peer.signalingState === 'closed') {
+                    peer = await setupPeer(signalUserId);
+                }
                 await peer.setRemoteDescription(new RTCSessionDescription(signal));
                 const answer = await peer.createAnswer();
                 await peer.setLocalDescription(answer);
@@ -105,12 +131,18 @@ const ProctorView = ({ examId }) => {
                     signal: answer,
                     type: 'answer'
                 });
-            } else if (pc.current[signalUserId]) {
+            } else if (type === 'answer' && pc.current[signalUserId]) {
                 const peer = pc.current[signalUserId];
-                if (type === 'answer') {
+                if (peer.signalingState !== 'closed') {
                     await peer.setRemoteDescription(new RTCSessionDescription(signal));
-                } else if (type === 'candidate') {
-                    await peer.addIceCandidate(new RTCIceCandidate(signal));
+                }
+            } else if (type === 'candidate') {
+                const peer = pc.current[signalUserId];
+                if (peer && peer.remoteDescription && peer.signalingState !== 'closed') {
+                    await peer.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.error(e));
+                } else {
+                    if (!pendingCandidates.current[signalUserId]) pendingCandidates.current[signalUserId] = [];
+                    pendingCandidates.current[signalUserId].push(signal);
                 }
             }
         });
@@ -138,12 +170,25 @@ const ProctorView = ({ examId }) => {
                         [id]: event.streams[0]
                     }));
                 };
+
+                // Drain pending screen candidates
+                if (pendingScreenCandidates.current[id]) {
+                    console.log(`[ProctorView] Draining ${pendingScreenCandidates.current[id].length} buffered screen ICE candidates for user ${id}`);
+                    for (const cand of pendingScreenCandidates.current[id]) {
+                        await peer.addIceCandidate(new RTCIceCandidate(cand)).catch(e => console.error(e));
+                    }
+                    delete pendingScreenCandidates.current[id];
+                }
+
                 return peer;
             };
 
             if (type === 'offer') {
-                console.log(`[ProctorView] Received screen offer from user ${signalUserId} in room ${room}. Setting remote description and creating answer.`);
-                const peer = await setupScreenPeer(signalUserId);
+                console.log(`[ProctorView] Received screen offer from user ${signalUserId} in room ${room}.`);
+                let peer = screenPc.current[signalUserId];
+                if (!peer || peer.signalingState === 'closed') {
+                    peer = await setupScreenPeer(signalUserId);
+                }
                 await peer.setRemoteDescription(new RTCSessionDescription(signal));
                 const answer = await peer.createAnswer();
                 await peer.setLocalDescription(answer);
@@ -153,12 +198,18 @@ const ProctorView = ({ examId }) => {
                     signal: answer,
                     type: 'answer'
                 });
-            } else if (screenPc.current[signalUserId]) {
+            } else if (type === 'answer' && screenPc.current[signalUserId]) {
                 const peer = screenPc.current[signalUserId];
-                if (type === 'answer') {
+                if (peer.signalingState !== 'closed') {
                     await peer.setRemoteDescription(new RTCSessionDescription(signal));
-                } else if (type === 'candidate') {
-                    await peer.addIceCandidate(new RTCIceCandidate(signal));
+                }
+            } else if (type === 'candidate') {
+                const peer = screenPc.current[signalUserId];
+                if (peer && peer.remoteDescription && peer.signalingState !== 'closed') {
+                    await peer.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.error(e));
+                } else {
+                    if (!pendingScreenCandidates.current[signalUserId]) pendingScreenCandidates.current[signalUserId] = [];
+                    pendingScreenCandidates.current[signalUserId].push(signal);
                 }
             }
         });
@@ -168,9 +219,16 @@ const ProctorView = ({ examId }) => {
             Object.values(pc.current).forEach(p => p.close());
             Object.values(screenPc.current).forEach(p => p.close());
             localStream.current?.getTracks().forEach(track => track.stop());
-            proctorMicStream?.getTracks().forEach(track => track.stop());
+            proctorMicStream.current?.getTracks().forEach(track => track.stop());
         };
-    }, [currentUser, proctorMicStream]);
+    }, [currentUser]);
+
+    useEffect(() => {
+        if (socket && examId) {
+            console.log("[ProctorView] Joining proctor room for exam:", examId);
+            socket.emit('join_proctor_exam', { examId });
+        }
+    }, [socket, examId]);
 
     useEffect(() => {
         if (socket && sessions.length > 0) {
@@ -182,8 +240,13 @@ const ProctorView = ({ examId }) => {
                         userId: session.userId?._id || session.userId,
                         attemptId: session.attemptId
                     });
-                    // Automatically request live feed when joining
-                    socket.emit('request_live_feed', { room });
+
+                    // Request feed only if we haven't requested it in this proctor instance session
+                    if (!requestedRooms.current.has(room)) {
+                        console.log("[ProctorView] Requesting initial live feed for room:", room);
+                        socket.emit('request_live_feed', { room });
+                        requestedRooms.current.add(room);
+                    }
                 }
             });
         }
@@ -205,7 +268,7 @@ const ProctorView = ({ examId }) => {
         interval = setInterval(fetchSessions, 5000); // Poll every 5 seconds
 
         return () => clearInterval(interval);
-    }, [examId]);
+    }, [examId, refreshTrigger]);
 
     const handleVerifyID = async (sessionId, status) => {
         try {
@@ -225,8 +288,8 @@ const ProctorView = ({ examId }) => {
         try {
             const peer = pc.current[userId];
 
-            if (!peer) {
-                toast.warn("Please connect the video feed first.");
+            if (!peer || peer.signalingState === 'closed') {
+                toast.warn("Video feed is not active or closed. Please connect the video feed first.");
                 return;
             }
 
@@ -234,7 +297,7 @@ const ProctorView = ({ examId }) => {
                 // Stop proctor voice (send nothing to student)
                 const senders = peer.getSenders();
                 const audioSender = senders.find(s => s.track?.kind === 'audio');
-                if (audioSender) {
+                if (audioSender && peer.signalingState !== 'closed') {
                     peer.removeTrack(audioSender);
                     // Re-negotiate
                     const offer = await peer.createOffer();
@@ -246,29 +309,31 @@ const ProctorView = ({ examId }) => {
             }
 
             // Start proctor voice (send mic to student)
-            let micStream = proctorMicStream;
+            let micStream = proctorMicStream.current;
             if (!micStream) {
                 micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                setProctorMicStream(micStream);
+                proctorMicStream.current = micStream;
             }
 
             // Remove any existing audio tracks first to avoid duplicates
-            const existingSenders = peer.getSenders();
-            const oldAudioSender = existingSenders.find(s => s.track?.kind === 'audio');
-            if (oldAudioSender) peer.removeTrack(oldAudioSender);
+            if (peer.signalingState !== 'closed') {
+                const existingSenders = peer.getSenders();
+                const oldAudioSender = existingSenders.find(s => s.track?.kind === 'audio');
+                if (oldAudioSender) peer.removeTrack(oldAudioSender);
 
-            console.log(`[Proctor] Adding audio track to peer for user ${userId}`);
-            micStream.getAudioTracks().forEach(track => {
-                peer.addTrack(track, micStream);
-            });
+                console.log(`[Proctor] Adding audio track to peer for user ${userId}`);
+                micStream.getAudioTracks().forEach(track => {
+                    peer.addTrack(track, micStream);
+                });
 
-            // Re-negotiate
-            console.log("[Proctor] Creating and sending offer for voice...");
-            const offer = await peer.createOffer();
-            await peer.setLocalDescription(offer);
-            socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
+                // Re-negotiate
+                console.log("[Proctor] Creating and sending offer for voice...");
+                const offer = await peer.createOffer();
+                await peer.setLocalDescription(offer);
+                socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
 
-            setActiveVoice(userId);
+                setActiveVoice(userId);
+            }
 
         } catch (error) {
             console.error("Voice communication error", error);
