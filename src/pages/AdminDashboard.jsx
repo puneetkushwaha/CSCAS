@@ -47,9 +47,22 @@ const ProctorView = ({ examId }) => {
         const newSocket = createSocket();
         setSocket(newSocket);
 
+        newSocket.on('connect', () => {
+            console.log("[Socket] Proctor connected to real-time server:", newSocket.id);
+        });
+
+        newSocket.on('connect_error', (error) => {
+            console.error("[Socket] Connection error:", error);
+            toast.error("Real-time connection failed. Actions might be delayed.");
+        });
+
         newSocket.on('new_id_verification', (data) => {
             console.log("[ProctorView] New ID verification request received:", data);
-            toast.info(`New ID verification request from ${data.studentName || 'Student'}`);
+            toast.info(`New ID verification request from ${data.studentName || 'Student'}`, {
+                position: "top-right",
+                autoClose: 5000
+            });
+            // Force intermediate refresh of sessions
             setRefreshTrigger(prev => prev + 1);
         });
 
@@ -225,7 +238,8 @@ const ProctorView = ({ examId }) => {
 
     useEffect(() => {
         if (socket && examId) {
-            console.log("[ProctorView] Joining proctor room for exam:", examId);
+            const room = `proctor_exam_${examId}`;
+            console.log(`[ProctorView] Joining proctor room for exam: ${examId} (Room: ${room})`);
             socket.emit('join_proctor_exam', { examId });
         }
     }, [socket, examId]);
@@ -235,6 +249,10 @@ const ProctorView = ({ examId }) => {
             sessions.forEach(session => {
                 if (session.examId && session.userId?._id && session.attemptId) {
                     const room = `${session.examId}_${session.userId?._id || session.userId}_${session.attemptId}`;
+
+                    // Join session if not already joined (socket.io handles duplicate joins gracefully, 
+                    // but we can be explicit if needed. For now, we always emit join_session to ensure 
+                    // the proctor is in the current active room).
                     socket.emit('join_session', {
                         examId: session.examId,
                         userId: session.userId?._id || session.userId,
@@ -244,13 +262,13 @@ const ProctorView = ({ examId }) => {
                     // Request feed only if we haven't requested it in this proctor instance session
                     if (!requestedRooms.current.has(room)) {
                         console.log("[ProctorView] Requesting initial live feed for room:", room);
+                        requestedRooms.current.add(room); // Add to Set BEFORE emitting to prevent race conditions
                         socket.emit('request_live_feed', { room });
-                        requestedRooms.current.add(room);
                     }
                 }
             });
         }
-    }, [socket, sessions]);
+    }, [socket, sessions.length]); // Dependency on length is safer than the whole array if sessions items change slightly
 
     useEffect(() => {
         let interval;
@@ -299,10 +317,12 @@ const ProctorView = ({ examId }) => {
                 const audioSender = senders.find(s => s.track?.kind === 'audio');
                 if (audioSender && peer.signalingState !== 'closed') {
                     peer.removeTrack(audioSender);
-                    // Re-negotiate
-                    const offer = await peer.createOffer();
-                    await peer.setLocalDescription(offer);
-                    socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
+                    // Re-negotiate only if signaling is stable
+                    if (peer.signalingState === 'stable') {
+                        const offer = await peer.createOffer();
+                        await peer.setLocalDescription(offer);
+                        socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
+                    }
                 }
                 setActiveVoice(null);
                 return;
@@ -319,7 +339,13 @@ const ProctorView = ({ examId }) => {
             if (peer.signalingState !== 'closed') {
                 const existingSenders = peer.getSenders();
                 const oldAudioSender = existingSenders.find(s => s.track?.kind === 'audio');
-                if (oldAudioSender) peer.removeTrack(oldAudioSender);
+                if (oldAudioSender) {
+                    try {
+                        peer.removeTrack(oldAudioSender);
+                    } catch (e) {
+                        console.warn("[Proctor] Failed to remove old audio track:", e);
+                    }
+                }
 
                 console.log(`[Proctor] Adding audio track to peer for user ${userId}`);
                 micStream.getAudioTracks().forEach(track => {
@@ -327,12 +353,16 @@ const ProctorView = ({ examId }) => {
                 });
 
                 // Re-negotiate
-                console.log("[Proctor] Creating and sending offer for voice...");
-                const offer = await peer.createOffer();
-                await peer.setLocalDescription(offer);
-                socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
-
-                setActiveVoice(userId);
+                if (peer.signalingState === 'stable') {
+                    console.log("[Proctor] Creating and sending offer for voice...");
+                    const offer = await peer.createOffer();
+                    await peer.setLocalDescription(offer);
+                    socket.emit('webrtc-signal', { room, signal: offer, type: 'offer', userId: currentUser?.id || currentUser?._id });
+                    setActiveVoice(userId);
+                } else {
+                    console.log("[Proctor] Signaling state not stable, waiting for automatic negotiation or connection recovery.");
+                    setActiveVoice(userId);
+                }
             }
 
         } catch (error) {
@@ -456,7 +486,7 @@ const ProctorView = ({ examId }) => {
                                         src={session.idSnapshot}
                                         crossOrigin="anonymous"
                                         referrerPolicy="no-referrer"
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain"
                                         alt="ID Card"
                                     />
                                 </div>

@@ -116,6 +116,7 @@ const ExamPlayer = () => {
       const newSocket = createSocket();
       setSocket(newSocket);
 
+      console.log(`[Socket] Joining session room: ${activeExam.examId}_${user._id || user.id}_${activeExam.id}`);
       newSocket.emit('join_session', {
         examId: activeExam.examId,
         userId: user._id || user.id,
@@ -789,16 +790,16 @@ const ExamPlayer = () => {
   }
 
   // --- ID Verification Phase ---
-  if (phase === 'active' && !isIdVerified) {
+  if ((phase === 'active' || phase === 'waiting') && !isIdVerified) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-lh-dark p-6 text-center">
-        <Shield size={64} className="text-lh-purple mb-8 animate-pulse" />
+      <div className="min-h-screen bg-lh-dark flex flex-col items-center py-12 px-6 overflow-y-auto">
+        <Shield size={64} className="text-lh-purple mb-8 animate-pulse shrink-0" />
         <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">KYC Verification</h2>
         <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-8 max-w-sm">
           Please provide your identification details and capture a clear photo of your ID card.
         </p>
 
-        <div className="w-full max-w-md bg-[#0a0a0a] border border-white/5 rounded-[2rem] p-8 space-y-6 relative overflow-hidden">
+        <div className="w-full max-w-md bg-[#0a0a0a] border border-white/5 rounded-[2rem] p-8 space-y-6 relative overflow-visible mb-12">
           <div className="absolute top-0 right-0 w-32 h-32 bg-lh-purple/5 blur-[50px] rounded-full pointer-events-none"></div>
 
           {/* KYC Form Fields */}
@@ -851,7 +852,7 @@ const ExamPlayer = () => {
                 src={idPhoto}
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 alt="ID Preview"
               />
             ) : (
@@ -894,18 +895,23 @@ const ExamPlayer = () => {
             )}
           </div>
 
-          {idPhoto && !isWaitingApproval && (
+          {!isWaitingApproval && (
             <button
+              disabled={!idPhoto}
               onClick={async () => {
                 try {
                   if (!kycData.fullName || !kycData.idType || !kycData.idNumber) {
                     setVerificationError("Please fill in all KYC details.");
                     return;
                   }
-                  console.log("[ExamPlayer] Uploading ID with payload:", {
+                  if (!idPhoto) {
+                    setVerificationError("Please capture an ID photo first.");
+                    return;
+                  }
+                  console.log("[ExamPlayer] Initiating ID upload...", {
                     examId: activeExam.examId,
-                    attemptId: activeExam.id,
-                    kycData
+                    userId: user._id || user.id,
+                    attemptId: activeExam.id
                   });
                   await api.post('/proctor/upload-id', {
                     examId: activeExam.examId,
@@ -916,6 +922,7 @@ const ExamPlayer = () => {
                   console.log("[ExamPlayer] ID upload successful");
                   setIsWaitingApproval(true);
                   setVerificationError(null);
+                  toast.success("Verification request sent successfully!");
                 } catch (error) {
                   console.error("ID upload failed detailed error:", {
                     error: error.message,
@@ -924,9 +931,12 @@ const ExamPlayer = () => {
                   setVerificationError(`Failed to upload ID: ${error.response?.data?.message || error.message}`);
                 }
               }}
-              className="w-full py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/10 hover:scale-105 active:scale-95 transition-all"
+              className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all ${idPhoto
+                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/10 hover:scale-[1.02] active:scale-95"
+                : "bg-white/5 border border-white/5 text-gray-600 cursor-not-allowed"
+                }`}
             >
-              Confirm and Request Approval
+              {idPhoto ? "Confirm and Request Approval" : "Capture ID to Continue"}
             </button>
           )}
 
@@ -1033,7 +1043,40 @@ const ExamPlayer = () => {
     );
   }
 
-  // --- Main Exam Interface (NTA Style) ---
+  // --- LOCKDOWN OVERLAY RENDER ---
+  if (phase === 'active' && (!isFullscreen || isLocked)) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#000] flex flex-col items-center justify-center text-center p-6">
+        <ShieldAlert size={80} className="text-red-500 mb-6 animate-pulse" />
+        <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Exam Paused</h1>
+
+        {lockReason === 'tab_switch' ? (
+          <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl max-w-lg mb-8">
+            <h3 className="text-xl font-bold text-red-500 mb-2">Security Violation Detected</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              You attempted to switch tabs or minimize the browser. This action has been recorded.
+              Repeated violations will result in automatic disqualification.
+            </p>
+            <div className="text-white font-mono text-2xl font-bold">
+              Violation Count: <span className="text-red-500">{violationCount}</span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-400 max-w-md mb-8 text-lg">
+            Full-screen mode is required to continue this assessment.
+            Please do not exit full-screen or switch windows.
+          </p>
+        )}
+
+        <button
+          onClick={enterFullscreen}
+          className="px-8 py-4 bg-white text-black rounded-xl text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-3"
+        >
+          <Maximize2 size={20} /> Resume Exam
+        </button>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col h-screen bg-[#111] overflow-hidden">
       {/* Proctor Speaking Indicator */}
