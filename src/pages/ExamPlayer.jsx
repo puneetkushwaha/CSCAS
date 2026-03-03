@@ -192,13 +192,17 @@ const ExamPlayer = () => {
 
     const setupPeerConnection = async () => {
       pc.current = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+        ]
       });
 
       try {
         if (!localStream.current) {
           localStream.current = await navigator.mediaDevices.getUserMedia({
-            video: { width: 320, height: 240, frameRate: 15 },
+            video: { width: 320, height: 240, frameRate: 10 },
             audio: true
           });
         }
@@ -382,12 +386,20 @@ const ExamPlayer = () => {
 
     const setupScreenPc = async () => {
       screenPc.current = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+        ]
       });
 
       try {
         screenStream.current = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: 10 },
+          video: {
+            width: { ideal: 1280, max: 1280 },
+            height: { ideal: 720, max: 720 },
+            frameRate: { ideal: 5, max: 8 },
+          },
           audio: false
         });
 
@@ -443,14 +455,23 @@ const ExamPlayer = () => {
       }
     });
 
+    // Limit SDP bitrate to reduce network load on screen share
+    const capBitrate = (sdp, kbps = 500) => {
+      return sdp.replace(
+        /a=mid:video\r\n/g,
+        `a=mid:video\r\nb=AS:${kbps}\r\n`
+      );
+    };
+
     const initiateScreenCall = async () => {
       if (!screenPc.current) await setupScreenPc();
       const offer = await screenPc.current.createOffer();
-      await screenPc.current.setLocalDescription(offer);
+      const cappedSdp = { ...offer, sdp: capBitrate(offer.sdp, 500) };
+      await screenPc.current.setLocalDescription(cappedSdp);
       socket.emit('webrtc-screen-signal', {
         room: `${activeExam.examId}_${user.id || user._id}_${activeExam.id}`,
         userId: user.id || user._id,
-        signal: offer,
+        signal: cappedSdp,
         type: 'offer'
       });
     };
