@@ -6,5 +6,8 @@ import { io } from 'socket.io-client';
  * across all frontend components like AdminDashboard and ExamPlayer.
  */
 export const createSocket = () => {
-    return io();
+    return io("https://csca.onrender.com", {
+        withCredentials: true
+    });
+
 };
